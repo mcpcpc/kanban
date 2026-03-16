@@ -57,27 +57,6 @@ docker build -t kanban .
 docker run -p 8080:8080 -v kanban-data:/app/instance kanban
 ```
 
-## Project Structure
-
-```
-src/kanban/
-├── __init__.py          # App factory
-├── db.py                # Database utilities & CLI
-├── schema.sql           # SQLite schema
-├── routes/              # Blueprint routes
-│   ├── dashboard.py     # Dashboard views
-│   ├── parts.py         # Parts CRUD
-│   ├── bins.py          # Bins CRUD
-│   ├── kanbans.py       # Kanban CRUD
-│   ├── events.py        # Event history
-│   ├── scan.py          # Barcode scanning
-│   ├── reports.py       # Analytics & reports
-│   └── api.py           # JSON API
-├── templates/           # Jinja2 templates
-└── utils/
-    └── barcode.py       # Code128 generation
-```
-
 ## Configuration
 
 Create `instance/config.py` to override defaults:
