@@ -1,3 +1,5 @@
+import math
+
 from quart import Blueprint, render_template, request, redirect, url_for, flash
 
 from kanban.db import get_db
@@ -17,7 +19,7 @@ async def list():
         SELECT k.*, p.part_number as part_name, p.manufacturer, 
                p.reorder_lead_time_days,
                b.location as bin_location,
-               CAST((k.estimated_daily_demand * p.reorder_lead_time_days) + k.safety_stock AS INTEGER) as reorder_point
+               CAST(k.estimated_daily_demand * (p.reorder_lead_time_days + k.safety_lead_time_days) AS INTEGER) as reorder_point
         FROM kanban k
         JOIN part p ON k.part_id = p.id
         JOIN bin b ON k.bin_id = b.id
@@ -67,30 +69,37 @@ async def create():
     part_id = form.get("part_id")
     bin_id = form.get("bin_id")
     kanban_quantity = form.get("kanban_quantity", "100")
-    safety_stock = form.get("safety_stock", "0")
+    safety_lead_time_days = form.get("safety_lead_time_days", "0")
     estimated_daily_demand = form.get("estimated_daily_demand", "0")
-    number_of_cards = form.get("number_of_cards", "2")
     is_active = form.get("is_active") == "on"
     
     if not part_id or not bin_id:
-        await flash("Part and Bin are required.", "danger")
+        await flash("Part and Location are required.", "danger")
         return redirect(url_for("kanbans.new"))
     
     try:
         kanban_quantity = int(kanban_quantity) if kanban_quantity else 100
-        safety_stock = int(safety_stock) if safety_stock else 0
+        safety_lead_time_days = float(safety_lead_time_days) if safety_lead_time_days else 0
         estimated_daily_demand = float(estimated_daily_demand) if estimated_daily_demand else 0
-        number_of_cards = int(number_of_cards) if number_of_cards else 2
     except ValueError:
         await flash("Invalid quantity values.", "danger")
         return redirect(url_for("kanbans.new"))
     
+    # Calculate number of cards: ceil((Demand × (Lead Time + Safety LT)) / Container Qty)
+    part = db.execute("SELECT reorder_lead_time_days FROM part WHERE id = ?", [part_id]).fetchone()
+    lead_time = part["reorder_lead_time_days"] if part else 7
+    total_lt = lead_time + safety_lead_time_days
+    if kanban_quantity > 0 and estimated_daily_demand > 0:
+        number_of_cards = max(1, math.ceil((estimated_daily_demand * total_lt) / kanban_quantity))
+    else:
+        number_of_cards = 1
+    
     cursor = db.execute(
         """INSERT INTO kanban (part_id, bin_id, kanban_quantity,
-           safety_stock, estimated_daily_demand, number_of_cards, is_active)
+           safety_lead_time_days, estimated_daily_demand, number_of_cards, is_active)
            VALUES (?, ?, ?, ?, ?, ?, ?)""",
         [part_id, bin_id, kanban_quantity,
-         safety_stock, estimated_daily_demand, number_of_cards, 1 if is_active else 0]
+         safety_lead_time_days, estimated_daily_demand, number_of_cards, 1 if is_active else 0]
     )
     db.commit()
     
@@ -107,7 +116,7 @@ async def detail(id):
                   p.reorder_lead_time_days,
                   b.location as bin_location,
                   u.name as uom_name, u.abbreviation as uom_abbr,
-                  CAST((k.estimated_daily_demand * p.reorder_lead_time_days) + k.safety_stock AS INTEGER) as reorder_point
+                  CAST(k.estimated_daily_demand * (p.reorder_lead_time_days + k.safety_lead_time_days) AS INTEGER) as reorder_point
            FROM kanban k
            JOIN part p ON k.part_id = p.id
            JOIN bin b ON k.bin_id = b.id
@@ -163,31 +172,38 @@ async def update(id):
     part_id = form.get("part_id")
     bin_id = form.get("bin_id")
     kanban_quantity = form.get("kanban_quantity", "100")
-    safety_stock = form.get("safety_stock", "0")
+    safety_lead_time_days = form.get("safety_lead_time_days", "0")
     estimated_daily_demand = form.get("estimated_daily_demand", "0")
-    number_of_cards = form.get("number_of_cards", "2")
     is_active = form.get("is_active") == "on"
     
     if not part_id or not bin_id:
-        await flash("Part and Bin are required.", "danger")
+        await flash("Part and Location are required.", "danger")
         return redirect(url_for("kanbans.edit", id=id))
     
     try:
         kanban_quantity = int(kanban_quantity) if kanban_quantity else 100
-        safety_stock = int(safety_stock) if safety_stock else 0
+        safety_lead_time_days = float(safety_lead_time_days) if safety_lead_time_days else 0
         estimated_daily_demand = float(estimated_daily_demand) if estimated_daily_demand else 0
-        number_of_cards = int(number_of_cards) if number_of_cards else 2
     except ValueError:
         await flash("Invalid quantity values.", "danger")
         return redirect(url_for("kanbans.edit", id=id))
     
+    # Calculate number of cards: ceil((Demand × (Lead Time + Safety LT)) / Container Qty)
+    part = db.execute("SELECT reorder_lead_time_days FROM part WHERE id = ?", [part_id]).fetchone()
+    lead_time = part["reorder_lead_time_days"] if part else 7
+    total_lt = lead_time + safety_lead_time_days
+    if kanban_quantity > 0 and estimated_daily_demand > 0:
+        number_of_cards = max(1, math.ceil((estimated_daily_demand * total_lt) / kanban_quantity))
+    else:
+        number_of_cards = 1
+    
     db.execute(
         """UPDATE kanban SET part_id = ?, bin_id = ?, kanban_quantity = ?, 
-           safety_stock = ?, estimated_daily_demand = ?,
+           safety_lead_time_days = ?, estimated_daily_demand = ?,
            number_of_cards = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
            WHERE id = ?""",
         [part_id, bin_id, kanban_quantity,
-         safety_stock, estimated_daily_demand, number_of_cards, 1 if is_active else 0, id]
+         safety_lead_time_days, estimated_daily_demand, number_of_cards, 1 if is_active else 0, id]
     )
     db.commit()
     
@@ -224,7 +240,7 @@ async def print_card(id):
         """SELECT k.*, p.part_number as part_name, p.manufacturer, p.description as part_description,
                   p.reorder_lead_time_days,
                   b.location as bin_location, u.abbreviation as uom_abbr,
-                  CAST((k.estimated_daily_demand * p.reorder_lead_time_days) + k.safety_stock AS INTEGER) as reorder_point
+                  CAST(k.estimated_daily_demand * (p.reorder_lead_time_days + k.safety_lead_time_days) AS INTEGER) as reorder_point
            FROM kanban k
            JOIN part p ON k.part_id = p.id
            JOIN bin b ON k.bin_id = b.id

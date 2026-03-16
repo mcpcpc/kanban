@@ -58,7 +58,7 @@ CREATE TABLE kanban (
     part_id INTEGER NOT NULL REFERENCES part(id),
     bin_id INTEGER NOT NULL REFERENCES bin(id),
     kanban_quantity INTEGER NOT NULL DEFAULT 100,
-    safety_stock INTEGER NOT NULL DEFAULT 0,
+    safety_lead_time_days REAL NOT NULL DEFAULT 0,
     estimated_daily_demand REAL NOT NULL DEFAULT 0,
     number_of_cards INTEGER NOT NULL DEFAULT 2,
     is_active INTEGER NOT NULL DEFAULT 1,

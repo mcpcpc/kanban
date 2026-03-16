@@ -22,10 +22,10 @@
         <div class="card-body">
             <ol style="margin: 0; padding-left: 1.25rem; line-height: 1.8;">
                 <li><strong>Add Parts</strong> — Create entries for components you stock</li>
-                <li><strong>Add Bins</strong> — Define physical storage locations</li>
-                <li><strong>Create Kanbans</strong> — Link parts to bins with reorder rules</li>
-                <li><strong>Print Cards</strong> — Generate cards to place in bins</li>
-                <li><strong>Start Scanning</strong> — Use Quick Scan when bins need restocking</li>
+                <li><strong>Add Locations</strong> — Define physical storage locations</li>
+                <li><strong>Create Kanbans</strong> — Link parts to locations with reorder rules</li>
+                <li><strong>Print Cards</strong> — Generate cards to place at locations</li>
+                <li><strong>Start Scanning</strong> — Use Quick Scan when locations need restocking</li>
             </ol>
         </div>
     </div>
@@ -38,20 +38,20 @@
                 <dt style="font-weight: 600;">Part</dt>
                 <dd style="margin: 0 0 1rem 0; color: var(--color-text-muted);">An item being tracked in inventory, identified by part number and manufacturer.</dd>
                 
-                <dt style="font-weight: 600;">Bin</dt>
-                <dd style="margin: 0 0 1rem 0; color: var(--color-text-muted);">A physical location that holds inventory. A bin can contain multiple kanbans for different parts.</dd>
+                <dt style="font-weight: 600;">Location</dt>
+                <dd style="margin: 0 0 1rem 0; color: var(--color-text-muted);">A physical location that holds inventory. A location can contain multiple kanbans for different parts.</dd>
                 
                 <dt style="font-weight: 600;">Kanban</dt>
-                <dd style="margin: 0 0 1rem 0; color: var(--color-text-muted);">A visual signal linking a part to a bin with replenishment rules (reorder point, quantity, max).</dd>
+                <dd style="margin: 0 0 1rem 0; color: var(--color-text-muted);">A visual signal linking a part to a location with replenishment rules (reorder point, quantity, max).</dd>
                 
                 <dt style="font-weight: 600;">Signal</dt>
                 <dd style="margin: 0 0 1rem 0; color: var(--color-text-muted);">Triggered when a kanban quantity is depleted — indicates replenishment is needed.</dd>
                 
                 <dt style="font-weight: 600;">Reorder Point</dt>
-                <dd style="margin: 0 0 1rem 0; color: var(--color-text-muted);">The stock level at which a signal should be triggered. Best practice: (Daily Demand × Lead Time) + Safety Stock.</dd>
+                <dd style="margin: 0 0 1rem 0; color: var(--color-text-muted);">The stock level at which a signal should be triggered. Calculated as: Daily Demand × (Lead Time + Safety Lead Time).</dd>
                 
-                <dt style="font-weight: 600;">Safety Stock</dt>
-                <dd style="margin: 0 0 1rem 0; color: var(--color-text-muted);">Buffer inventory to protect against demand variability and supply delays.</dd>
+                <dt style="font-weight: 600;">Safety Lead Time</dt>
+                <dd style="margin: 0 0 1rem 0; color: var(--color-text-muted);">Buffer time to protect against demand variability and supply delays.</dd>
                 
                 <dt style="font-weight: 600;">Lead Time</dt>
                 <dd style="margin: 0; color: var(--color-text-muted);">Days required to receive new stock after ordering.</dd>
@@ -77,7 +77,7 @@
                     <li>Warehouse sees active signals on Dashboard</li>
                     <li>Starts replenishment → <span class="badge badge-info">Restocking</span></li>
                     <li>Receives material → <span class="badge badge-success">Restocked</span></li>
-                    <li>Returns card to bin with restocked material</li>
+                    <li>Returns card to location with restocked material</li>
                 </ol>
             </div>
 
@@ -104,7 +104,7 @@
                 <ol style="margin: 0; padding-left: 1.25rem; font-size: 0.875rem; line-height: 1.7; color: var(--color-text-muted);">
                     <li>Go to Inventory → select a part</li>
                     <li>Click "Adjust" button</li>
-                    <li>Count physical stock in bin</li>
+                    <li>Count physical stock at location</li>
                     <li>Enter new quantity with reason</li>
                     <li>System logs adjustment for audit</li>
                 </ol>
@@ -182,7 +182,7 @@
                 </tr>
                 <tr>
                     <td><strong>Manager</strong></td>
-                    <td>Setup parts/bins/kanbans, review reports, configure system</td>
+                    <td>Setup parts/locations/kanbans, review reports, configure system</td>
                     <td>All pages</td>
                 </tr>
             </tbody>
@@ -294,7 +294,7 @@
 
             <dt style="font-weight: 600; margin-bottom: 0.5rem;">Can I have multiple kanbans for the same part?</dt>
             <dd style="margin: 0 0 1.5rem 0; color: var(--color-text-muted);">
-                Yes. You might have the same part stocked in multiple bins across different areas. Each kanban has its own reorder point and quantity. The inventory view aggregates all active kanbans when calculating totals for a part.
+                Yes. You might have the same part stocked in multiple locations across different areas. Each kanban has its own reorder point and quantity. The inventory view aggregates all active kanbans when calculating totals for a part.
             </dd>
 
             <dt style="font-weight: 600; margin-bottom: 0.5rem;">How should I set my reorder point?</dt>

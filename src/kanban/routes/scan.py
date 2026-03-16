@@ -68,23 +68,22 @@ async def process():
         await flash(f"Kanban is inactive: {kanban['part_name']} @ {kanban['bin_location']}", "warning")
         return get_redirect()
     
+    # Count open signals: signals minus completed restocks
+    open_signal_count = db.execute("""
+        SELECT
+            (SELECT COUNT(*) FROM kanban_event ke
+             JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
+             WHERE ke.kanban_id = ? AND ket.type = 'signal')
+            -
+            (SELECT COUNT(*) FROM kanban_event ke
+             JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
+             WHERE ke.kanban_id = ? AND ket.type = 'restock_complete')
+        AS cnt
+    """, [kanban_id, kanban_id]).fetchone()["cnt"]
+
     # Validate signal action: limit active signals to number_of_cards
     if action == "signal":
-        active_signal_count = db.execute("""
-            SELECT COUNT(*) as cnt FROM kanban_event ke
-            JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
-            WHERE ke.kanban_id = ?
-            AND ket.type = 'signal'
-            AND NOT EXISTS (
-                SELECT 1 FROM kanban_event ke2
-                JOIN kanban_event_type ket2 ON ke2.kanban_event_type = ket2.id
-                WHERE ke2.kanban_id = ke.kanban_id
-                AND ket2.type = 'restock_complete'
-                AND ke2.created_at > ke.created_at
-            )
-        """, [kanban_id]).fetchone()["cnt"]
-        
-        if active_signal_count >= kanban["number_of_cards"]:
+        if open_signal_count >= kanban["number_of_cards"]:
             await flash(
                 f"All {kanban['number_of_cards']} cards already signaled for "
                 f"{kanban['part_name']} @ {kanban['bin_location']} — waiting for restock",
@@ -94,22 +93,7 @@ async def process():
     
     # Validate restock actions require an open signal
     if action in ("restock_start", "restock_complete"):
-        has_open_signal = db.execute("""
-            SELECT 1 FROM kanban_event ke
-            JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
-            WHERE ke.kanban_id = ?
-            AND ket.type = 'signal'
-            AND NOT EXISTS (
-                SELECT 1 FROM kanban_event ke2
-                JOIN kanban_event_type ket2 ON ke2.kanban_event_type = ket2.id
-                WHERE ke2.kanban_id = ke.kanban_id
-                AND ket2.type IN ('restock_complete', 'restock_start')
-                AND ke2.created_at > ke.created_at
-            )
-            LIMIT 1
-        """, [kanban_id]).fetchone()
-        
-        if not has_open_signal:
+        if open_signal_count <= 0:
             action_label = "start restocking" if action == "restock_start" else "complete restocking"
             await flash(f"Cannot {action_label}: no open signal for {kanban['part_name']} @ {kanban['bin_location']}", "danger")
             return get_redirect()

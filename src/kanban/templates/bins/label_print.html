@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bin Label - {{ bin.location }}</title>
+    <title>Location Label - {{ bin.location }}</title>
     <style>
         @page {
             size: 3.5in 1in;
@@ -161,7 +161,7 @@
             Print Labels
         </button>
         <a href="{{ url_for('bins.detail', id=bin.id) }}" class="btn btn-secondary">
-            Back to Bin
+            Back to Location
         </a>
     </div>
 

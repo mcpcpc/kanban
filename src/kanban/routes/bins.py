@@ -84,7 +84,7 @@ async def create():
     color = form.get("color", "").strip() or None
     
     if not location:
-        await flash("Bin location is required.", "danger")
+        await flash("Location is required.", "danger")
         return redirect(url_for("bins.new"))
     
     try:
@@ -93,9 +93,9 @@ async def create():
             [location, description or None, color]
         )
         db.commit()
-        await flash(f"Bin '{location}' created successfully.", "success")
+        await flash(f"Location '{location}' created successfully.", "success")
     except Exception as e:
-        await flash(f"Error creating bin: {str(e)}", "danger")
+        await flash(f"Error creating location: {str(e)}", "danger")
         return redirect(url_for("bins.new"))
     
     return redirect(url_for("bins.list"))
@@ -108,7 +108,7 @@ async def detail(id):
     bin = db.execute("SELECT * FROM bin WHERE id = ?", [id]).fetchone()
     
     if not bin:
-        await flash("Bin not found.", "danger")
+        await flash("Location not found.", "danger")
         return redirect(url_for("bins.list"))
     
     # Get kanbans in this bin
@@ -131,7 +131,7 @@ async def edit(id):
     bin = db.execute("SELECT * FROM bin WHERE id = ?", [id]).fetchone()
     
     if not bin:
-        await flash("Bin not found.", "danger")
+        await flash("Location not found.", "danger")
         return redirect(url_for("bins.list"))
     
     return await render_template("bins/form.html", bin=bin, bin_colors=BIN_COLORS)
@@ -148,7 +148,7 @@ async def update(id):
     color = form.get("color", "").strip() or None
     
     if not location:
-        await flash("Bin location is required.", "danger")
+        await flash("Location is required.", "danger")
         return redirect(url_for("bins.edit", id=id))
     
     db.execute(
@@ -157,7 +157,7 @@ async def update(id):
         [location, description or None, color, id]
     )
     db.commit()
-    await flash(f"Bin '{location}' updated successfully.", "success")
+    await flash(f"Location '{location}' updated successfully.", "success")
     
     return redirect(url_for("bins.detail", id=id))
 
@@ -173,14 +173,14 @@ async def delete(id):
     ).fetchone()[0]
     
     if kanban_count > 0:
-        await flash(f"Cannot delete bin: it is used in {kanban_count} kanban(s).", "danger")
+        await flash(f"Cannot delete location: it is used in {kanban_count} kanban(s).", "danger")
         return redirect(url_for("bins.detail", id=id))
     
     bin = db.execute("SELECT location FROM bin WHERE id = ?", [id]).fetchone()
     if bin:
         db.execute("DELETE FROM bin WHERE id = ?", [id])
         db.commit()
-        await flash(f"Bin '{bin['location']}' deleted.", "success")
+        await flash(f"Location '{bin['location']}' deleted.", "success")
     
     return redirect(url_for("bins.list"))
 
@@ -192,7 +192,7 @@ async def print_label(id):
     bin = db.execute("SELECT * FROM bin WHERE id = ?", [id]).fetchone()
 
     if not bin:
-        await flash("Bin not found.", "danger")
+        await flash("Location not found.", "danger")
         return redirect(url_for("bins.list"))
 
     return await render_template("bins/label_print.html", bin=bin)

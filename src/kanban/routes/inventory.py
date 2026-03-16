@@ -68,7 +68,7 @@ async def index():
             SELECT 
                 part_id,
                 SUM(kanban_quantity) as total_kanban_quantity,
-                SUM(CAST((estimated_daily_demand * (SELECT reorder_lead_time_days FROM part WHERE id = kanban.part_id)) + safety_stock AS INTEGER)) as total_reorder_point,
+                SUM(CAST(estimated_daily_demand * ((SELECT reorder_lead_time_days FROM part WHERE id = kanban.part_id) + safety_lead_time_days) AS INTEGER)) as total_reorder_point,
                 COUNT(*) as kanban_count
             FROM kanban
             WHERE is_active = 1
@@ -239,7 +239,7 @@ async def export():
             SELECT 
                 part_id,
                 SUM(kanban_quantity) as total_kanban_quantity,
-                SUM(CAST((estimated_daily_demand * (SELECT reorder_lead_time_days FROM part WHERE id = kanban.part_id)) + safety_stock AS INTEGER)) as total_reorder_point
+                SUM(CAST(estimated_daily_demand * ((SELECT reorder_lead_time_days FROM part WHERE id = kanban.part_id) + safety_lead_time_days) AS INTEGER)) as total_reorder_point
             FROM kanban
             WHERE is_active = 1
             GROUP BY part_id

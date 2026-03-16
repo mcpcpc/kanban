@@ -14,7 +14,7 @@ async def list_kanbans():
         SELECT k.*, p.part_number as part_name, p.manufacturer, 
                p.reorder_lead_time_days,
                b.location as bin_location,
-               CAST((k.estimated_daily_demand * p.reorder_lead_time_days) + k.safety_stock AS INTEGER) as reorder_point
+               CAST(k.estimated_daily_demand * (p.reorder_lead_time_days + k.safety_lead_time_days) AS INTEGER) as reorder_point
         FROM kanban k
         JOIN part p ON k.part_id = p.id
         JOIN bin b ON k.bin_id = b.id
@@ -31,7 +31,7 @@ async def list_kanbans():
             "bin_location": k["bin_location"],
             "kanban_quantity": k["kanban_quantity"],
             "reorder_point": k["reorder_point"],
-            "safety_stock": k["safety_stock"],
+            "safety_lead_time_days": k["safety_lead_time_days"],
             "estimated_daily_demand": k["estimated_daily_demand"],
             "number_of_cards": k["number_of_cards"],
             "is_active": bool(k["is_active"])
@@ -49,7 +49,7 @@ async def get_kanban(id):
         SELECT k.*, p.part_number as part_name, p.manufacturer, 
                p.reorder_lead_time_days,
                b.location as bin_location,
-               CAST((k.estimated_daily_demand * p.reorder_lead_time_days) + k.safety_stock AS INTEGER) as reorder_point
+               CAST(k.estimated_daily_demand * (p.reorder_lead_time_days + k.safety_lead_time_days) AS INTEGER) as reorder_point
         FROM kanban k
         JOIN part p ON k.part_id = p.id
         JOIN bin b ON k.bin_id = b.id
@@ -75,7 +75,7 @@ async def get_kanban(id):
         "bin_location": kanban["bin_location"],
         "kanban_quantity": kanban["kanban_quantity"],
         "reorder_point": kanban["reorder_point"],
-        "safety_stock": kanban["safety_stock"],
+        "safety_lead_time_days": kanban["safety_lead_time_days"],
         "estimated_daily_demand": kanban["estimated_daily_demand"],
         "number_of_cards": kanban["number_of_cards"],
         "is_active": bool(kanban["is_active"]),
@@ -166,18 +166,21 @@ async def health():
     total_bins = db.execute("SELECT COUNT(*) FROM bin").fetchone()[0]
     total_events = db.execute("SELECT COUNT(*) FROM kanban_event").fetchone()[0]
     
-    # Count pending signals (signals without subsequent restock_complete)
+    # Count kanbans with pending signals (more signals than restock_completes)
     pending_signals = db.execute("""
-        SELECT COUNT(DISTINCT ke.kanban_id)
-        FROM kanban_event ke
-        JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
-        WHERE ket.type = 'signal'
-        AND NOT EXISTS (
-            SELECT 1 FROM kanban_event ke2
-            JOIN kanban_event_type ket2 ON ke2.kanban_event_type = ket2.id
-            WHERE ke2.kanban_id = ke.kanban_id
-            AND ket2.type = 'restock_complete'
-            AND ke2.created_at > ke.created_at
+        SELECT COUNT(*) FROM (
+            SELECT k.id
+            FROM kanban k
+            WHERE k.is_active = 1
+            AND (
+                SELECT COUNT(*) FROM kanban_event ke
+                JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
+                WHERE ke.kanban_id = k.id AND ket.type = 'signal'
+            ) > (
+                SELECT COUNT(*) FROM kanban_event ke
+                JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
+                WHERE ke.kanban_id = k.id AND ket.type = 'restock_complete'
+            )
         )
     """).fetchone()[0]
     
@@ -247,16 +250,16 @@ async def suggest_reorder_point(id):
     
     estimated_daily_demand = kanban["estimated_daily_demand"]
     lead_time = kanban["reorder_lead_time_days"]
-    safety_stock = kanban["safety_stock"]
+    safety_lead_time = kanban["safety_lead_time_days"]
     
-    # Formula: (D × LT) + SS
-    reorder_point = int((estimated_daily_demand * lead_time) + safety_stock)
+    # Formula: D × (LT + Safety LT)
+    reorder_point = int(estimated_daily_demand * (lead_time + safety_lead_time))
     
     return jsonify({
         "kanban_id": id,
         "estimated_daily_demand": estimated_daily_demand,
         "lead_time_days": lead_time,
-        "safety_stock": safety_stock,
+        "safety_lead_time_days": safety_lead_time,
         "reorder_point": reorder_point,
-        "formula": "(estimated_daily_demand × lead_time) + safety_stock"
+        "formula": "estimated_daily_demand × (lead_time + safety_lead_time)"
     })

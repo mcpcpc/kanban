@@ -87,7 +87,7 @@
 
     <div class="stat-card">
         <div class="stat-card-header">
-            <span class="stat-card-title">Bins</span>
+            <span class="stat-card-title">Locations</span>
             <div class="stat-card-icon" style="background-color: var(--color-warning-bg); color: var(--color-warning);">
                 <svg><use href="#icon-bins"></use></svg>
             </div>
@@ -156,7 +156,7 @@
                     <thead>
                         <tr>
                             <th>Kanban</th>
-                            <th>Bin</th>
+                            <th>Location</th>
                             <th>Waiting</th>
                             <th></th>
                         </tr>
@@ -166,6 +166,7 @@
                         <tr>
                             <td>
                                 <span class="font-mono">K{{ '%06d' % signal.kanban_id }}</span>
+                                {% if signal.pending_count > 1 %}<span class="badge badge-danger" style="margin-left: 0.25rem;">{{ signal.pending_count }} cards</span>{% endif %}
                                 <div class="text-muted text-truncate" style="font-size: 0.75rem;" title="{{ signal.part_name }}">{{ signal.part_name }}</div>
                             </td>
                             <td class="cell-truncate" title="{{ signal.bin_location }}">{{ signal.bin_location }}</td>
@@ -237,7 +238,7 @@
                         <th>Time</th>
                         <th>Event</th>
                         <th>Part</th>
-                        <th>Bin</th>
+                        <th>Location</th>
                         <th>Qty</th>
                     </tr>
                 </thead>

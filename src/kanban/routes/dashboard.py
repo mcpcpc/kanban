@@ -37,30 +37,41 @@ async def index():
         LIMIT 10
     """).fetchall()
 
-    # Get pending signals (kanbans signaled but not yet restocked)
+    # Get pending signals (kanbans with more signals than restock_completes)
     pending_signals = db.execute("""
-        SELECT 
-            k.id as kanban_id,
-            p.part_number as part_name,
-            p.manufacturer,
-            b.location as bin_location,
-            ke.created_at as signal_time
-        FROM kanban_event ke
-        JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
-        JOIN kanban k ON ke.kanban_id = k.id
-        JOIN part p ON k.part_id = p.id
-        JOIN bin b ON k.bin_id = b.id
-        WHERE ket.type = 'signal'
-        AND k.is_active = 1
-        AND NOT EXISTS (
-            SELECT 1 FROM kanban_event ke2
-            JOIN kanban_event_type ket2 ON ke2.kanban_event_type = ket2.id
-            WHERE ke2.kanban_id = ke.kanban_id
-            AND ket2.type IN ('restock_complete', 'restock_start')
-            AND ke2.created_at > ke.created_at
-        )
-        ORDER BY ke.created_at ASC
+        SELECT * FROM (
+            SELECT 
+                k.id as kanban_id,
+                p.part_number as part_name,
+                p.manufacturer,
+                b.location as bin_location,
+                (
+                    SELECT COUNT(*) FROM kanban_event ke
+                    JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
+                    WHERE ke.kanban_id = k.id AND ket.type = 'signal'
+                ) - (
+                    SELECT COUNT(*) FROM kanban_event ke
+                    JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
+                    WHERE ke.kanban_id = k.id AND ket.type = 'restock_complete'
+                ) AS pending_count,
+                (
+                    SELECT MAX(ke.created_at) FROM kanban_event ke
+                    JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
+                    WHERE ke.kanban_id = k.id AND ket.type = 'signal'
+                ) AS signal_time
+            FROM kanban k
+            JOIN part p ON k.part_id = p.id
+            JOIN bin b ON k.bin_id = b.id
+            WHERE k.is_active = 1
+        ) WHERE pending_count > 0
+        ORDER BY signal_time ASC
     """).fetchall()
+
+    # Convert signal_time strings to datetime (aggregates bypass PARSE_DECLTYPES)
+    pending_signals = [
+        {**dict(row), "signal_time": datetime.fromisoformat(row["signal_time"])}
+        for row in pending_signals
+    ]
 
     active_signals = len(pending_signals)
 

@@ -26,7 +26,7 @@
                     <select id="part_id" name="part_id" class="form-control" required>
                         <option value="">Select a part...</option>
                         {% for part in parts %}
-                        <option value="{{ part.id }}" {% if (kanban and kanban.part_id == part.id) or (selected_part_id and selected_part_id == part.id) %}selected{% endif %}>
+                        <option value="{{ part.id }}" data-lead-time="{{ part.reorder_lead_time_days }}" {% if (kanban and kanban.part_id == part.id) or (selected_part_id and selected_part_id == part.id) %}selected{% endif %}>
                             {{ part.part_number }} ({{ part.manufacturer }})
                         </option>
                         {% endfor %}
@@ -34,9 +34,9 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="bin_id">Bin *</label>
+                    <label class="form-label" for="bin_id">Location *</label>
                     <select id="bin_id" name="bin_id" class="form-control" required>
-                        <option value="">Select a bin...</option>
+                        <option value="">Select a location...</option>
                         {% for bin in bins %}
                         <option value="{{ bin.id }}" {% if (kanban and kanban.bin_id == bin.id) or (selected_bin_id and selected_bin_id == bin.id) %}selected{% endif %}>
                             {{ bin.location }}{% if bin.description %} - {{ bin.description }}{% endif %}
@@ -48,33 +48,15 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label" for="number_of_cards">Number of Cards *</label>
-                    <input type="number" id="number_of_cards" name="number_of_cards" 
-                           class="form-control" required min="1" max="10"
-                           value="{{ kanban.number_of_cards if kanban else '2' }}">
-                    <div class="form-text">Cards in circulation (1-10)</div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="kanban_quantity">Quantity per Card *</label>
+                    <label class="form-label" for="kanban_quantity">Container Quantity *</label>
                     <input type="number" id="kanban_quantity" name="kanban_quantity" 
                            class="form-control" required min="1"
                            value="{{ kanban.kanban_quantity if kanban else '100' }}">
-                    <div class="form-text">Units replenished per card</div>
+                    <div class="form-text">Units per container</div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Total Quantity</label>
-                    <div id="total_quantity" class="form-control" style="background-color: var(--color-bg-tertiary); font-weight: 600;">
-                        {{ (kanban.kanban_quantity * kanban.number_of_cards) if kanban else '200' }}
-                    </div>
-                    <div class="form-text">Cards × Quantity (auto-calculated)</div>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label" for="estimated_daily_demand">Estimated Daily Demand *</label>
+                    <label class="form-label" for="estimated_daily_demand">Daily Demand *</label>
                     <input type="number" id="estimated_daily_demand" name="estimated_daily_demand" 
                            class="form-control" required min="0" step="0.1"
                            value="{{ kanban.estimated_daily_demand if kanban else '0' }}">
@@ -82,19 +64,37 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="safety_stock">Safety Stock *</label>
-                    <input type="number" id="safety_stock" name="safety_stock" 
-                           class="form-control" required min="0"
-                           value="{{ kanban.safety_stock if kanban else '0' }}">
-                    <div class="form-text">Buffer against demand variability</div>
+                    <label class="form-label" for="safety_lead_time_days">Safety Lead Time (days) *</label>
+                    <input type="number" id="safety_lead_time_days" name="safety_lead_time_days" 
+                           class="form-control" required min="0" step="0.5"
+                           value="{{ kanban.safety_lead_time_days if kanban else '0' }}">
+                    <div class="form-text">Buffer time for variability</div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Lead Time (days)</label>
+                    <div id="lead-time-display" class="form-control" style="background-color: var(--color-bg-tertiary); font-weight: 600;">
+                        {% if kanban %}{{ kanban.lead_time_days }}{% else %}-{% endif %}
+                    </div>
+                    <div class="form-text">From part settings</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Number of Cards</label>
+                    <div id="number-of-cards-display" class="form-control" style="background-color: var(--color-bg-tertiary); font-weight: 600;">
+                        {{ kanban.number_of_cards if kanban else '-' }}
+                    </div>
+                    <div class="form-text">(Demand × (LT + Safety LT)) / Container Qty</div>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Reorder Point</label>
                     <div id="reorder-point-display" class="form-control" style="background-color: var(--color-bg-tertiary); font-weight: 600;">
-                        {% if kanban %}{{ ((kanban.estimated_daily_demand * kanban.lead_time_days) + kanban.safety_stock)|round|int }}{% else %}0{% endif %}
+                        {% if kanban %}{{ ((kanban.estimated_daily_demand * (kanban.lead_time_days + kanban.safety_lead_time_days))|round|int) }}{% else %}-{% endif %}
                     </div>
-                    <div class="form-text">(Demand × Lead Time) + Safety Stock (auto-calculated)</div>
+                    <div class="form-text">Demand × (LT + Safety LT)</div>
                 </div>
             </div>
 
@@ -121,34 +121,51 @@
 </div>
 
 <script>
+    const partSelect = document.getElementById('part_id');
     const qtyInput = document.getElementById('kanban_quantity');
-    const cardsInput = document.getElementById('number_of_cards');
-    const totalDisplay = document.getElementById('total_quantity');
-    
-    function updateTotal() {
-        const qty = parseInt(qtyInput.value) || 0;
-        const cards = parseInt(cardsInput.value) || 0;
-        totalDisplay.textContent = qty * cards;
-    }
-    
-    qtyInput.addEventListener('input', updateTotal);
-    cardsInput.addEventListener('input', updateTotal);
-
-    // Calculate and display reorder point
     const demandInput = document.getElementById('estimated_daily_demand');
-    const safetyInput = document.getElementById('safety_stock');
+    const safetyLTInput = document.getElementById('safety_lead_time_days');
+    const leadTimeDisplay = document.getElementById('lead-time-display');
+    const cardsDisplay = document.getElementById('number-of-cards-display');
     const reorderDisplay = document.getElementById('reorder-point-display');
-    const leadTimeDays = {{ (kanban.lead_time_days if kanban and kanban.lead_time_days else 7) | default(7) }};
-    
-    function updateReorderPoint() {
-        const demand = parseFloat(demandInput.value) || 0;
-        const safety = parseInt(safetyInput.value) || 0;
-        const reorderPoint = Math.round((demand * leadTimeDays) + safety);
-        reorderDisplay.textContent = reorderPoint;
+
+    function getLeadTime() {
+        const selected = partSelect.options[partSelect.selectedIndex];
+        if (selected && selected.dataset.leadTime) {
+            return parseFloat(selected.dataset.leadTime);
+        }
+        return 0;
     }
-    
-    demandInput.addEventListener('input', updateReorderPoint);
-    safetyInput.addEventListener('input', updateReorderPoint);
-    updateReorderPoint();
+
+    function updateCalculations() {
+        const leadTime = getLeadTime();
+        const qty = parseInt(qtyInput.value) || 0;
+        const demand = parseFloat(demandInput.value) || 0;
+        const safetyLT = parseFloat(safetyLTInput.value) || 0;
+
+        if (!partSelect.value) {
+            leadTimeDisplay.textContent = '-';
+            cardsDisplay.textContent = '-';
+            reorderDisplay.textContent = '-';
+            return;
+        }
+
+        leadTimeDisplay.textContent = leadTime;
+
+        const totalLT = leadTime + safetyLT;
+        reorderDisplay.textContent = Math.round(demand * totalLT);
+
+        if (qty > 0 && demand > 0) {
+            cardsDisplay.textContent = Math.max(1, Math.ceil((demand * totalLT) / qty));
+        } else {
+            cardsDisplay.textContent = 1;
+        }
+    }
+
+    partSelect.addEventListener('change', updateCalculations);
+    qtyInput.addEventListener('input', updateCalculations);
+    demandInput.addEventListener('input', updateCalculations);
+    safetyLTInput.addEventListener('input', updateCalculations);
+    updateCalculations();
 </script>
 {% endblock %}

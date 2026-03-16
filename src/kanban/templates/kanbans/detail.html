@@ -55,23 +55,26 @@
                     <div class="text-muted" style="font-size: 0.8125rem;">{{ kanban.manufacturer }}</div>
                 </dd>
 
-                <dt class="text-muted">Bin Location</dt>
+                <dt class="text-muted">Location</dt>
                 <dd><a href="{{ url_for('bins.detail', id=kanban.bin_id) }}">{{ kanban.bin_location }}</a></dd>
+
+                <dt class="text-muted">Container Quantity</dt>
+                <dd>{{ kanban.kanban_quantity }} {{ kanban.uom_abbr }}</dd>
 
                 <dt class="text-muted">Number of Cards</dt>
                 <dd>{{ kanban.number_of_cards }}</dd>
 
-                <dt class="text-muted">Quantity per Card</dt>
-                <dd>{{ kanban.kanban_quantity }} {{ kanban.uom_abbr }}</dd>
+                <dt class="text-muted">Est. Daily Demand</dt>
+                <dd>{{ kanban.estimated_daily_demand }} {{ kanban.uom_abbr }}/day</dd>
+
+                <dt class="text-muted">Lead Time</dt>
+                <dd>{{ kanban.reorder_lead_time_days }} days</dd>
+
+                <dt class="text-muted">Safety Lead Time</dt>
+                <dd>{{ kanban.safety_lead_time_days }} days</dd>
 
                 <dt class="text-muted">Reorder Point</dt>
                 <dd>{{ kanban.reorder_point }} {{ kanban.uom_abbr }}</dd>
-
-                <dt class="text-muted">Safety Stock</dt>
-                <dd>{{ kanban.safety_stock }} {{ kanban.uom_abbr }}</dd>
-
-                <dt class="text-muted">Est. Daily Demand</dt>
-                <dd>{{ kanban.estimated_daily_demand }} {{ kanban.uom_abbr }}/day</dd>
 
                 <dt class="text-muted">Status</dt>
                 <dd>
