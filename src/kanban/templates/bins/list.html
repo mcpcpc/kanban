@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Bins{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}">Home</a>
+    <span class="breadcrumb-separator">/</span>
+    <span class="breadcrumb-current">Bins</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Bins</h1>
+    <a href="{{ url_for('bins.new') }}" class="btn btn-primary">
+        <svg><use href="#icon-plus"></use></svg>
+        New Bin
+    </a>
+</div>
+
+<!-- Search and Filter -->
+<div class="card mb-2">
+    <div class="card-body">
+        <form method="get" action="{{ url_for('bins.list') }}">
+            <div class="form-row">
+                <div class="form-group" style="margin-bottom: 0; flex: 1;">
+                    <div style="position: relative;">
+                        <input type="text" name="search" class="form-control" 
+                               placeholder="Search bins..." value="{{ search }}"
+                               style="padding-left: 2.5rem;">
+                        <svg style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--color-text-muted);">
+                            <use href="#icon-search"></use>
+                        </svg>
+                    </div>
+                </div>
+                {% if colors_in_use %}
+                <div class="form-group" style="margin-bottom: 0;">
+                    <select name="color" class="form-control" style="min-width: 130px;">
+                        <option value="">All Colors</option>
+                        {% for color in colors_in_use %}
+                        <option value="{{ color }}" {% if color_filter == color %}selected{% endif %}>
+                            {{ color|capitalize }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                <div class="form-group" style="margin-bottom: 0;">
+                    <button type="submit" class="btn btn-secondary">
+                        <svg><use href="#icon-search"></use></svg>
+                        Search
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Bins List -->
+{% if bins %}
+<div class="grid grid-3">
+    {% for bin in bins %}
+    <div class="card">
+        <div class="card-body">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="min-width: 0; display: flex; align-items: center; gap: 0.5rem;">
+                    {% if bin.color %}
+                    {% for color_name, color_dark, color_light in bin_colors %}
+                    {% if color_name == bin.color %}
+                    <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: {{ color_dark }}; flex-shrink: 0;"></span>
+                    {% endif %}
+                    {% endfor %}
+                    {% endif %}
+                    <h3 class="text-truncate" style="margin: 0; font-size: 1.125rem;" title="{{ bin.location }}">
+                        {{ bin.location }}
+                    </h3>
+                </div>
+                <svg style="width: 24px; height: 24px; color: var(--color-text-muted); flex-shrink: 0;">
+                    <use href="#icon-bins"></use>
+                </svg>
+            </div>
+            {% if bin.description %}
+            <p class="text-muted text-truncate" style="margin: 0.25rem 0 0 0; font-size: 0.875rem;" title="{{ bin.description }}">{{ bin.description }}</p>
+            {% endif %}
+            <div style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                <span class="text-muted" style="font-size: 0.875rem;">
+                    {{ bin_kanban_counts.get(bin.id, 0) }} kanban{% if bin_kanban_counts.get(bin.id, 0) != 1 %}s{% endif %}
+                </span>
+                <a href="{{ url_for('bins.detail', id=bin.id) }}" class="btn btn-sm btn-secondary" title="View">
+                    <svg><use href="#icon-eye"></use></svg>
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body">
+        <div class="empty-state">
+            <svg><use href="#icon-bins"></use></svg>
+            <div class="empty-state-title">No Bins Found</div>
+            {% if search or color_filter %}
+            <p>Try adjusting your search criteria.</p>
+            <a href="{{ url_for('bins.list') }}" class="btn btn-secondary mt-2">Clear Filters</a>
+            {% else %}
+            <p>No bins have been created yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

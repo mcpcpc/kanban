@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}{% if part %}Edit Part{% else %}New Part{% endif %}{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}">Home</a>
+    <span class="breadcrumb-separator">/</span>
+    <a href="{{ url_for('parts.list') }}">Parts</a>
+    <span class="breadcrumb-separator">/</span>
+    <span class="breadcrumb-current">{% if part %}Edit{% else %}New{% endif %}</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">{% if part %}Edit Part{% else %}New Part{% endif %}</h1>
+</div>
+
+<div class="card" style="max-width: 600px;">
+    <div class="card-body">
+        <form method="post" action="{% if part %}{{ url_for('parts.update', id=part.id) }}{% else %}{{ url_for('parts.create') }}{% endif %}">
+            <div class="form-group">
+                <label class="form-label" for="part_number">Part Number *</label>
+                <input type="text" id="part_number" name="part_number" class="form-control" required
+                       value="{{ part.part_number if part else '' }}" 
+                       placeholder="e.g., 91290A115">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="manufacturer">Manufacturer *</label>
+                <input type="text" id="manufacturer" name="manufacturer" class="form-control" required
+                       value="{{ part.manufacturer if part else '' }}"
+                       placeholder="e.g., McMaster-Carr">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="description">Description</label>
+                <textarea id="description" name="description" class="form-control" 
+                          placeholder="Optional description...">{{ part.description if part and part.description else '' }}</textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="category">Category</label>
+                    <input type="text" id="category" name="category" class="form-control"
+                           value="{{ part.category if part and part.category else '' }}"
+                           placeholder="e.g., Fasteners">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="unit_of_measure_id">Unit of Measure *</label>
+                    <select id="unit_of_measure_id" name="unit_of_measure_id" class="form-control" required>
+                        {% for unit in units %}
+                        <option value="{{ unit.id }}" {% if part and part.unit_of_measure_id == unit.id %}selected{% endif %}>
+                            {{ unit.name }} ({{ unit.abbreviation }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="reorder_lead_time_days">Reorder Lead Time (days)</label>
+                <input type="number" id="reorder_lead_time_days" name="reorder_lead_time_days" 
+                       class="form-control" step="0.5" min="0"
+                       value="{{ part.reorder_lead_time_days if part else '7' }}">
+                <div class="form-text">Typical time to receive replenishment</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="datasheet">Datasheet URL</label>
+                <input type="url" id="datasheet" name="datasheet" class="form-control"
+                       value="{{ part.datasheet if part and part.datasheet else '' }}"
+                       placeholder="https://...">
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary">
+                    <svg><use href="#icon-check"></use></svg>
+                    {% if part %}Update Part{% else %}Create Part{% endif %}
+                </button>
+                <a href="{% if part %}{{ url_for('parts.detail', id=part.id) }}{% else %}{{ url_for('parts.list') }}{% endif %}" 
+                   class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

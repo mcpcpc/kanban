@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanban Card - K{{ '%06d' % kanban.id }}</title>
+    <style>
+        @page {
+            size: auto;
+            margin: 0.25in;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .card-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .kanban-card {
+            background: white;
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            page-break-inside: avoid;
+        }
+
+        /* Card size variants */
+        .kanban-card.size-4x2-5 {
+            width: 4in;
+            height: 2.5in;
+        }
+
+        .kanban-card.size-4x3 {
+            width: 4in;
+            height: 3in;
+        }
+
+        .kanban-card.size-5x3 {
+            width: 5in;
+            height: 3in;
+        }
+
+        .kanban-card.size-4x6 {
+            width: 4in;
+            height: 6in;
+        }
+
+        .kanban-card.size-3x5 {
+            width: 3in;
+            height: 5in;
+        }
+
+        /* Font scaling for different sizes */
+        .kanban-card.size-4x6 .part-name,
+        .kanban-card.size-3x5 .part-name {
+            font-size: 20px;
+        }
+
+        .kanban-card.size-4x6 .part-manufacturer,
+        .kanban-card.size-3x5 .part-manufacturer {
+            font-size: 14px;
+        }
+
+        .kanban-card.size-4x6 .quantity-value,
+        .kanban-card.size-3x5 .quantity-value {
+            font-size: 22px;
+        }
+
+        .kanban-card.size-4x6 .quantities,
+        .kanban-card.size-3x5 .quantities {
+            font-size: 13px;
+            gap: 8px;
+            min-width: 90px;
+        }
+
+        .kanban-card.size-4x6 .quantity-label,
+        .kanban-card.size-3x5 .quantity-label {
+            font-size: 11px;
+        }
+
+        .kanban-card.size-4x6 .card-bin,
+        .kanban-card.size-3x5 .card-bin {
+            font-size: 22px;
+        }
+
+        /* Compact styling for smallest card */
+        .kanban-card.size-4x2-5 {
+            padding: 8px 10px;
+        }
+
+        .kanban-card.size-4x2-5 .card-header {
+            padding-bottom: 5px;
+            margin-bottom: 5px;
+        }
+
+        .kanban-card.size-4x2-5 .card-footer {
+            padding-top: 5px;
+            margin-top: 5px;
+        }
+
+        .kanban-card.size-4x2-5 .card-body {
+            gap: 8px;
+        }
+
+        .kanban-card.size-4x2-5 .quantities {
+            flex-direction: row;
+            gap: 12px;
+            padding-left: 0;
+            border-left: none;
+            border-top: 1px solid #ddd;
+            padding-top: 6px;
+            min-width: unset;
+        }
+
+        .kanban-card.size-4x2-5 .card-body {
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .kanban-card.size-4x2-5 .quantity-item {
+            align-items: center;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+        }
+
+        .card-id {
+            font-size: 14px;
+            font-weight: bold;
+            font-family: monospace;
+            background: #333;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .card-bin {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .card-body {
+            flex: 1;
+            display: flex;
+            flex-direction: row;
+            gap: 12px;
+        }
+
+        .part-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-width: 0;
+        }
+
+        .part-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 2px;
+            word-wrap: break-word;
+        }
+
+        .part-manufacturer {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .part-description {
+            font-size: 11px;
+            color: #444;
+            margin-top: 6px;
+            display: none;
+        }
+
+        .kanban-card.size-4x6 .part-description,
+        .kanban-card.size-3x5 .part-description {
+            display: block;
+        }
+
+        .quantities {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 4px;
+            font-size: 12px;
+            border-left: 1px solid #ddd;
+            padding-left: 12px;
+            min-width: 70px;
+        }
+
+        .quantity-item {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            text-align: right;
+        }
+
+        .quantity-value {
+            font-size: 18px;
+            font-weight: bold;
+            line-height: 1.1;
+        }
+
+        .quantity-label {
+            color: #666;
+            font-size: 11px;
+        }
+
+        .card-footer {
+            border-top: 1px solid #ddd;
+            padding-top: 8px;
+            margin-top: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .barcode {
+            text-align: center;
+        }
+
+        .barcode-text {
+            font-family: monospace;
+            font-size: 10px;
+            margin-top: 2px;
+        }
+
+        .no-print {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .size-selector {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .size-option {
+            padding: 8px 16px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .size-option:hover {
+            border-color: #0d6efd;
+        }
+
+        .size-option.active {
+            border-color: #0d6efd;
+            background: #e7f1ff;
+        }
+
+        .size-option .size-label {
+            font-weight: bold;
+        }
+
+        .size-option .size-desc {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            font-size: 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            background: #0d6efd;
+            color: white;
+            margin-right: 10px;
+        }
+
+        .btn:hover {
+            background: #0b5ed7;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5c636a;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .no-print {
+                display: none;
+            }
+
+            .card-container {
+                display: block;
+            }
+
+            .kanban-card {
+                border-radius: 0;
+                margin: 0;
+                page-break-inside: avoid;
+                break-inside: avoid;
+                page-break-after: always;
+                break-after: page;
+            }
+
+            .kanban-card:last-child {
+                page-break-after: auto;
+                break-after: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print">
+        <div class="size-selector">
+            <button class="size-option active" data-size="size-4x2-5">
+                <div class="size-label">4" × 2.5"</div>
+                <div class="size-desc">Small / Label</div>
+            </button>
+            <button class="size-option" data-size="size-4x3">
+                <div class="size-label">4" × 3"</div>
+                <div class="size-desc">Index Card</div>
+            </button>
+            <button class="size-option" data-size="size-5x3">
+                <div class="size-label">5" × 3"</div>
+                <div class="size-desc">Large Index</div>
+            </button>
+            <button class="size-option" data-size="size-3x5">
+                <div class="size-label">3" × 5"</div>
+                <div class="size-desc">Portrait</div>
+            </button>
+            <button class="size-option" data-size="size-4x6">
+                <div class="size-label">4" × 6"</div>
+                <div class="size-desc">Photo / Large</div>
+            </button>
+        </div>
+        <button class="btn" onclick="window.print()">
+            Print Cards
+        </button>
+        <a href="{{ url_for('kanbans.detail', id=kanban.id) }}" class="btn btn-secondary">
+            Back to Kanban
+        </a>
+        <p style="margin-top: 16px; color: #666;">
+            Printing {{ kanban.number_of_cards }} card{% if kanban.number_of_cards != 1 %}s{% endif %} for this kanban.
+        </p>
+    </div>
+
+    <div class="card-container">
+        {% for i in range(kanban.number_of_cards) %}
+        <div class="kanban-card size-4x2-5">
+            <div class="card-header">
+                <span class="card-id">{{ barcode_data }}</span>
+                <span class="card-bin">{{ kanban.bin_location }}</span>
+            </div>
+            <div class="card-body">
+                <div class="part-info">
+                    <div class="part-name">{{ kanban.part_name }}</div>
+                    <div class="part-manufacturer">{{ kanban.manufacturer }}</div>
+                    {% if kanban.part_description %}
+                    <div class="part-description">{{ kanban.part_description }}</div>
+                    {% endif %}
+                </div>
+                <div class="quantities">
+                    <div class="quantity-item">
+                        <span class="quantity-value">{{ kanban.kanban_quantity }}</span>
+                        <span class="quantity-label">Qty ({{ kanban.uom_abbr }})</span>
+                    </div>
+                    <div class="quantity-item">
+                        <span class="quantity-value">{{ kanban.reorder_point }}</span>
+                        <span class="quantity-label">Reorder Pt</span>
+                    </div>
+                    <div class="quantity-item">
+                        <span class="quantity-value">{{ i + 1 }}/{{ kanban.number_of_cards }}</span>
+                        <span class="quantity-label">Card</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="barcode">
+                    {{ barcode_svg|safe }}
+                    <div class="barcode-text">{{ barcode_data }}</div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        document.querySelectorAll('.size-option').forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Update active state
+                document.querySelectorAll('.size-option').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Update card sizes
+                const size = btn.dataset.size;
+                document.querySelectorAll('.kanban-card').forEach(card => {
+                    card.className = 'kanban-card ' + size;
+                });
+            });
+        });
+    </script>
+</body>
+</html>

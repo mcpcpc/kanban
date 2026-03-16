@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Kanbans{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}">Home</a>
+    <span class="breadcrumb-separator">/</span>
+    <span class="breadcrumb-current">Kanbans</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Kanbans</h1>
+    <a href="{{ url_for('kanbans.new') }}" class="btn btn-primary">
+        <svg><use href="#icon-plus"></use></svg>
+        New Kanban
+    </a>
+</div>
+
+<!-- Filters -->
+<div class="card mb-2">
+    <div class="card-body">
+        <form method="get" action="{{ url_for('kanbans.list') }}">
+            <div class="form-row">
+                <div class="form-group" style="margin-bottom: 0; flex: 1;">
+                    <div style="position: relative;">
+                        <input type="text" name="search" class="form-control" 
+                               placeholder="Search by part, manufacturer, or bin..." value="{{ search }}"
+                               style="padding-left: 2.5rem;">
+                        <svg style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--color-text-muted);">
+                            <use href="#icon-search"></use>
+                        </svg>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <select name="status" class="form-control">
+                        <option value="">All Status</option>
+                        <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <button type="submit" class="btn btn-secondary">
+                        <svg><use href="#icon-filter"></use></svg>
+                        Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Kanbans List -->
+{% if kanbans %}
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Part</th>
+                <th>Bin</th>
+                <th>Quantity</th>
+                <th>Reorder Point</th>
+                <th>Cards</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for kanban in kanbans %}
+            <tr>
+                <td class="font-mono">K{{ '%06d' % kanban.id }}</td>
+                <td class="cell-truncate-lg" title="{{ kanban.part_name }} - {{ kanban.manufacturer }}">
+                    <strong>{{ kanban.part_name }}</strong>
+                    <div class="text-muted text-truncate" style="font-size: 0.8125rem;">{{ kanban.manufacturer }}</div>
+                </td>
+                <td class="cell-truncate" title="{{ kanban.bin_location }}">{{ kanban.bin_location }}</td>
+                <td>{{ kanban.kanban_quantity }}</td>
+                <td>{{ kanban.reorder_point }}</td>
+                <td>{{ kanban.number_of_cards }}</td>
+                <td>
+                    {% if kanban.is_active %}
+                    <span class="badge badge-success">Active</span>
+                    {% else %}
+                    <span class="badge badge-warning">Inactive</span>
+                    {% endif %}
+                </td>
+                <td style="text-align: right;">
+                    <a href="{{ url_for('kanbans.detail', id=kanban.id) }}" class="btn btn-sm btn-secondary" title="View">
+                        <svg><use href="#icon-eye"></use></svg>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body">
+        <div class="empty-state">
+            <svg><use href="#icon-kanban"></use></svg>
+            <div class="empty-state-title">No Kanbans Found</div>
+            {% if search or selected_status %}
+            <p>Try adjusting your search criteria.</p>
+            <a href="{{ url_for('kanbans.list') }}" class="btn btn-secondary mt-2">Clear Filters</a>
+            {% else %}
+            <p>No kanbans have been created yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

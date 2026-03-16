@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Parts{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}">Home</a>
+    <span class="breadcrumb-separator">/</span>
+    <span class="breadcrumb-current">Parts</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Parts</h1>
+    <a href="{{ url_for('parts.new') }}" class="btn btn-primary">
+        <svg><use href="#icon-plus"></use></svg>
+        New Part
+    </a>
+</div>
+
+<!-- Filters -->
+<div class="card mb-2">
+    <div class="card-body">
+        <form method="get" action="{{ url_for('parts.list') }}">
+            <div class="form-row">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <div style="position: relative;">
+                        <input type="text" name="search" class="form-control" 
+                               placeholder="Search parts..." value="{{ search }}"
+                               style="padding-left: 2.5rem;">
+                        <svg style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--color-text-muted);">
+                            <use href="#icon-search"></use>
+                        </svg>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <select name="category" class="form-control">
+                        <option value="">All Categories</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.category }}" {% if cat.category == selected_category %}selected{% endif %}>
+                            {{ cat.category }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <button type="submit" class="btn btn-secondary">
+                        <svg><use href="#icon-filter"></use></svg>
+                        Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Parts List -->
+{% if parts %}
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Part Number</th>
+                <th>Manufacturer</th>
+                <th>Category</th>
+                <th>UoM</th>
+                <th>Lead Time</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for part in parts %}
+            <tr>
+                <td class="cell-truncate-lg" title="{{ part.part_number }}{% if part.description %} - {{ part.description }}{% endif %}">
+                    <strong>{{ part.part_number }}</strong>
+                    {% if part.description %}
+                    <div class="text-muted text-truncate" style="font-size: 0.8125rem;">{{ part.description }}</div>
+                    {% endif %}
+                </td>
+                <td class="cell-truncate" title="{{ part.manufacturer }}">{{ part.manufacturer }}</td>
+                <td>
+                    {% if part.category %}
+                    <span class="badge badge-info">{{ part.category }}</span>
+                    {% else %}
+                    <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+                <td>{{ part.uom_abbr }}</td>
+                <td>{{ part.reorder_lead_time_days }} days</td>
+                <td style="text-align: right;">
+                    <a href="{{ url_for('parts.detail', id=part.id) }}" class="btn btn-sm btn-secondary" title="View">
+                        <svg><use href="#icon-eye"></use></svg>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<div class="pagination">
+    <span class="pagination-info">{{ total_count }} items</span>
+    
+    <a href="{{ url_for('parts.list', search=search, category=selected_category, page=1) }}" 
+       class="pagination-btn {% if page == 1 %}disabled{% endif %}">First</a>
+    
+    <a href="{{ url_for('parts.list', search=search, category=selected_category, page=page-1) }}" 
+       class="pagination-btn {% if page == 1 %}disabled{% endif %}">Prev</a>
+    
+    {% for p in range(1, total_pages + 1) %}
+        {% if p == page or (p >= page - 2 and p <= page + 2) or p == 1 or p == total_pages %}
+            {% if loop.previtem is defined and p - loop.previtem > 1 %}
+                <span class="pagination-btn disabled">...</span>
+            {% endif %}
+            <a href="{{ url_for('parts.list', search=search, category=selected_category, page=p) }}" 
+               class="pagination-btn {% if p == page %}active{% endif %}">{{ p }}</a>
+        {% endif %}
+    {% endfor %}
+    
+    <a href="{{ url_for('parts.list', search=search, category=selected_category, page=page+1) }}" 
+       class="pagination-btn {% if page == total_pages %}disabled{% endif %}">Next</a>
+    
+    <a href="{{ url_for('parts.list', search=search, category=selected_category, page=total_pages) }}" 
+       class="pagination-btn {% if page == total_pages %}disabled{% endif %}">Last</a>
+</div>
+{% endif %}
+
+{% else %}
+<div class="card">
+    <div class="card-body">
+        <div class="empty-state">
+            <svg><use href="#icon-parts"></use></svg>
+            <div class="empty-state-title">No Parts Found</div>
+            {% if search or selected_category %}
+            <p>Try adjusting your search criteria.</p>
+            <a href="{{ url_for('parts.list') }}" class="btn btn-secondary mt-2">Clear Filters</a>
+            {% else %}
+            <p>No parts have been created yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

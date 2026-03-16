@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Dashboard</h1>
+</div>
+
+<!-- SVG Gradient Definitions for Sparklines -->
+<svg width="0" height="0" style="position: absolute;">
+    <defs>
+        <linearGradient id="sparkline-gradient-info" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color: var(--color-info); stop-opacity: 0.3;" />
+            <stop offset="100%" style="stop-color: var(--color-info); stop-opacity: 0;" />
+        </linearGradient>
+        <linearGradient id="sparkline-gradient-success" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color: var(--color-success); stop-opacity: 0.3;" />
+            <stop offset="100%" style="stop-color: var(--color-success); stop-opacity: 0;" />
+        </linearGradient>
+        <linearGradient id="sparkline-gradient-warning" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color: var(--color-warning); stop-opacity: 0.3;" />
+            <stop offset="100%" style="stop-color: var(--color-warning); stop-opacity: 0;" />
+        </linearGradient>
+        <linearGradient id="sparkline-gradient-danger" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color: var(--color-danger); stop-opacity: 0.3;" />
+            <stop offset="100%" style="stop-color: var(--color-danger); stop-opacity: 0;" />
+        </linearGradient>
+    </defs>
+</svg>
+
+<!-- Stats Grid -->
+<div class="grid grid-4 mb-3">
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <span class="stat-card-title">Active Kanbans</span>
+            <div class="stat-card-icon" style="background-color: var(--color-info-bg); color: var(--color-info);">
+                <svg><use href="#icon-kanban"></use></svg>
+            </div>
+        </div>
+        <div class="stat-card-value">{{ total_kanbans }}</div>
+        {% if kanban_trend %}
+        <div class="stat-card-sparkline">
+            <svg viewBox="0 0 300 40" preserveAspectRatio="none">
+                <path fill="url(#sparkline-gradient-info)" d="
+                    M 0 40
+                    {% for point in kanban_trend %}
+                    L {{ loop.index0 * 10 }} {{ 40 - (point.count / kanban_max * 35) }}
+                    {% endfor %}
+                    L 290 40 Z
+                "/>
+                <polyline fill="none" stroke="var(--color-info)" stroke-width="1.5" points="
+                    {% for point in kanban_trend %}{{ loop.index0 * 10 }},{{ 40 - (point.count / kanban_max * 35) }} {% endfor %}
+                "/>
+            </svg>
+            <span class="stat-card-trend-label">New (30 days)</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <span class="stat-card-title">Parts</span>
+            <div class="stat-card-icon" style="background-color: var(--color-success-bg); color: var(--color-success);">
+                <svg><use href="#icon-parts"></use></svg>
+            </div>
+        </div>
+        <div class="stat-card-value">{{ total_parts }}</div>
+        {% if parts_trend %}
+        <div class="stat-card-sparkline">
+            <svg viewBox="0 0 300 40" preserveAspectRatio="none">
+                <path fill="url(#sparkline-gradient-success)" d="
+                    M 0 40
+                    {% for point in parts_trend %}
+                    L {{ loop.index0 * 10 }} {{ 40 - (point.count / parts_max * 35) }}
+                    {% endfor %}
+                    L 290 40 Z
+                "/>
+                <polyline fill="none" stroke="var(--color-success)" stroke-width="1.5" points="
+                    {% for point in parts_trend %}{{ loop.index0 * 10 }},{{ 40 - (point.count / parts_max * 35) }} {% endfor %}
+                "/>
+            </svg>
+            <span class="stat-card-trend-label">New (30 days)</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <span class="stat-card-title">Bins</span>
+            <div class="stat-card-icon" style="background-color: var(--color-warning-bg); color: var(--color-warning);">
+                <svg><use href="#icon-bins"></use></svg>
+            </div>
+        </div>
+        <div class="stat-card-value">{{ total_bins }}</div>
+        {% if bins_trend %}
+        <div class="stat-card-sparkline">
+            <svg viewBox="0 0 300 40" preserveAspectRatio="none">
+                <path fill="url(#sparkline-gradient-warning)" d="
+                    M 0 40
+                    {% for point in bins_trend %}
+                    L {{ loop.index0 * 10 }} {{ 40 - (point.count / bins_max * 35) }}
+                    {% endfor %}
+                    L 290 40 Z
+                "/>
+                <polyline fill="none" stroke="var(--color-warning)" stroke-width="1.5" points="
+                    {% for point in bins_trend %}{{ loop.index0 * 10 }},{{ 40 - (point.count / bins_max * 35) }} {% endfor %}
+                "/>
+            </svg>
+            <span class="stat-card-trend-label">New (30 days)</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <span class="stat-card-title">Active Signals</span>
+            <div class="stat-card-icon" style="background-color: var(--color-danger-bg); color: var(--color-danger);">
+                <svg><use href="#icon-activity"></use></svg>
+            </div>
+        </div>
+        <div class="stat-card-value">{{ active_signals }}</div>
+        {% if signals_trend %}
+        <div class="stat-card-sparkline">
+            <svg viewBox="0 0 300 40" preserveAspectRatio="none">
+                <path fill="url(#sparkline-gradient-danger)" d="
+                    M 0 40
+                    {% for point in signals_trend %}
+                    L {{ loop.index0 * 10 }} {{ 40 - (point.count / signals_max * 35) }}
+                    {% endfor %}
+                    L 290 40 Z
+                "/>
+                <polyline fill="none" stroke="var(--color-danger)" stroke-width="1.5" points="
+                    {% for point in signals_trend %}{{ loop.index0 * 10 }},{{ 40 - (point.count / signals_max * 35) }} {% endfor %}
+                "/>
+            </svg>
+            <span class="stat-card-trend-label">Signals (30 days)</span>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Pending Signals & Quick Actions -->
+<div class="grid grid-2 mb-3">
+    <div class="card">
+        <div class="card-header flex justify-between items-center">
+            <span>Pending Signals</span>
+            {% if active_signals %}
+            <span class="badge badge-warning">{{ active_signals }}</span>
+            {% endif %}
+        </div>
+        <div class="card-body" style="padding: 0;">
+            {% if pending_signals %}
+            <div class="table-container" style="border: none; border-radius: 0;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Kanban</th>
+                            <th>Bin</th>
+                            <th>Waiting</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for signal in pending_signals %}
+                        <tr>
+                            <td>
+                                <span class="font-mono">K{{ '%06d' % signal.kanban_id }}</span>
+                                <div class="text-muted text-truncate" style="font-size: 0.75rem;" title="{{ signal.part_name }}">{{ signal.part_name }}</div>
+                            </td>
+                            <td class="cell-truncate" title="{{ signal.bin_location }}">{{ signal.bin_location }}</td>
+                            <td class="text-muted" style="white-space: nowrap;">
+                                {% set delta = (current_time - signal.signal_time) %}
+                                {% if delta.days > 0 %}
+                                    {{ delta.days }}d ago
+                                {% elif delta.seconds >= 3600 %}
+                                    {{ (delta.seconds // 3600) }}h ago
+                                {% else %}
+                                    {{ (delta.seconds // 60) }}m ago
+                                {% endif %}
+                            </td>
+                            <td style="text-align: right;">
+                                <a href="{{ url_for('kanbans.detail', id=signal.kanban_id) }}" class="btn btn-sm btn-secondary">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state" style="padding: 1.5rem;">
+                <svg><use href="#icon-check"></use></svg>
+                <div class="empty-state-title">All Clear</div>
+                <p>No pending signals - all kanbans are stocked.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Quick Actions</div>
+        <div class="card-body">
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <a href="{{ url_for('scan.index') }}" class="btn btn-primary btn-lg">
+                    <svg><use href="#icon-scan"></use></svg>
+                    Quick Scan
+                </a>
+                <div style="display: flex; gap: 0.75rem;">
+                    <a href="{{ url_for('parts.new') }}" class="btn btn-secondary" style="flex: 1;">
+                        <svg><use href="#icon-plus"></use></svg>
+                        New Part
+                    </a>
+                    <a href="{{ url_for('kanbans.new') }}" class="btn btn-secondary" style="flex: 1;">
+                        <svg><use href="#icon-plus"></use></svg>
+                        New Kanban
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="card">
+    <div class="card-header flex justify-between items-center">
+        <span>Recent Activity</span>
+        <a href="{{ url_for('events.history') }}" class="btn btn-sm btn-secondary">View All</a>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        {% if recent_events %}
+        <div class="table-container" style="border: none; border-radius: 0;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Event</th>
+                        <th>Part</th>
+                        <th>Bin</th>
+                        <th>Qty</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in recent_events %}
+                    <tr>
+                        <td class="text-muted" style="white-space: nowrap;">
+                            {{ event.created_at.strftime('%m/%d %H:%M') if event.created_at else '-' }}
+                        </td>
+                        <td>
+                            {% if event.event_type == 'signal' %}
+                            <span class="badge badge-warning">Signal</span>
+                            {% elif event.event_type == 'restock_start' %}
+                            <span class="badge badge-info">Restocking</span>
+                            {% elif event.event_type == 'restock_complete' %}
+                            <span class="badge badge-success">Restocked</span>
+                            {% elif event.event_type == 'adjustment' %}
+                            <span class="badge badge-purple">Adjustment</span>
+                            {% endif %}
+                        </td>
+                        <td class="cell-truncate-lg" title="{{ event.part_name }}">
+                            <a href="{{ url_for('kanbans.detail', id=event.kanban_id) }}">{{ event.part_name }}</a>
+                        </td>
+                        <td class="cell-truncate" title="{{ event.bin_location }}">{{ event.bin_location }}</td>
+                        <td>{{ event.quantity if event.quantity else '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <svg><use href="#icon-events"></use></svg>
+            <div class="empty-state-title">No Recent Activity</div>
+            <p>Start by scanning a kanban card or creating new entries.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Quick Scan{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}">Home</a>
+    <span class="breadcrumb-separator">/</span>
+    <span class="breadcrumb-current">Quick Scan</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<style>
+    .action-option {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        border: 2px solid var(--color-border);
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .action-option:hover {
+        border-color: var(--color-success);
+    }
+    .action-option.selected {
+        background-color: var(--color-success-bg);
+        border-color: var(--color-success);
+    }
+    .action-option input {
+        display: none;
+    }
+    .action-option .check-icon {
+        display: none;
+        width: 18px;
+        height: 18px;
+        color: var(--color-success);
+    }
+    .action-option.selected .check-icon {
+        display: block;
+    }
+</style>
+
+<div class="page-header">
+    <h1 class="page-title">Quick Scan</h1>
+</div>
+
+<div class="grid grid-2">
+    <div class="card">
+        <div class="card-body">
+            <form method="post" action="{{ url_for('scan.process') }}" id="scanForm">
+                <div class="form-group">
+                    <label class="form-label" for="barcode">Scan Barcode</label>
+                    <input type="text" id="barcode" name="barcode" 
+                           class="form-control scan-input" 
+                           placeholder="Scan or enter barcode..."
+                           autocomplete="off" autofocus>
+                    <div class="form-text text-center">
+                        Position cursor here and scan kanban card barcode
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Action</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
+                        <label class="action-option selected">
+                            <input type="radio" name="action" value="signal" checked>
+                            <svg class="check-icon"><use href="#icon-check"></use></svg>
+                            <span>Signal</span>
+                        </label>
+                        <label class="action-option">
+                            <input type="radio" name="action" value="restock_start">
+                            <svg class="check-icon"><use href="#icon-check"></use></svg>
+                            <span>Restocking</span>
+                        </label>
+                        <label class="action-option">
+                            <input type="radio" name="action" value="restock_complete">
+                            <svg class="check-icon"><use href="#icon-check"></use></svg>
+                            <span>Restocked</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="quantity">Quantity (optional)</label>
+                        <input type="number" id="quantity" name="quantity" class="form-control"
+                               placeholder="Enter quantity...">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="notes">Notes (optional)</label>
+                    <input type="text" id="notes" name="notes" class="form-control"
+                           placeholder="Optional notes...">
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">
+                    <svg><use href="#icon-check"></use></svg>
+                    Submit
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div>
+        <div class="card">
+            <div class="card-header">When to Use Each Action</div>
+            <div class="card-body" style="padding: 0;">
+                <table style="font-size: 0.875rem;">
+                    <tbody>
+                        <tr>
+                            <td><span class="badge badge-warning">Signal</span></td>
+                            <td>Kanban quantity depleted — pulling this card to request replenishment</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-info">Restocking</span></td>
+                            <td>You've started gathering material to refill this kanban (optional intermediate step)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-success">Restocked</span></td>
+                            <td>Kanban has been refilled — returning the card with replenished material</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card mt-2">
+            <div class="card-header">Scan Tips</div>
+            <div class="card-body">
+                <ul style="margin: 0; padding-left: 1.25rem;">
+                    <li>Keep the scan input focused (click it if needed)</li>
+                    <li>Scanner should be configured with Enter suffix</li>
+                    <li>Barcode format: K followed by 6 digits (e.g., K000001)</li>
+                    <li><strong>Quantity</strong> is required for <em>Restocked</em>, optional otherwise</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    const barcodeInput = document.getElementById('barcode');
+    const form = document.getElementById('scanForm');
+    
+    // Auto-focus on page load
+    barcodeInput.focus();
+    
+    // Re-focus when clicking anywhere on the page
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('form') === form && e.target !== barcodeInput) {
+            barcodeInput.focus();
+        }
+    });
+    
+    // Auto-submit on Enter (scanner sends Enter after barcode)
+    barcodeInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && barcodeInput.value.trim()) {
+            // Let the form submit naturally
+        }
+    });
+    
+    // Handle action option selection
+    const actionOptions = form.querySelectorAll('.action-option');
+    actionOptions.forEach(function(option) {
+        option.addEventListener('click', function() {
+            actionOptions.forEach(function(opt) {
+                opt.classList.remove('selected');
+            });
+            option.classList.add('selected');
+        });
+    });
+    
+    // Clear barcode input after form submission to prepare for next scan
+    form.addEventListener('submit', function() {
+        setTimeout(function() {
+            barcodeInput.value = '';
+            barcodeInput.focus();
+        }, 100);
+    });
+})();
+</script>
+{% endblock %}
