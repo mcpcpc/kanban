@@ -58,32 +58,26 @@ class LabelConfig:
 
     @property
     def dpmm(self) -> float:
-        """Dots per millimetre derived from DPI (1 in = 25.4 mm)."""
         return self.dpi / 25.4
 
     @property
     def width_dots(self) -> int:
-        """Label width expressed in printer dots (cross-feed direction)."""
         return round(self.width_in * self.dpi)
 
     @property
     def length_dots(self) -> Optional[int]:
-        """Label length in printer dots, or None for continuous media."""
         return round(self.length_in * self.dpi) if self.length_in is not None else None
 
     @property
     def gap_dots(self) -> Optional[int]:
-        """Inter-label gap in printer dots, or None for continuous media."""
         return round(self.gap_in * self.dpi) if self.gap_in is not None else None
 
     @property
     def width_mm(self) -> float:
-        """Label width in millimetres."""
         return self.width_in * 25.4
 
     @property
     def length_mm(self) -> Optional[float]:
-        """Label length in millimetres, or None for continuous media."""
         return self.length_in * 25.4 if self.length_in is not None else None
 
     def __str__(self) -> str:
@@ -102,7 +96,6 @@ class ZPLBuilder:
         self._lines: list[str] = []
 
     def start(self) -> "ZPLBuilder":
-        """Emit the ZPL header (^XA) plus standard label setup commands."""
         c = self._cfg
         self._lines += [
             "^XA",
@@ -158,7 +151,6 @@ class ZPLBuilder:
         line_width: int = 2,
         show_human_readable: bool = True,
     ) -> "ZPLBuilder":
-        """Render a Code 128 barcode using ^BC."""
         hr = "Y" if show_human_readable else "N"
         self._lines += [
             f"^FO{x},{y}",
@@ -176,7 +168,6 @@ class ZPLBuilder:
         magnification: int = 3,
         error_correction: str = "M",
     ) -> "ZPLBuilder":
-        """Render a QR code using ^BQ."""
         self._lines += [
             f"^FO{x},{y}",
             f"^BQN,2,{magnification},{error_correction}",
@@ -227,7 +218,6 @@ class ZebraPrinter:
         self._sock = None
 
     def connect(self) -> None:
-        """Open a persistent TCP connection to the printer."""
         if self._sock:
             logger.debug("Already connected to %s:%d", self.host, self.port)
             return
@@ -281,7 +271,6 @@ class ZebraPrinter:
                     raise
 
     def print_zpl(self, zpl: str | bytes) -> None:
-        """Convenience alias for send(); opens/closes a transient connection."""
         with self:
             self.send(zpl)
 
@@ -289,14 +278,6 @@ class ZebraPrinter:
         self.print_zpl(builder.encode())
 
     def query(self, command: str, buffer_size: int = 1024) -> str:
-        """
-        Send a ZPL/SGD query command and return the raw response string.
-
-        Example
-        -------
-        status = printer.query("~HS")   # Host status
-        info   = printer.query("^XA^HH^XZ")  # Configuration label
-        """
         response = b""
         with self:
             self.send(command)
