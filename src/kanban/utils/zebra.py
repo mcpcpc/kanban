@@ -80,15 +80,6 @@ class LabelConfig:
     def length_mm(self) -> Optional[float]:
         return self.length_in * 25.4 if self.length_in is not None else None
 
-    def __str__(self) -> str:
-        length_str = f"{self.length_in}\"" if self.length_in is not None else "continuous"
-        return (
-            f"LabelConfig({self.width_in}\" x {length_str} | "
-            f"{self.media_type.name} | "
-            f"{self.dpi} DPI / {self.dpmm:.2f} dpmm | "
-            f"{self.width_dots}x{self.length_dots or '?'} dots)"
-        )
-
 
 class ZPLBuilder:
     def __init__(self, config: LabelConfig):
@@ -138,6 +129,28 @@ class ZPLBuilder:
         self._lines += [
             f"^FO{x},{y}",
             f"^A{font}N,{height},{w}",
+            f"^FD{text}^FS",
+        ]
+        return self
+
+    def textblock(
+        self,
+        x: int,
+        y: int,
+        text: str,
+        width: int,
+        max_lines: int = 1,
+        font: str = "0",
+        font_height: int = 30,
+        font_width: Optional[int] = None,
+        line_spacing: int = 0,
+        justification: str = "L",
+    ) -> "ZPLBuilder":
+        fw = font_width or font_height
+        self._lines += [
+            f"^FO{x},{y}",
+            f"^A{font}N,{font_height},{fw}",
+            f"^TB{justification},{width},{font_height * max_lines + line_spacing * (max_lines - 1)}",
             f"^FD{text}^FS",
         ]
         return self
