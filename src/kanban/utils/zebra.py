@@ -272,7 +272,7 @@ class ZebraPrinter:
                 info("Sent %d bytes to %s:%d", len(payload), self.host, self.port)
                 return
             except (OSError, socket.error) as exc:
-                logger.warning(
+                warning(
                     "Send attempt %d/%d failed: %s", attempt + 1, retries + 1, exc
                 )
                 self._sock = None  # Mark socket as dead
