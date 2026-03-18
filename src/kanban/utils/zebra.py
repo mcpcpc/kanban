@@ -1,11 +1,11 @@
 import socket
-import logging
-from time import sleep
 from dataclasses import dataclass, field
 from enum import Enum
+from logging import getLogger, debug, info, warning
+from time import sleep
 from typing import Optional
 
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
 
 class MediaType(Enum):
@@ -232,14 +232,14 @@ class ZebraPrinter:
 
     def connect(self) -> None:
         if self._sock:
-            logger.debug("Already connected to %s:%d", self.host, self.port)
+            debug("Already connected to %s:%d", self.host, self.port)
             return
-        logger.info("Connecting to %s:%d …", self.host, self.port)
+        info("Connecting to %s:%d …", self.host, self.port)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(self.timeout)
         sock.connect((self.host, self.port))
         self._sock = sock
-        logger.info("Connected to %s:%d", self.host, self.port)
+        info("Connected to %s:%d", self.host, self.port)
 
     def disconnect(self) -> None:
         if self._sock:
@@ -249,7 +249,7 @@ class ZebraPrinter:
                 pass
             self._sock.close()
             self._sock = None
-            logger.info("Disconnected from %s:%d", self.host, self.port)
+            info("Disconnected from %s:%d", self.host, self.port)
 
     def is_connected(self) -> bool:
         return self._sock is not None
@@ -269,9 +269,7 @@ class ZebraPrinter:
                 if not self.is_connected():
                     self.connect()
                 self._sock.sendall(payload)
-                logger.info(
-                    "Sent %d bytes to %s:%d", len(payload), self.host, self.port
-                )
+                info("Sent %d bytes to %s:%d", len(payload), self.host, self.port)
                 return
             except (OSError, socket.error) as exc:
                 logger.warning(
