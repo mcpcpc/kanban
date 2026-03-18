@@ -1,21 +1,43 @@
 import socket
 import logging
-from time import sleep
+import time
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_PORT = 9100
-DEFAULT_TIMEOUT = 5.0  # seconds
+
+class MediaType(Enum):
+    """
+    Zebra media tracking types, corresponding to the ZPL ^MN command.
+
+    WEB        : Die-cut labels separated by gaps (^MNY). Requires length + gap.
+    BLACK_MARK : Labels with a black reflective mark (^MNM). Requires length + gap (mark height).
+    NOTCH      : Labels with a notch or hole (^MNN). Requires length + gap.
+    CONTINUOUS : Continuous roll with no gaps or marks (^MNC). Length and gap are not used.
+    """
+    WEB        = "Y"
+    BLACK_MARK = "M"
+    NOTCH      = "N"
+    CONTINUOUS = "C"
+
+    @property
+    def requires_length(self) -> bool:
+        return self != MediaType.CONTINUOUS
+
+    @property
+    def requires_gap(self) -> bool:
+        return self != MediaType.CONTINUOUS
 
 
 @dataclass
 class LabelConfig:
     width_in: float
-    height_in: float
     dpi: int
-    gap_in: float = 0.12
+    media_type: MediaType = MediaType.WEB
+    length_in: Optional[float] = None
+    gap_in: Optional[float] = None
     copies: int = 1
     darkness: int = 15
     print_speed: int = 4
@@ -24,6 +46,24 @@ class LabelConfig:
     label_shift: int = 0
     encoding: str = "utf-8"
 
+    def __post_init__(self) -> None:
+        if self.media_type.requires_length and self.length_in is None:
+            raise ValueError(
+                f"MediaType.{self.media_type.name} requires 'length_in' to be set."
+            )
+        if self.media_type.requires_gap and self.gap_in is None:
+            raise ValueError(
+                f"MediaType.{self.media_type.name} requires 'gap_in' to be set."
+            )
+        if not self.media_type.requires_length and self.length_in is not None:
+            raise ValueError(
+                f"MediaType.{self.media_type.name} is continuous -- 'length_in' should not be set."
+            )
+        if not self.media_type.requires_gap and self.gap_in is not None:
+            raise ValueError(
+                f"MediaType.{self.media_type.name} is continuous -- 'gap_in' should not be set."
+            )
+
     @property
     def dpmm(self) -> float:
         """Dots per millimetre derived from DPI (1 in = 25.4 mm)."""
@@ -31,18 +71,18 @@ class LabelConfig:
 
     @property
     def width_dots(self) -> int:
-        """Label width expressed in printer dots."""
+        """Label width expressed in printer dots (cross-feed direction)."""
         return round(self.width_in * self.dpi)
 
     @property
-    def height_dots(self) -> int:
-        """Label height expressed in printer dots."""
-        return round(self.height_in * self.dpi)
+    def length_dots(self) -> Optional[int]:
+        """Label length in printer dots, or None for continuous media."""
+        return round(self.length_in * self.dpi) if self.length_in is not None else None
 
     @property
-    def gap_dots(self) -> int:
-        """Inter-label gap expressed in printer dots."""
-        return round(self.gap_in * self.dpi)
+    def gap_dots(self) -> Optional[int]:
+        """Inter-label gap in printer dots, or None for continuous media."""
+        return round(self.gap_in * self.dpi) if self.gap_in is not None else None
 
     @property
     def width_mm(self) -> float:
@@ -50,22 +90,36 @@ class LabelConfig:
         return self.width_in * 25.4
 
     @property
-    def height_mm(self) -> float:
-        """Label height in millimetres."""
-        return self.height_in * 25.4
+    def length_mm(self) -> Optional[float]:
+        """Label length in millimetres, or None for continuous media."""
+        return self.length_in * 25.4 if self.length_in is not None else None
+
+    def __str__(self) -> str:
+        length_str = f"{self.length_in}\"" if self.length_in is not None else "continuous"
+        return (
+            f"LabelConfig({self.width_in}\" x {length_str} | "
+            f"{self.media_type.name} | "
+            f"{self.dpi} DPI / {self.dpmm:.2f} dpmm | "
+            f"{self.width_dots}x{self.length_dots or '?'} dots)"
+        )
 
 
 class ZPLBuilder:
-    def __init__(self, config: LabelConfig) -> None:
+    def __init__(self, config: LabelConfig):
         self._cfg = config
-        self._lines = []
+        self._lines: list[str] = []
 
     def start(self) -> "ZPLBuilder":
+        """Emit the ZPL header (^XA) plus standard label setup commands."""
         c = self._cfg
         self._lines += [
             "^XA",
             f"^PW{c.width_dots}",
-            f"^LL{c.height_dots}",
+            f"^MN{c.media_type.value}",
+        ]
+        if c.length_dots is not None:
+            self._lines.append(f"^LL{c.length_dots + (c.gap_dots or 0)}")  # Label length inc. gap
+        self._lines += [
             f"^LH0,0",
             f"^LT{c.label_top}",
             f"^LS{c.label_shift}",
@@ -112,6 +166,7 @@ class ZPLBuilder:
         line_width: int = 2,
         show_human_readable: bool = True,
     ) -> "ZPLBuilder":
+        """Render a Code 128 barcode using ^BC."""
         hr = "Y" if show_human_readable else "N"
         self._lines += [
             f"^FO{x},{y}",
@@ -129,6 +184,7 @@ class ZPLBuilder:
         magnification: int = 3,
         error_correction: str = "M",
     ) -> "ZPLBuilder":
+        """Render a QR code using ^BQ."""
         self._lines += [
             f"^FO{x},{y}",
             f"^BQN,2,{magnification},{error_correction}",
@@ -144,41 +200,34 @@ class ZPLBuilder:
         height: int,
         color: str = "B",
     ) -> "ZPLBuilder":
-        """Draw a filled rectangle / line using ^GB (Graphic Box)."""
         self._lines.append(f"^FO{x},{y}^GB{width},{height},1,{color}^FS")
         return self
 
     def image(self, x: int, y: int, zpl_image_data: str) -> "ZPLBuilder":
-        """
-        Place a pre-encoded GRF/Z64 image field.
-
-        `zpl_image_data` should already be a valid ^GF or ~DG block.
-        """
         self._lines += [f"^FO{x},{y}", zpl_image_data]
         return self
 
     def build(self) -> str:
-        """Return the assembled ZPL string."""
         return "\n".join(self._lines)
 
     def encode(self) -> bytes:
-        """Return the ZPL string encoded to bytes using the config encoding."""
         return self.build().encode(self._cfg.encoding)
 
     def reset(self) -> "ZPLBuilder":
-        """Clear all accumulated ZPL commands."""
         self._lines.clear()
         return self
-        
+
 
 class ZebraPrinter:
+    DEFAULT_PORT = 9100
+
     def __init__(
         self,
         host: str,
         config: LabelConfig,
         port: int = DEFAULT_PORT,
-        timeout: float = DEFAULT_TIMEOUT,
-    ) -> None:
+        timeout: float = 10.0,
+    ):
         self.host = host
         self.port = port
         self.config = config
@@ -186,6 +235,7 @@ class ZebraPrinter:
         self._sock = None
 
     def connect(self) -> None:
+        """Open a persistent TCP connection to the printer."""
         if self._sock:
             logger.debug("Already connected to %s:%d", self.host, self.port)
             return
@@ -234,11 +284,12 @@ class ZebraPrinter:
                 )
                 self._sock = None  # Mark socket as dead
                 if attempt < retries:
-                    sleep(retry_delay)
+                    time.sleep(retry_delay)
                 else:
                     raise
 
     def print_zpl(self, zpl: str | bytes) -> None:
+        """Convenience alias for send(); opens/closes a transient connection."""
         with self:
             self.send(zpl)
 
@@ -246,6 +297,14 @@ class ZebraPrinter:
         self.print_zpl(builder.encode())
 
     def query(self, command: str, buffer_size: int = 1024) -> str:
+        """
+        Send a ZPL/SGD query command and return the raw response string.
+
+        Example
+        -------
+        status = printer.query("~HS")   # Host status
+        info   = printer.query("^XA^HH^XZ")  # Configuration label
+        """
         response = b""
         with self:
             self.send(command)
@@ -264,19 +323,10 @@ class ZebraPrinter:
 def make_printer(
     host: str,
     width_in: float,
-    height_in: float,
+    length_in: float,
     dpi: int = 203,
-    port: int = DEFAULT_PORT,
-    **kwargs,
+    port: int = ZebraPrinter.DEFAULT_PORT,
+    **label_kwargs,
 ) -> ZebraPrinter:
-    config = LabelConfig(
-        width_in=width_in,
-        height_in=height_in,
-        dpi=dpi,
-        **kwargs
-    )
-    return ZebraPrinter(
-        host=host,
-        port=port,
-        config=config
-    )
+    config = LabelConfig(width_in=width_in, length_in=length_in, dpi=dpi, **label_kwargs)
+    return ZebraPrinter(host=host, port=port, config=config)
