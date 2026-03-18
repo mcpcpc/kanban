@@ -1,6 +1,6 @@
 import socket
 import logging
-import time
+from time import sleep
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional
@@ -9,18 +9,10 @@ logger = logging.getLogger(__name__)
 
 
 class MediaType(Enum):
-    """
-    Zebra media tracking types, corresponding to the ZPL ^MN command.
-
-    WEB        : Die-cut labels separated by gaps (^MNY). Requires length + gap.
-    BLACK_MARK : Labels with a black reflective mark (^MNM). Requires length + gap (mark height).
-    NOTCH      : Labels with a notch or hole (^MNN). Requires length + gap.
-    CONTINUOUS : Continuous roll with no gaps or marks (^MNC). Length and gap are not used.
-    """
-    WEB        = "Y"
-    BLACK_MARK = "M"
-    NOTCH      = "N"
-    CONTINUOUS = "C"
+    WEB = "Y"         # Die-cut labels separated by gaps (^MNY). Requires length + gap.
+    BLACK_MARK = "M"  # Labels with a black reflective mark (^MNM). Requires length + gap (mark height).
+    NOTCH = "N"       # Labels with a notch or hole (^MNN). Requires length + gap.
+    CONTINUOUS = "C"  # Continuous roll with no gaps or marks (^MNC). Length and gap are not used.
 
     @property
     def requires_length(self) -> bool:
@@ -284,7 +276,7 @@ class ZebraPrinter:
                 )
                 self._sock = None  # Mark socket as dead
                 if attempt < retries:
-                    time.sleep(retry_delay)
+                    sleep(retry_delay)
                 else:
                     raise
 
