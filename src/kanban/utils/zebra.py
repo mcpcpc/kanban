@@ -228,31 +228,31 @@ class ZebraPrinter:
         self.port = port
         self.config = config
         self.timeout = timeout
-        self._sock = None
+        self.sock = None
 
     def connect(self) -> None:
-        if self._sock:
+        if self.sock:
             debug("Already connected to %s:%d", self.host, self.port)
             return
         info("Connecting to %s:%d …", self.host, self.port)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(self.timeout)
         sock.connect((self.host, self.port))
-        self._sock = sock
+        self.sock = sock
         info("Connected to %s:%d", self.host, self.port)
 
     def disconnect(self) -> None:
-        if self._sock:
+        if self.sock:
             try:
-                self._sock.shutdown(socket.SHUT_RDWR)
+                self.sock.shutdown(socket.SHUT_RDWR)
             except OSError:
                 pass
-            self._sock.close()
-            self._sock = None
+            self.sock.close()
+            self.sock = None
             info("Disconnected from %s:%d", self.host, self.port)
 
     def is_connected(self) -> bool:
-        return self._sock is not None
+        return self.sock is not None
 
     def __enter__(self) -> "ZebraPrinter":
         self.connect()
@@ -268,14 +268,14 @@ class ZebraPrinter:
             try:
                 if not self.is_connected():
                     self.connect()
-                self._sock.sendall(payload)
+                self.sock.sendall(payload)
                 info("Sent %d bytes to %s:%d", len(payload), self.host, self.port)
                 return
             except (OSError, socket.error) as exc:
                 warning(
                     "Send attempt %d/%d failed: %s", attempt + 1, retries + 1, exc
                 )
-                self._sock = None  # Mark socket as dead
+                self.sock = None  # Mark socket as dead
                 if attempt < retries:
                     sleep(retry_delay)
                 else:
@@ -292,10 +292,10 @@ class ZebraPrinter:
         response = b""
         with self:
             self.send(command)
-            self._sock.settimeout(2.0)
+            self.sock.settimeout(2.0)
             try:
                 while True:
-                    chunk = self._sock.recv(buffer_size)
+                    chunk = self.sock.recv(buffer_size)
                     if not chunk:
                         break
                     response += chunk
