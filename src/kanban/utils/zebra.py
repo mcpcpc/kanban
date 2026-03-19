@@ -303,14 +303,3 @@ class ZebraPrinter:
                 pass  # Expected -- printer stops sending when done
         return response.decode(self.config.encoding, errors="replace")
 
-
-def make_printer(
-    host: str,
-    width_in: float,
-    length_in: float,
-    dpi: int = 203,
-    port: int = ZebraPrinter.DEFAULT_PORT,
-    **label_kwargs,
-) -> ZebraPrinter:
-    config = LabelConfig(width_in=width_in, length_in=length_in, dpi=dpi, **label_kwargs)
-    return ZebraPrinter(host=host, port=port, config=config)
