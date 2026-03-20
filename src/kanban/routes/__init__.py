@@ -10,8 +10,7 @@ from kanban.routes.help import bp as help_bp
 from kanban.routes.api import bp as api_bp
 
 
-def register_blueprints(app):
-    """Register all blueprints with the app."""
+def register_blueprints(app) -> None:
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(parts_bp)
     app.register_blueprint(bins_bp)
