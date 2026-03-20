@@ -68,7 +68,7 @@ async def list():
 async def new():
     """Show new part form."""
     db = get_db()
-    units = db.execute("SELECT * FROM unit_of_measure ORDER BY name").fetchall()
+    units = db.execute("SELECT * FROM unit_of_measure").fetchall()
     return await render_template("parts/form.html", part=None, units=units)
 
 
