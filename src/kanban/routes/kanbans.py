@@ -5,6 +5,7 @@ from quart import Blueprint, render_template, request, redirect, url_for, flash
 from kanban.db import get_db
 from kanban.oauth import authorize
 from kanban.utils.zebra import ZebraPrinter
+from kanban.utils.label import KanbanLabelTemplate
 
 bp = Blueprint("kanbans", __name__, url_prefix="/kanbans")
 
@@ -273,7 +274,8 @@ async def print_card(id):
     printer = ZebraPrinter(host)
     
     for i in range(1, kanban["number_of_cards"] + 1):
-        print((dict(kanban), i))
+        label = KanbanLabelTemplate(**kanban)
+        print((label, i))
     
     await flash("Kanban card(s) printed.", "success")
     
