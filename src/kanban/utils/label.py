@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class LabelTemplateBase:
-    kanban_id: int
+    id: int
     part_number: str
     part_manufacturer: str
     part_description: str
@@ -12,7 +12,7 @@ class LabelTemplateBase:
     kanban_quantity: int
 
     def __post_init__(self) -> None:
-        self.qr = f"K{self.kanban_id:06d}"
+        self.qr = f"K{self.id:06d}"
 
     def render(self) -> str:
         raise NotImplementedError(
