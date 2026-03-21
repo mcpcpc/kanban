@@ -255,7 +255,7 @@ async def print_card(id):
             p.manufacturer as part_manufacturer,
             p.description as part_description,
             b.location as bin_location,
-            u.abbreviation as unit_of_meaure_abbreviation,
+            u.abbreviation as unit_of_measure_abbreviation,
             CAST(k.estimated_daily_demand * (p.reorder_lead_time_days + k.safety_lead_time_days) AS INTEGER) as reorder_point
         FROM kanban k
             JOIN part p ON k.part_id = p.id
