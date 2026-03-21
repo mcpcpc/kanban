@@ -5,6 +5,7 @@ from quart import Quart
 
 from kanban.db import init_db
 from kanban.routes import register_blueprints
+from kanban.oauth import init_oauth
 
 __version__ = "0.0.1"
 
@@ -14,7 +15,7 @@ def create_app(test_config=None) -> Quart:
     app.config.from_mapping(
         SECRET_KEY="dev",
         DATABASE=join(app.instance_path, "kanban.db"),
-        VERSION=__version__,
+        VERSION=__version__
     )
 
     if test_config is None:
@@ -31,6 +32,7 @@ def create_app(test_config=None) -> Quart:
         pass
 
     init_db(app)
+    init_oauth(app)
     register_blueprints(app)
 
     return app
