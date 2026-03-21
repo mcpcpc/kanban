@@ -24,12 +24,12 @@ def init_oauth(app: Quart) -> Quart:
     async def auth():
         token = await oauth.google.authorize_access_token()
         session["user"] = token["userinfo"]
-        return redirect(url_for("index"))
+        return redirect(url_for("dashboard.index"))
 
     @app.route("/logout")
     async def logout():
         session.pop("user", None)
-        return redirect(url_for("index"))
+        return redirect(url_for("dashboard.index"))
 
     return app
 
