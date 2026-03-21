@@ -67,8 +67,8 @@ from secrets import token_hex
 
 SECRET_KEY = f"{token_hex()}"
 #DATABASE = "/path/to/kanban.db"
-GOOGLE_CLIENT_ID = getenv(“GOOGLE_CLIENT_ID”)
-GOOGLE_CLIENT_SECRET = getenv(“GOOGLE_CLIENT_SECRET”)
+GOOGLE_CLIENT_ID = getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = getenv("GOOGLE_CLIENT_SECRET")
 ```
 
 ## DataWedge Setup
