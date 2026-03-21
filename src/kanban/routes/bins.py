@@ -1,6 +1,7 @@
 from quart import Blueprint, render_template, request, redirect, url_for, flash
 
 from kanban.db import get_db
+from kanban.oauth import authorize
 
 bp = Blueprint("bins", __name__, url_prefix="/bins")
 
@@ -18,6 +19,7 @@ BIN_COLORS = [
 
 
 @bp.route("/")
+@authorize
 async def list():
     """List all bins."""
     db = get_db()
@@ -68,12 +70,14 @@ async def list():
 
 
 @bp.route("/new")
+@authorize
 async def new():
     """Show new bin form."""
     return await render_template("bins/form.html", bin=None, bin_colors=BIN_COLORS)
 
 
 @bp.route("/", methods=["POST"])
+@authorize
 async def create():
     """Create a new bin."""
     db = get_db()
@@ -102,6 +106,7 @@ async def create():
 
 
 @bp.route("/<int:id>")
+@authorize
 async def detail(id):
     """Show bin details."""
     db = get_db()
@@ -125,6 +130,7 @@ async def detail(id):
 
 
 @bp.route("/<int:id>/edit")
+@authorize
 async def edit(id):
     """Show edit bin form."""
     db = get_db()
@@ -138,6 +144,7 @@ async def edit(id):
 
 
 @bp.route("/<int:id>", methods=["POST"])
+@authorize
 async def update(id):
     """Update a bin."""
     db = get_db()
@@ -163,6 +170,7 @@ async def update(id):
 
 
 @bp.route("/<int:id>/delete", methods=["POST"])
+@authorize
 async def delete(id):
     """Delete a bin."""
     db = get_db()
@@ -186,6 +194,7 @@ async def delete(id):
 
 
 @bp.route("/<int:id>/print")
+@authorize
 async def print_label(id):
     """Show printable bin label."""
     db = get_db()

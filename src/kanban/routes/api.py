@@ -1,11 +1,13 @@
 from quart import Blueprint, jsonify, request
 
 from kanban.db import get_db
+from kanban.oauth import authorize
 
 bp = Blueprint("api", __name__, url_prefix="/api")
 
 
 @bp.route("/kanbans")
+@authorize
 async def list_kanbans():
     """List kanbans with status."""
     db = get_db()
@@ -41,6 +43,7 @@ async def list_kanbans():
 
 
 @bp.route("/kanbans/<int:id>")
+@authorize
 async def get_kanban(id):
     """Get kanban detail with recent events."""
     db = get_db()
@@ -93,6 +96,7 @@ async def get_kanban(id):
 
 
 @bp.route("/events", methods=["POST"])
+@authorize
 async def record_event():
     """Record a kanban event."""
     db = get_db()
@@ -157,6 +161,7 @@ async def record_event():
 
 
 @bp.route("/health")
+@authorize
 async def health():
     """System health summary."""
     db = get_db()
@@ -199,6 +204,7 @@ async def health():
 
 
 @bp.route("/metrics")
+@authorize
 async def metrics():
     """Performance metrics."""
     db = get_db()
@@ -231,6 +237,7 @@ async def metrics():
 
 
 @bp.route("/kanbans/<int:id>/suggest-reorder-point")
+@authorize
 async def suggest_reorder_point(id):
     """Calculate reorder point based on estimated demand, lead time, and safety stock.
     

@@ -1,11 +1,13 @@
 from quart import Blueprint, render_template
 
 from kanban.db import get_db
+from kanban.oauth import authorize
 
 bp = Blueprint("reports", __name__, url_prefix="/reports")
 
 
 @bp.route("/")
+@authorize
 async def index():
     """Reports dashboard."""
     db = get_db()

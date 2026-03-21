@@ -1,6 +1,7 @@
 from quart import Blueprint, render_template, request, redirect, url_for, flash
 
 from kanban.db import get_db
+from kanban.oauth import authorize
 
 bp = Blueprint("parts", __name__, url_prefix="/parts")
 
@@ -8,6 +9,7 @@ ITEMS_PER_PAGE = 20
 
 
 @bp.route("/")
+@authorize
 async def list():
     """List all parts with search and filter."""
     db = get_db()
@@ -65,6 +67,7 @@ async def list():
 
 
 @bp.route("/new")
+@authorize
 async def new():
     """Show new part form."""
     db = get_db()
@@ -73,6 +76,7 @@ async def new():
 
 
 @bp.route("/", methods=["POST"])
+@authorize
 async def create():
     """Create a new part."""
     db = get_db()
@@ -117,6 +121,7 @@ async def create():
 
 
 @bp.route("/<int:id>")
+@authorize
 async def detail(id):
     """Show part details."""
     db = get_db()
@@ -146,6 +151,7 @@ async def detail(id):
 
 
 @bp.route("/<int:id>/edit")
+@authorize
 async def edit(id):
     """Show edit part form."""
     db = get_db()
@@ -160,6 +166,7 @@ async def edit(id):
 
 
 @bp.route("/<int:id>", methods=["POST"])
+@authorize
 async def update(id):
     """Update a part."""
     db = get_db()
@@ -205,6 +212,7 @@ async def update(id):
 
 
 @bp.route("/<int:id>/delete", methods=["POST"])
+@authorize
 async def delete(id):
     """Delete a part."""
     db = get_db()
