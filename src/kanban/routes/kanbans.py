@@ -250,12 +250,11 @@ async def print_card(id):
         """
         SELECT
             k.*,
-            p.part_number as part_name,
-            p.manufacturer,
+            p.part_number as part_number,
+            p.manufacturer as part_manufacturer,
             p.description as part_description,
-            p.reorder_lead_time_days,
             b.location as bin_location,
-            u.abbreviation as uom_abbr,
+            u.abbreviation as unit_of_meaure_abbreviation,
             CAST(k.estimated_daily_demand * (p.reorder_lead_time_days + k.safety_lead_time_days) AS INTEGER) as reorder_point
         FROM kanban k
             JOIN part p ON k.part_id = p.id
@@ -274,7 +273,7 @@ async def print_card(id):
     printer = ZebraPrinter(host)
     
     for i in range(1, kanban["number_of_cards"] + 1):
-        print((kanban, i))
+        print((dict(kanban), i))
     
     await flash("Kanban card(s) printed.", "success")
     
