@@ -824,6 +824,16 @@
         .gap-1 { gap: 0.5rem; }
         .gap-2 { gap: 1rem; }
     </style>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.setAttribute(
+                'data-theme',
+                savedTheme || (prefersDark ? 'dark' : 'light')
+            );
+        })();
+    </script>
 </head>
 <body>
     <!-- SVG Icon Definitions -->
@@ -1140,14 +1150,11 @@
                 moonIcon.style.display = theme === 'dark' ? 'none' : 'block';
             }
 
-            // Initialize theme
-            const savedTheme = localStorage.getItem('theme');
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            setTheme(savedTheme || (prefersDark ? 'dark' : 'light'));
+            // Sync icon state with whatever the head script already set
+            setTheme(html.getAttribute('data-theme'));
 
             themeToggle.addEventListener('click', function() {
-                const currentTheme = html.getAttribute('data-theme');
-                setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+                setTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
             });
         })();
 
