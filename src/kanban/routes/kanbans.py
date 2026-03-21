@@ -4,6 +4,7 @@ from quart import Blueprint, render_template, request, redirect, url_for, flash
 
 from kanban.db import get_db
 from kanban.oauth import authorize
+from kanban.utils.zebra import ZebraPrinter
 
 bp = Blueprint("kanbans", __name__, url_prefix="/kanbans")
 
@@ -246,15 +247,22 @@ async def print_card(id):
     """Show printable kanban card."""
     db = get_db()
     kanban = db.execute(
-        """SELECT k.*, p.part_number as part_name, p.manufacturer, p.description as part_description,
-                  p.reorder_lead_time_days,
-                  b.location as bin_location, u.abbreviation as uom_abbr,
-                  CAST(k.estimated_daily_demand * (p.reorder_lead_time_days + k.safety_lead_time_days) AS INTEGER) as reorder_point
-           FROM kanban k
-           JOIN part p ON k.part_id = p.id
-           JOIN bin b ON k.bin_id = b.id
-           JOIN unit_of_measure u ON p.unit_of_measure_id = u.id
-           WHERE k.id = ?""",
+        """
+        SELECT
+            k.*,
+            p.part_number as part_name,
+            p.manufacturer,
+            p.description as part_description,
+            p.reorder_lead_time_days,
+            b.location as bin_location,
+            u.abbreviation as uom_abbr,
+            CAST(k.estimated_daily_demand * (p.reorder_lead_time_days + k.safety_lead_time_days) AS INTEGER) as reorder_point
+        FROM kanban k
+            JOIN part p ON k.part_id = p.id
+            JOIN bin b ON k.bin_id = b.id
+            JOIN unit_of_measure u ON p.unit_of_measure_id = u.id
+        WHERE k.id = ?
+        """,
         [id]
     ).fetchone()
     
@@ -262,13 +270,12 @@ async def print_card(id):
         await flash("Kanban not found.", "danger")
         return redirect(url_for("kanbans.list"))
     
-    # Generate barcode data
-    from kanban.utils.barcode import generate_code128_svg
-    barcode_svg = generate_code128_svg(f"K{id:06d}")
+    host = "127.0.0.1"
+    printer = ZebraPrinter(host)
     
-    return await render_template(
-        "kanbans/card_print.html",
-        kanban=kanban,
-        barcode_svg=barcode_svg,
-        barcode_data=f"K{id:06d}"
-    )
+    for i in range(1, kanban["number_of_cards"] + 1):
+        print((kanban, i))
+    
+    await flash("Kanban card(s) printed.", "success")
+    
+    return redirect(url_for("kanbans.detail", id=id))
