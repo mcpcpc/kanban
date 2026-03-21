@@ -5,7 +5,7 @@ readme = "README.md"
 license = {file = "LICENSE"}
 dynamic = ["version"]
 requires-python = ">=3.12"
-dependencies = ["quart"]
+dependencies = ["quart-authlib"]
 
 [project.optional-dependencies]
 prod = ["uvicorn"]
