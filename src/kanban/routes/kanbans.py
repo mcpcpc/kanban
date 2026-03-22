@@ -279,7 +279,7 @@ async def print_card(id):
             zpl = label.render()
             print(zpl)
             printer.print(zpl)
-    except Error as e:
+    except Exception as e:
         await flash(f"Print failed: {e}", "danger")
         return redirect(url_for("kanbans.detail", id=id))
     await flash("Kanban card(s) printed.", "success")
