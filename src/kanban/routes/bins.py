@@ -191,17 +191,3 @@ async def delete(id):
         await flash(f"Location '{bin['location']}' deleted.", "success")
     
     return redirect(url_for("bins.list"))
-
-
-@bp.route("/<int:id>/print")
-@authorize
-async def print_label(id):
-    """Show printable bin label."""
-    db = get_db()
-    bin = db.execute("SELECT * FROM bin WHERE id = ?", [id]).fetchone()
-
-    if not bin:
-        await flash("Location not found.", "danger")
-        return redirect(url_for("bins.list"))
-
-    return await render_template("bins/label_print.html", bin=bin)
