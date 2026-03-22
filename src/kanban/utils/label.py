@@ -28,7 +28,7 @@ class LabelTemplateBase:
 
 
 class KanbanLabelTemplate(LabelTemplateBase):
-    def render(self) -> str:
+    def render(self, card_number: int) -> str:
         return f"""
 ^XA
 ^PW533
@@ -67,7 +67,7 @@ class KanbanLabelTemplate(LabelTemplateBase):
 ^FDROP: {self.reorder_point}^FS
 ^FO392,254
 ^A0N,26,26
-^FDCARD:1 of {self.number_of_cards}^FS
+^FDCARD:{card_number} of {self.number_of_cards}^FS
 ^PQ1
 ^XZ
         """

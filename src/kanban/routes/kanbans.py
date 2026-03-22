@@ -276,7 +276,7 @@ async def print_card(id):
     try:
         for i in range(1, kanban["number_of_cards"] + 1):
             label = KanbanLabelTemplate(**kanban)
-            zpl = label.render()
+            zpl = label.render(i)
             print(zpl)
             printer.print(zpl)
     except Exception as e:
