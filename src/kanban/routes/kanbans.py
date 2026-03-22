@@ -273,10 +273,15 @@ async def print_card(id):
     host = "127.0.0.1"
     printer = ZebraPrinter(host)
     
-    for i in range(1, kanban["number_of_cards"] + 1):
-        label = KanbanLabelTemplate(**kanban)
-        print((label, i))
-    
+    try:
+        for i in range(1, kanban["number_of_cards"] + 1):
+            label = KanbanLabelTemplate(**kanban)
+            zpl = label.render()
+            print(zpl)
+            printer.print(zpl)
+    except Error as e:
+        await flash(f"Print failed: {e}", "danger")
+        return redirect(url_for("kanbans.detail", id=id))
     await flash("Kanban card(s) printed.", "success")
     
     return redirect(url_for("kanbans.detail", id=id))
