@@ -55,7 +55,7 @@ class KanbanLabelTemplate(LabelTemplateBase):
 ^FO162,99
 ^A0N,28,28
 ^FD{self.part_manufacturer}^FS
-^FO240,130
+^FO162,130
 ^A0N,20,20
 ^TBL,345,62
 ^FD{self.part_description}^FS
