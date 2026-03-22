@@ -282,6 +282,7 @@ async def print_card(id):
     except Exception as e:
         await flash(f"Print failed: {e}", "danger")
         return redirect(url_for("kanbans.detail", id=id))
+    
     await flash("Kanban card(s) printed.", "success")
     
     return redirect(url_for("kanbans.detail", id=id))
