@@ -31,7 +31,7 @@ class KanbanLabelTemplate(LabelTemplateBase):
     def render(self, card_number: int) -> str:
         return f"""
 ^XA
-^PW533
+^PW532
 ^MNY
 ^LL329
 ^LH0,0
@@ -42,10 +42,10 @@ class KanbanLabelTemplate(LabelTemplateBase):
 ^PON
 ^FO16,12
 ^BQN,2,6,H
-^FDQA,{self.id:06d}^FS
+^FDQA,K{self.id:06d}^FS
 ^FO162,18
 ^A0N,32,32
-^FD{self.id:06d}^FS
+^FDK{self.id:06d}^FS
 ^FO392,18
 ^A0N,32,32
 ^FD{self.bin_location}^FS
@@ -57,7 +57,7 @@ class KanbanLabelTemplate(LabelTemplateBase):
 ^FD{self.part_manufacturer}^FS
 ^FO162,130
 ^A0N,20,20
-^TBL,345,62
+^TBN,345,96
 ^FD{self.part_description}^FS
 ^FO162,254
 ^A0N,26,26
@@ -67,7 +67,7 @@ class KanbanLabelTemplate(LabelTemplateBase):
 ^FDROP: {self.reorder_point}^FS
 ^FO392,254
 ^A0N,26,26
-^FDCARD:{card_number} of {self.number_of_cards}^FS
+^FD{card_number} of {self.number_of_cards}^FS
 ^PQ1
 ^XZ
         """
