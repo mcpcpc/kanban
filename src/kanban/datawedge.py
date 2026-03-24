@@ -35,7 +35,7 @@ async def handle_datawedge_client(reader, writer):
 
 
 async def start_datawedge_server():
-    server = await start_server(handle_datawedge_client, "0.0.0.0", TCP_PORT)
+    server = await start_server(handle_datawedge_client, "0.0.0.0", 58627)
     addrs = ", ".join(str(s.getsockname()) for s in server.sockets)
     info(f"DataWedge TCP server listening on {addrs}")
     async with server:
