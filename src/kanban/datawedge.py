@@ -6,7 +6,7 @@ from logging import info
 from logging import exception
 from logging import getLogger
 
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
 
 async def handle_datawedge_client(reader, writer):
