@@ -16,6 +16,8 @@ def create_app(test_config=None) -> Quart:
     app.config.from_mapping(
         SECRET_KEY="dev",
         DATABASE=join(app.instance_path, "kanban.db"),
+        DATAWEDGE_HOST="0.0.0.0",
+        DATAWEDGE_PORT=58627,
         VERSION=__version__
     )
 
