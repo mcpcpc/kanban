@@ -12,7 +12,22 @@ logger = getLogger(__name__)
 
 
 async def save_scan(barcode: str) -> None:
-    db = get_db()
+    if barcode.upper().startswith("K"):
+        try:
+            kanban_id = int(barcode[1:])
+        except ValueError:
+            pass
+    else:
+        try:
+            kanban_id = int(barcode)
+        except ValueError:
+            pass
+    
+    if not kanban_id:
+        info(f"Invalid barcode format: {barcode}")
+        return
+    
+    print(kanban_id)
 
 
 async def handle_datawedge_client(reader, writer):
