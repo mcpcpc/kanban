@@ -4,6 +4,7 @@ from os.path import join
 from quart import Quart
 
 from kanban.db import init_db
+from kanban.datawedge import start_datawedge_server
 from kanban.routes import register_blueprints
 from kanban.oauth import init_oauth
 
@@ -33,6 +34,7 @@ def create_app(test_config=None) -> Quart:
 
     init_db(app)
     init_oauth(app)
+    init_datawedge(app)
     register_blueprints(app)
 
     return app
