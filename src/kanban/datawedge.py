@@ -42,4 +42,6 @@ async def start_datawedge_server():
         await server.serve_forever()
 
 def init_datawedge(app) -> None:
-    app.add_background_task(start_datawedge_server)
+    @app.before_serving
+    async def startup():
+        app.add_background_task(start_datawedge_server)
