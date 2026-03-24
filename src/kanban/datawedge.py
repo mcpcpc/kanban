@@ -6,7 +6,13 @@ from logging import info
 from logging import exception
 from logging import getLogger
 
+from kanban.db import get_db
+
 logger = getLogger(__name__)
+
+
+async def save_scan(barcode: str) -> None:
+    db = get_db()
 
 
 async def handle_datawedge_client(reader, writer):
@@ -24,7 +30,7 @@ async def handle_datawedge_client(reader, writer):
                 continue
 
             info(f"Scan received -- barcode: {data!r}")
-            await save_scan(barcode, barcode_type)
+            await save_scan(data)
     except IncompleteReadError:
         info(f"DataWedge client {addr} disconnected")
     except Exception as e:
