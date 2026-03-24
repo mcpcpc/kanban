@@ -2,8 +2,11 @@ from asyncio import start_server
 from asyncio import IncompleteReadError
 from json import loads
 from json import JSONDecodeError
-from logger import info
-from logger import exception
+from logging import info
+from logging import exception
+from logging import getLogger
+
+logger = logging.getLogger(__name__)
 
 
 async def handle_datawedge_client(reader, writer):
