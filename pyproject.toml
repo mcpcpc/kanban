@@ -1,6 +1,6 @@
 [project]
 name = "kanban"
-description = "Production kanban monitoring system"
+description = "Kanban and inventory management system"
 readme = "README.md"
 license = {file = "LICENSE"}
 dynamic = ["version"]
