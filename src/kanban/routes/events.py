@@ -1,13 +1,11 @@
 from quart import Blueprint, render_template, request
 
 from kanban.db import get_db
-from kanban.oauth import authorize
 
 bp = Blueprint("events", __name__, url_prefix="/events")
 
 
 @bp.route("/")
-@authorize
 async def history():
     """Show event history with filters."""
     db = get_db()
@@ -68,7 +66,6 @@ async def history():
 
 
 @bp.route("/export")
-@authorize
 async def export():
     """Export events as CSV."""
     from quart import Response

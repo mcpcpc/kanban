@@ -62,13 +62,10 @@ docker run -p 8080:8080 -v kanban-data:/app/instance kanban
 Create `instance/config.py` to override defaults:
 
 ```python
-from os import getenv
 from secrets import token_hex
 
 SECRET_KEY = f"{token_hex()}"
-#DATABASE = "/path/to/kanban.db"
-GOOGLE_CLIENT_ID = getenv("GOOGLE_CLIENT_ID")
-GOOGLE_CLIENT_SECRET = getenv("GOOGLE_CLIENT_SECRET")
+DATABASE = "/path/to/kanban.db"
 ```
 
 ## DataWedge Setup

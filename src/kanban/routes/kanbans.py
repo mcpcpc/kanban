@@ -3,7 +3,6 @@ import math
 from quart import Blueprint, render_template, request, redirect, url_for, flash
 
 from kanban.db import get_db
-from kanban.oauth import authorize
 from kanban.utils.zebra import ZebraPrinter
 from kanban.utils.label import KanbanLabelTemplate
 
@@ -11,7 +10,6 @@ bp = Blueprint("kanbans", __name__, url_prefix="/kanbans")
 
 
 @bp.route("/")
-@authorize
 async def list():
     """List all kanbans."""
     db = get_db()
@@ -54,7 +52,6 @@ async def list():
 
 
 @bp.route("/new")
-@authorize
 async def new():
     """Show new kanban form."""
     db = get_db()
@@ -66,7 +63,6 @@ async def new():
 
 
 @bp.route("/", methods=["POST"])
-@authorize
 async def create():
     """Create a new kanban."""
     db = get_db()
@@ -114,7 +110,6 @@ async def create():
 
 
 @bp.route("/<int:id>")
-@authorize
 async def detail(id):
     """Show kanban details."""
     db = get_db()
@@ -151,7 +146,6 @@ async def detail(id):
 
 
 @bp.route("/<int:id>/edit")
-@authorize
 async def edit(id):
     """Show edit kanban form."""
     db = get_db()
@@ -172,7 +166,6 @@ async def edit(id):
 
 
 @bp.route("/<int:id>", methods=["POST"])
-@authorize
 async def update(id):
     """Update a kanban."""
     db = get_db()
@@ -221,7 +214,6 @@ async def update(id):
 
 
 @bp.route("/<int:id>/delete", methods=["POST"])
-@authorize
 async def delete(id):
     """Delete a kanban."""
     db = get_db()
@@ -243,7 +235,6 @@ async def delete(id):
 
 
 @bp.route("/<int:id>/print")
-@authorize
 async def print_card(id):
     """Show printable kanban card."""
     db = get_db()

@@ -4,7 +4,6 @@ import io
 from datetime import datetime, timedelta
 
 from kanban.db import get_db
-from kanban.oauth import authorize
 
 bp = Blueprint("inventory", __name__, url_prefix="/inventory")
 
@@ -38,7 +37,6 @@ def calculate_demand_stats(db, part_id, days=30):
 
 
 @bp.route("/")
-@authorize
 async def index():
     """Inventory list with stock levels and demand metrics."""
     db = get_db()
@@ -139,7 +137,6 @@ async def index():
 
 
 @bp.route("/<int:part_id>/adjust", methods=["GET", "POST"])
-@authorize
 async def adjust(part_id):
     """Adjust inventory quantity for a part."""
     db = get_db()
@@ -218,7 +215,6 @@ async def adjust(part_id):
 
 
 @bp.route("/export")
-@authorize
 async def export():
     """Export inventory data as CSV."""
     db = get_db()

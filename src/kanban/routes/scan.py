@@ -1,20 +1,17 @@
 from quart import Blueprint, render_template, request, redirect, url_for, flash
 
 from kanban.db import get_db
-from kanban.oauth import authorize
 
 bp = Blueprint("scan", __name__, url_prefix="/scan")
 
 
 @bp.route("/")
-@authorize
 async def index():
     """Quick scan interface."""
     return await render_template("scan/quick.html")
 
 
 @bp.route("/", methods=["POST"])
-@authorize
 async def process():
     """Process a scanned barcode."""
     db = get_db()

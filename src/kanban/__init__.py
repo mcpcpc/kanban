@@ -6,7 +6,6 @@ from quart import Quart
 from kanban.db import init_db
 from kanban.datawedge import init_datawedge
 from kanban.routes import register_blueprints
-from kanban.oauth import init_oauth
 
 __version__ = "0.0.1"
 
@@ -35,7 +34,6 @@ def create_app(test_config=None) -> Quart:
         pass
 
     init_db(app)
-    init_oauth(app)
     init_datawedge(app)
     register_blueprints(app)
 
