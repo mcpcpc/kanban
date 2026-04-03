@@ -11,6 +11,11 @@ from kanban.db import get_db
 logger = getLogger(__name__)
 
 
+def is_datawedge_running() -> bool:
+    server = getattr(current_app, "_datawedge_server", None)
+    return server is not None and server.is_serving()
+
+
 async def save_scan(barcode: str) -> None:
     if barcode.upper().startswith("K"):
         try:
@@ -30,7 +35,7 @@ async def save_scan(barcode: str) -> None:
     print(kanban_id)
 
 
-async def handle_datawedge_client(reader, writer):
+async def client_handler(reader, writer):
     addr = writer.get_extra_info("peername")
     info(f"DataWedge connected from {addr}")
     try:
@@ -55,12 +60,39 @@ async def handle_datawedge_client(reader, writer):
         await writer.wait_closed()
 
 
-async def start_datawedge_server(host, port):
-    server = await start_server(handle_datawedge_client, host, port)
-    addrs = ", ".join(str(s.getsockname()) for s in server.sockets)
-    info(f"DataWedge TCP server listening on {addrs}")
-    async with server:
-        await server.serve_forever()
+async def start_datawedge_server(app, host: str, port: int) -> bool:
+    if is_datawedge_running():
+        info("DataWedge server already running")
+        return True
+
+    try:
+        server = await start_server(client_handler, host, port)
+        app._datawedge_server = server
+        addrs = ", ".join(str(s.getsockname()) for s in server.sockets)
+        info(f"DataWedge TCP server listening on {addrs}")
+        return True
+    except OSError as e:
+        exception(f"Failed to start DataWedge server: {e}")
+        app._datawedge_server = None
+        return False
+
+
+async def stop_datawedge_server(app) -> bool:
+    server = getattr(app, "_datawedge_server", None)
+
+    if server is None or not server.is_serving():
+        info("DataWedge server not running")
+        return True
+
+    try:
+        server.close()
+        await server.wait_closed()
+        app._datawedge_server = None
+        info("DataWedge server stopped")
+        return True
+    except Exception as e:
+        exception(f"Error stopping DataWedge server: {e}")
+        return False
 
 def init_datawedge(app) -> None:
     host = app.config["DATAWEDGE_HOST"]
@@ -68,8 +100,4 @@ def init_datawedge(app) -> None:
 
     @app.before_serving
     async def startup():
-        app.add_background_task(
-            start_datawedge_server,
-            host=host,
-            port=port
-        )
+        await start_datawedge_server(app, host, port)

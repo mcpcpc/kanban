@@ -4,7 +4,7 @@ from os.path import join
 from quart import Quart
 
 from kanban.db import init_db
-from kanban.wedge import init_datawedge
+from kanban.datawedge import init_datawedge
 from kanban.routes import register_blueprints
 
 __version__ = "0.0.1"
