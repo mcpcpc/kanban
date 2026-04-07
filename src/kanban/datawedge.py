@@ -6,6 +6,8 @@ from logging import info
 from logging import exception
 from logging import getLogger
 
+from quart import current_app
+
 from kanban.db import get_db
 
 logger = getLogger(__name__)
