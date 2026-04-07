@@ -19,6 +19,7 @@ def is_datawedge_running() -> bool:
 
 
 async def save_scan(barcode: str) -> None:
+    kanban_id = None
     if barcode.upper().startswith("K"):
         try:
             kanban_id = int(barcode[1:])
@@ -34,7 +35,65 @@ async def save_scan(barcode: str) -> None:
         info(f"Invalid barcode format: {barcode}")
         return
     
-    print(kanban_id)
+    db = get_db()
+
+    kanban = db.execute(
+        """SELECT k.*, p.part_number as part_name, b.location as bin_location
+           FROM kanban k
+           JOIN part p ON k.part_id = p.id
+           JOIN bin b ON k.bin_id = b.id
+           WHERE k.id = ?""",
+        [kanban_id]
+    ).fetchone()
+
+    if not kanban:
+        info(f"Kanban not found: {barcode}")
+        return
+
+    if not kanban["is_active"]:
+        info(f"Kanban is inactive: {kanban['part_name']} @ {kanban['bin_location']}")
+        return
+
+    open_signal_count = db.execute("""
+        SELECT
+            (SELECT COUNT(*) FROM kanban_event ke
+             JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
+             WHERE ke.kanban_id = ? AND ket.type = 'signal')
+            -
+            (SELECT COUNT(*) FROM kanban_event ke
+             JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
+             WHERE ke.kanban_id = ? AND ket.type = 'restock_complete')
+        AS cnt
+    """, [kanban_id, kanban_id]).fetchone()["cnt"]
+
+    if open_signal_count >= kanban["number_of_cards"]:
+        info(
+            f"All {kanban['number_of_cards']} cards already signaled for "
+            f"{kanban['part_name']} @ {kanban['bin_location']} — waiting for restock"
+        )
+        return
+
+    event_type_row = db.execute(
+        "SELECT id FROM kanban_event_type WHERE type = ?",
+        ["signal"]
+    ).fetchone()
+
+    db.execute(
+        """INSERT INTO kanban_event (kanban_id, kanban_event_type, quantity, notes)
+           VALUES (?, ?, ?, ?)""",
+        [kanban_id, event_type_row["id"], None, None]
+    )
+
+    db.execute("""
+        UPDATE inventory
+        SET quantity_on_hand = MAX(0, quantity_on_hand - ?),
+            updated_at = CURRENT_TIMESTAMP
+        WHERE part_id = ?
+    """, [kanban["kanban_quantity"], kanban["part_id"]])
+
+    db.commit()
+
+    info(f"Signal recorded: {kanban['part_name']} @ {kanban['bin_location']}")
 
 
 async def client_handler(reader, writer):
