@@ -1,7 +1,5 @@
 from asyncio import start_server
 from asyncio import IncompleteReadError
-from json import loads
-from json import JSONDecodeError
 from logging import info
 from logging import exception
 from logging import getLogger
