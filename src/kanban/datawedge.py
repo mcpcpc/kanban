@@ -156,9 +156,6 @@ async def stop_datawedge_server(app) -> bool:
         return False
 
 def init_datawedge(app) -> None:
-    host = app.config["DATAWEDGE_HOST"]
-    port = app.config["DATAWEDGE_PORT"]
-
     @app.before_serving
     async def startup():
-        await start_datawedge_server(app, host, port)
+        await start_datawedge_server(app, "0.0.0.0", 58627)

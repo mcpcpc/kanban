@@ -8,6 +8,7 @@ from kanban.routes.reports import bp as reports_bp
 from kanban.routes.inventory import bp as inventory_bp
 from kanban.routes.help import bp as help_bp
 from kanban.routes.api import bp as api_bp
+from kanban.routes.settings import bp as settings_bp
 
 
 def register_blueprints(app) -> None:
@@ -21,3 +22,4 @@ def register_blueprints(app) -> None:
     app.register_blueprint(inventory_bp)
     app.register_blueprint(help_bp)
     app.register_blueprint(api_bp)
+    app.register_blueprint(settings_bp)

@@ -1020,6 +1020,16 @@
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
             <circle cx="12" cy="12" r="3"></circle>
         </symbol>
+        <symbol id="icon-settings" viewBox="0 0 24 24">
+            <!-- Slider tracks (muted) -->
+            <rect x="4" y="3" width="2" height="18" rx="1" fill="currentColor" opacity="0.3"/>
+            <rect x="11" y="3" width="2" height="18" rx="1" fill="currentColor" opacity="0.3"/>
+            <rect x="18" y="3" width="2" height="18" rx="1" fill="currentColor" opacity="0.3"/>
+            <!-- Slider knobs (solid) -->
+            <circle cx="5" cy="8" r="3" fill="currentColor"/>
+            <circle cx="12" cy="15" r="3" fill="currentColor"/>
+            <circle cx="19" cy="10" r="3" fill="currentColor"/>
+        </symbol>
     </svg>
 
     <div class="app-container">
@@ -1085,6 +1095,10 @@
                     </a>
 
                     <div class="nav-section">Support</div>
+                    <a href="{{ url_for('settings.index') }}" class="nav-item{% if request.endpoint and request.endpoint.startswith('settings.') %} active{% endif %}">
+                        <svg><use href="#icon-settings"></use></svg>
+                        Settings
+                    </a>
                     <a href="{{ url_for('help.index') }}" class="nav-item{% if request.endpoint and request.endpoint.startswith('help.') %} active{% endif %}">
                         <svg><use href="#icon-help"></use></svg>
                         Help

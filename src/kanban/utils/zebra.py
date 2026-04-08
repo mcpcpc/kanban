@@ -7,17 +7,8 @@ from time import sleep
 
 logger = getLogger(__name__)
 
-DEFAULT_PORT = 9100
-DEFAULT_TIMEOUT = 10.0
-
-
 class ZebraPrinter:
-    def __init__(
-        self,
-        host: str,
-        port: int = DEFAULT_PORT,
-        timeout: float = DEFAULT_TIMEOUT
-    ):
+    def __init__(self, host: str, port: int, timeout: float):
         self.host = host
         self.port = port
         self.timeout = timeout

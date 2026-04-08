@@ -261,8 +261,11 @@ async def print_card(id):
         await flash("Kanban not found.", "danger")
         return redirect(url_for("kanbans.list"))
     
-    host = "10.86.242.249"
-    printer = ZebraPrinter(host)
+    row = db.execute("SELECT * FROM setting LIMIT 1").fetchone()
+    hostname = row["printer_hostname"]
+    port = row["printer_port"]
+    timeout = row["printer_timeout_seconds"]
+    printer = ZebraPrinter(hostname, port, timeout)
     
     try:
         for i in range(1, kanban["number_of_cards"] + 1):

@@ -8,6 +8,7 @@ DROP TABLE IF EXISTS kanban;
 DROP TABLE IF EXISTS kanban_event_type;
 DROP TABLE IF EXISTS kanban_event;
 DROP TABLE IF EXISTS inventory;
+DROP TABLE IF EXISTS setting;
 
 -- Units of Measure: How parts should be quantified
 CREATE TABLE unit_of_measure (
@@ -99,3 +100,16 @@ CREATE TABLE inventory (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Setting: Stores application configuration
+CREATE TABLE setting (
+    id INTEGER PRIMARY KEY,
+    printer_hostname TEXT DEFAULT NULL,
+    printer_port INTEGER DEFAULT 9100,
+    printer_timeout_seconds REAL DEFAULT 10.0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO setting (printer_hostname, printer_port, printer_timeout_seconds) VALUES
+    ('localhost', 9100, 10.0);
