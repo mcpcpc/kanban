@@ -36,7 +36,7 @@
     <div class="card">
         <div class="card-header">Location Details</div>
         <div class="card-body">
-            <dl style="display: grid; grid-template-columns: auto 1fr; gap: 0.75rem 1rem;">
+            <dl class="dl-grid">
                 <dt class="text-muted">Location</dt>
                 <dd>{{ location.location }}</dd>
 
@@ -106,7 +106,7 @@
                                 <span class="badge badge-warning">Inactive</span>
                                 {% endif %}
                             </td>
-                            <td style="text-align: right;">
+                            <td class="text-right">
                                 <a href="{{ url_for('kanbans.detail', id=kanban.id) }}" class="btn btn-sm btn-secondary" title="View">
                                     <svg><use href="#icon-eye"></use></svg>
                                 </a>
@@ -117,7 +117,7 @@
                 </table>
             </div>
             {% else %}
-            <div class="empty-state" style="padding: 2rem;">
+            <div class="empty-state">
                 <svg><use href="#icon-kanban"></use></svg>
                 <div class="empty-state-title">No Kanbans</div>
                 <p>This location doesn't have any kanbans yet.</p>

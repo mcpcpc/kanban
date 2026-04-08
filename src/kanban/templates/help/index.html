@@ -20,7 +20,7 @@
     <div class="card">
         <div class="card-header">Quick Start</div>
         <div class="card-body">
-            <ol style="margin: 0; padding-left: 1.25rem; line-height: 1.8;">
+            <ol class="workflow-list" style="line-height: 1.8;">
                 <li><strong>Add Parts</strong> — Create entries for components you stock</li>
                 <li><strong>Add Locations</strong> — Define physical storage locations</li>
                 <li><strong>Create Kanbans</strong> — Link parts to locations with reorder rules</li>
@@ -34,27 +34,27 @@
     <div class="card">
         <div class="card-header">Key Concepts</div>
         <div class="card-body">
-            <dl style="margin: 0;">
-                <dt style="font-weight: 600;">Part</dt>
-                <dd style="margin: 0 0 1rem 0; color: var(--color-text-muted);">An item being tracked in inventory, identified by part number and manufacturer.</dd>
+            <dl class="help-dl">
+                <dt>Part</dt>
+                <dd>An item being tracked in inventory, identified by part number and manufacturer.</dd>
                 
-                <dt style="font-weight: 600;">Location</dt>
-                <dd style="margin: 0 0 1rem 0; color: var(--color-text-muted);">A physical location that holds inventory. A location can contain multiple kanbans for different parts.</dd>
+                <dt>Location</dt>
+                <dd>A physical location that holds inventory. A location can contain multiple kanbans for different parts.</dd>
                 
-                <dt style="font-weight: 600;">Kanban</dt>
-                <dd style="margin: 0 0 1rem 0; color: var(--color-text-muted);">A visual signal linking a part to a location with replenishment rules (reorder point, quantity, max).</dd>
+                <dt>Kanban</dt>
+                <dd>A visual signal linking a part to a location with replenishment rules (reorder point, quantity, max).</dd>
                 
-                <dt style="font-weight: 600;">Signal</dt>
-                <dd style="margin: 0 0 1rem 0; color: var(--color-text-muted);">Triggered when a kanban quantity is depleted — indicates replenishment is needed.</dd>
+                <dt>Signal</dt>
+                <dd>Triggered when a kanban quantity is depleted — indicates replenishment is needed.</dd>
                 
-                <dt style="font-weight: 600;">Reorder Point</dt>
-                <dd style="margin: 0 0 1rem 0; color: var(--color-text-muted);">The stock level at which a signal should be triggered. Calculated as: Daily Demand × (Lead Time + Safety Lead Time).</dd>
+                <dt>Reorder Point</dt>
+                <dd>The stock level at which a signal should be triggered. Calculated as: Daily Demand × (Lead Time + Safety Lead Time).</dd>
                 
-                <dt style="font-weight: 600;">Safety Lead Time</dt>
-                <dd style="margin: 0 0 1rem 0; color: var(--color-text-muted);">Buffer time to protect against demand variability and supply delays.</dd>
+                <dt>Safety Lead Time</dt>
+                <dd>Buffer time to protect against demand variability and supply delays.</dd>
                 
-                <dt style="font-weight: 600;">Lead Time</dt>
-                <dd style="margin: 0; color: var(--color-text-muted);">Days required to receive new stock after ordering.</dd>
+                <dt>Lead Time</dt>
+                <dd>Days required to receive new stock after ordering.</dd>
             </dl>
         </div>
     </div>
@@ -67,11 +67,11 @@
         <div class="grid grid-3" style="gap: 2rem;">
             <!-- Daily Operations -->
             <div>
-                <h3 style="font-size: 1rem; margin: 0 0 0.75rem 0; display: flex; align-items: center; gap: 0.5rem;">
-                    <svg style="width: 20px; height: 20px; color: var(--color-primary);"><use href="#icon-scan"></use></svg>
+                <h3 class="workflow-heading">
+                    <svg><use href="#icon-scan"></use></svg>
                     Daily Operations
                 </h3>
-                <ol style="margin: 0; padding-left: 1.25rem; font-size: 0.875rem; line-height: 1.7; color: var(--color-text-muted);">
+                <ol class="workflow-list">
                     <li>Worker depletes a kanban → takes kanban card</li>
                     <li>Scan card → records <span class="badge badge-warning">Signal</span></li>
                     <li>Warehouse sees active signals on Dashboard</li>
@@ -83,11 +83,11 @@
 
             <!-- Inventory Monitoring -->
             <div>
-                <h3 style="font-size: 1rem; margin: 0 0 0.75rem 0; display: flex; align-items: center; gap: 0.5rem;">
-                    <svg style="width: 20px; height: 20px; color: var(--color-primary);"><use href="#icon-inventory"></use></svg>
+                <h3 class="workflow-heading">
+                    <svg><use href="#icon-inventory"></use></svg>
                     Inventory Monitoring
                 </h3>
-                <ol style="margin: 0; padding-left: 1.25rem; font-size: 0.875rem; line-height: 1.7; color: var(--color-text-muted);">
+                <ol class="workflow-list">
                     <li>View Inventory page for stock levels</li>
                     <li>Check days of supply vs. lead time</li>
                     <li>Filter by status to find problems</li>
@@ -97,11 +97,11 @@
 
             <!-- Cycle Counting -->
             <div>
-                <h3 style="font-size: 1rem; margin: 0 0 0.75rem 0; display: flex; align-items: center; gap: 0.5rem;">
-                    <svg style="width: 20px; height: 20px; color: var(--color-primary);"><use href="#icon-edit"></use></svg>
+                <h3 class="workflow-heading">
+                    <svg><use href="#icon-edit"></use></svg>
                     Cycle Counting
                 </h3>
-                <ol style="margin: 0; padding-left: 1.25rem; font-size: 0.875rem; line-height: 1.7; color: var(--color-text-muted);">
+                <ol class="workflow-list">
                     <li>Go to Inventory → select a part</li>
                     <li>Click "Adjust" button</li>
                     <li>Count physical stock at location</li>
@@ -261,9 +261,9 @@
 <div class="card mt-3">
     <div class="card-header">Frequently Asked Questions</div>
     <div class="card-body">
-        <dl style="margin: 0;">
-            <dt style="font-weight: 600; margin-bottom: 0.5rem;">What happens when I set a kanban to inactive?</dt>
-            <dd style="margin: 0 0 1.5rem 0; color: var(--color-text-muted);">
+        <dl class="help-dl">
+            <dt>What happens when I set a kanban to inactive?</dt>
+            <dd>
                 Inactive kanbans are excluded from all forward-looking inventory calculations:
                 <ul style="margin: 0.5rem 0 0 0; padding-left: 1.25rem;">
                     <li><strong>Reorder Point:</strong> The kanban's reorder point is removed from the part's total reorder threshold</li>
@@ -274,44 +274,44 @@
                 <p style="margin: 0.5rem 0 0 0;"><strong>Note:</strong> Historical data (past events, demand history) is preserved even after deactivating a kanban.</p>
             </dd>
 
-            <dt style="font-weight: 600; margin-bottom: 0.5rem;">How is "Days of Supply" calculated?</dt>
-            <dd style="margin: 0 0 1.5rem 0; color: var(--color-text-muted);">
+            <dt>How is "Days of Supply" calculated?</dt>
+            <dd>
                 Days of Supply = Quantity on Hand ÷ Average Daily Demand. The average daily demand is calculated from restock events over the last 30 days. If there's no restock history, days of supply cannot be calculated.
             </dd>
 
-            <dt style="font-weight: 600; margin-bottom: 0.5rem;">What's the difference between "Warning" and "Low Stock" status?</dt>
-            <dd style="margin: 0 0 1.5rem 0; color: var(--color-text-muted);">
+            <dt>What's the difference between "Warning" and "Low Stock" status?</dt>
+            <dd>
                 <ul style="margin: 0; padding-left: 1.25rem;">
                     <li><strong>Low Stock:</strong> Quantity on hand is at or below the sum of all active kanban reorder points for that part</li>
                     <li><strong>Warning:</strong> Days of supply is less than or equal to the part's lead time — you may run out before new stock arrives</li>
                 </ul>
             </dd>
 
-            <dt style="font-weight: 600; margin-bottom: 0.5rem;">How does lead time affect inventory status?</dt>
-            <dd style="margin: 0 0 1.5rem 0; color: var(--color-text-muted);">
+            <dt>How does lead time affect inventory status?</dt>
+            <dd>
                 Lead time (set on each part) is compared against days of supply. If your days of supply is less than your lead time, the system shows a "Warning" status — indicating you should reorder now to avoid a stockout before new material arrives.
             </dd>
 
-            <dt style="font-weight: 600; margin-bottom: 0.5rem;">Can I have multiple kanbans for the same part?</dt>
-            <dd style="margin: 0 0 1.5rem 0; color: var(--color-text-muted);">
+            <dt>Can I have multiple kanbans for the same part?</dt>
+            <dd>
                 Yes. You might have the same part stocked in multiple locations across different areas. Each kanban has its own reorder point and quantity. The inventory view aggregates all active kanbans when calculating totals for a part.
             </dd>
 
-            <dt style="font-weight: 600; margin-bottom: 0.5rem;">How should I set my reorder point?</dt>
-            <dd style="margin: 0 0 1.5rem 0; color: var(--color-text-muted);">
+            <dt>How should I set my reorder point?</dt>
+            <dd>
                 The recommended formula is: <strong>Reorder Point = (Estimated Daily Demand × Lead Time) + Safety Stock</strong>. 
                 Enter your estimated daily demand on the kanban form, and the system will suggest a reorder point. 
                 You can compare this against actual demand shown on the Inventory page.
             </dd>
 
-            <dt style="font-weight: 600; margin-bottom: 0.5rem;">What is safety stock and how do I determine it?</dt>
-            <dd style="margin: 0 0 1.5rem 0; color: var(--color-text-muted);">
+            <dt>What is safety stock and how do I determine it?</dt>
+            <dd>
                 Safety stock is buffer inventory that protects against unexpected demand spikes or supply delays. A simple approach: 
                 set it to cover 1-2 days of estimated demand. For critical parts, consider: (Max Daily Demand × Max Lead Time) - (Avg Daily Demand × Avg Lead Time).
             </dd>
 
-            <dt style="font-weight: 600; margin-bottom: 0.5rem;">What is estimated daily demand?</dt>
-            <dd style="margin: 0; color: var(--color-text-muted);">
+            <dt>What is estimated daily demand?</dt>
+            <dd>
                 The expected units consumed per day for this kanban. Use this to calculate reorder points for new parts without history, 
                 or to plan for expected demand changes. Compare against actual demand on the Inventory page and adjust as needed.
             </dd>

@@ -17,7 +17,7 @@
     <h1 class="page-title">{% if kanban %}Edit Kanban{% else %}New Kanban{% endif %}</h1>
 </div>
 
-<div class="card" style="max-width: 600px;">
+<div class="card form-card">
     <div class="card-body">
         <form method="post" action="{% if kanban %}{{ url_for('kanbans.update', id=kanban.id) }}{% else %}{{ url_for('kanbans.create') }}{% endif %}">
             <div class="form-row">

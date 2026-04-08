@@ -25,13 +25,10 @@
         <form method="get" action="{{ url_for('kanbans.list') }}">
             <div class="form-row">
                 <div class="form-group" style="margin-bottom: 0; flex: 1;">
-                    <div style="position: relative;">
+                    <div class="search-input-wrapper">
                         <input type="text" name="search" class="form-control" 
-                               placeholder="Search by part, manufacturer, or location..." value="{{ search }}"
-                               style="padding-left: 2.5rem;">
-                        <svg style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--color-text-muted);">
-                            <use href="#icon-search"></use>
-                        </svg>
+                               placeholder="Search by part, manufacturer, or location..." value="{{ search }}">
+                        <svg><use href="#icon-search"></use></svg>
                     </div>
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
@@ -87,7 +84,7 @@
                     <span class="badge badge-warning">Inactive</span>
                     {% endif %}
                 </td>
-                <td style="text-align: right;">
+                <td class="text-right">
                     <a href="{{ url_for('kanbans.detail', id=kanban.id) }}" class="btn btn-sm btn-secondary" title="View">
                         <svg><use href="#icon-eye"></use></svg>
                     </a>

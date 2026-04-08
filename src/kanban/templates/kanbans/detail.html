@@ -45,7 +45,7 @@
     <div class="card">
         <div class="card-header">Kanban Details</div>
         <div class="card-body">
-            <dl style="display: grid; grid-template-columns: auto 1fr; gap: 0.75rem 1rem;">
+            <dl class="dl-grid">
                 <dt class="text-muted">Kanban ID</dt>
                 <dd class="font-mono">K{{ '%06d' % kanban.id }}</dd>
 
@@ -163,7 +163,7 @@
             </table>
         </div>
         {% else %}
-        <div class="empty-state" style="padding: 2rem;">
+        <div class="empty-state">
             <svg><use href="#icon-events"></use></svg>
             <div class="empty-state-title">No Events</div>
             <p>No events have been recorded for this kanban yet.</p>

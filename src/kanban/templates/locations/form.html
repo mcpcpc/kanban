@@ -17,7 +17,7 @@
     <h1 class="page-title">{% if location %}Edit Location{% else %}New Location{% endif %}</h1>
 </div>
 
-<div class="card" style="max-width: 500px;">
+<div class="card form-card">
     <div class="card-body">
         <form method="post" action="{% if location %}{{ url_for('locations.update', id=location.id) }}{% else %}{{ url_for('locations.create') }}{% endif %}">
             <div class="form-group">
@@ -59,10 +59,14 @@
                         border-color: var(--color-primary) !important;
                         box-shadow: 0 0 0 1px var(--color-primary);
                     }
+                    input[name="color"]:focus + span {
+                        border-color: var(--color-primary) !important;
+                        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+                    }
                 </style>
             </div>
 
-            <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+            <div class="form-actions">
                 <button type="submit" class="btn btn-primary">
                     <svg><use href="#icon-check"></use></svg>
                     {% if location %}Update Location{% else %}Create Location{% endif %}

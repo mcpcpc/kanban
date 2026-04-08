@@ -180,9 +180,9 @@
                                     {{ (delta.seconds // 60) }}m ago
                                 {% endif %}
                             </td>
-                            <td style="text-align: right;">
-                                <a href="{{ url_for('kanbans.detail', id=signal.kanban_id) }}" class="btn btn-sm btn-secondary">
-                                    View
+                            <td class="text-right">
+                                <a href="{{ url_for('kanbans.detail', id=signal.kanban_id) }}" class="btn btn-sm btn-secondary" title="View">
+                                    <svg><use href="#icon-eye"></use></svg>
                                 </a>
                             </td>
                         </tr>
@@ -191,7 +191,7 @@
                 </table>
             </div>
             {% else %}
-            <div class="empty-state" style="padding: 1.5rem;">
+            <div class="empty-state">
                 <svg><use href="#icon-check"></use></svg>
                 <div class="empty-state-title">All Clear</div>
                 <p>No pending signals - all kanbans are stocked.</p>

@@ -22,7 +22,8 @@
         cursor: pointer;
         transition: all 0.15s;
     }
-    .action-option:hover {
+    .action-option:hover,
+    .action-option:focus-within {
         border-color: var(--color-success);
     }
     .action-option.selected {
@@ -64,7 +65,7 @@
 
                 <div class="form-group">
                     <label class="form-label">Action</label>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
+                    <div class="action-grid">
                         <label class="action-option selected">
                             <input type="radio" name="action" value="signal" checked>
                             <svg class="check-icon"><use href="#icon-check"></use></svg>

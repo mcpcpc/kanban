@@ -17,7 +17,7 @@
     <h1 class="page-title">{% if part %}Edit Part{% else %}New Part{% endif %}</h1>
 </div>
 
-<div class="card" style="max-width: 600px;">
+<div class="card form-card">
     <div class="card-body">
         <form method="post" action="{% if part %}{{ url_for('parts.update', id=part.id) }}{% else %}{{ url_for('parts.create') }}{% endif %}">
             <div class="form-group">
@@ -75,7 +75,7 @@
                        placeholder="https://...">
             </div>
 
-            <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+            <div class="form-actions">
                 <button type="submit" class="btn btn-primary">
                     <svg><use href="#icon-check"></use></svg>
                     {% if part %}Update Part{% else %}Create Part{% endif %}

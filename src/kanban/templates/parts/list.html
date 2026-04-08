@@ -24,14 +24,11 @@
     <div class="card-body">
         <form method="get" action="{{ url_for('parts.list') }}">
             <div class="form-row">
-                <div class="form-group" style="margin-bottom: 0;">
-                    <div style="position: relative;">
+                <div class="form-group" style="margin-bottom: 0; flex: 1;">
+                    <div class="search-input-wrapper">
                         <input type="text" name="search" class="form-control" 
-                               placeholder="Search parts..." value="{{ search }}"
-                               style="padding-left: 2.5rem;">
-                        <svg style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--color-text-muted);">
-                            <use href="#icon-search"></use>
-                        </svg>
+                               placeholder="Search parts..." value="{{ search }}">
+                        <svg><use href="#icon-search"></use></svg>
                     </div>
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
@@ -88,7 +85,7 @@
                 </td>
                 <td>{{ part.uom_abbr }}</td>
                 <td>{{ part.reorder_lead_time_days }} days</td>
-                <td style="text-align: right;">
+                <td class="text-right">
                     <a href="{{ url_for('parts.detail', id=part.id) }}" class="btn btn-sm btn-secondary" title="View">
                         <svg><use href="#icon-eye"></use></svg>
                     </a>

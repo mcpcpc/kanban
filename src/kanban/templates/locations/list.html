@@ -25,13 +25,10 @@
         <form method="get" action="{{ url_for('locations.list') }}">
             <div class="form-row">
                 <div class="form-group" style="margin-bottom: 0; flex: 1;">
-                    <div style="position: relative;">
+                    <div class="search-input-wrapper">
                         <input type="text" name="search" class="form-control" 
-                               placeholder="Search locations..." value="{{ search }}"
-                               style="padding-left: 2.5rem;">
-                        <svg style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--color-text-muted);">
-                            <use href="#icon-search"></use>
-                        </svg>
+                               placeholder="Search locations..." value="{{ search }}">
+                        <svg><use href="#icon-search"></use></svg>
                     </div>
                 </div>
                 {% if colors_in_use %}
