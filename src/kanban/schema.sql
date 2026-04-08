@@ -104,12 +104,53 @@ CREATE TABLE inventory (
 -- Setting: Stores application configuration
 CREATE TABLE setting (
     id INTEGER PRIMARY KEY,
-    printer_hostname TEXT DEFAULT NULL,
-    printer_port INTEGER DEFAULT 9100,
-    printer_timeout_seconds REAL DEFAULT 10.0,
+    printer_hostname TEXT NOT NULL,
+    printer_port INTEGER NOT NULL,
+    printer_timeout_seconds REAL NOT NULL,
+    label_template TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO setting (printer_hostname, printer_port, printer_timeout_seconds) VALUES
-    ('localhost', 9100, 10.0);
+INSERT INTO setting (printer_hostname, printer_port, printer_timeout_seconds, label_template) VALUES
+    ('localhost', 9100, 10.0,
+'^XA
+^PW532
+^MNY
+^LL329
+^LH0,0
+^LT10
+^LS-50
+^MD15
+^PR1
+^PON
+^FO16,12
+^BQN,2,6,H
+^FDQA,K{id:06d}^FS
+^FO162,18
+^A0N,32,32
+^FDK{id:06d}^FS
+^FO392,18
+^A0N,32,32
+^FD{bin_location}^FS
+^FO162,55
+^A0N,28,28
+^FD{part_number}^FS
+^FO162,99
+^A0N,28,28
+^FD{part_manufacturer}^FS
+^FO162,130
+^A0N,20,20
+^TBN,345,96
+^FD{part_description}^FS
+^FO162,254
+^A0N,26,26
+^FDQty: {kanban_quantity}^FS
+^FO270,254
+^A0N,26,26
+^FDROP: {reorder_point}^FS
+^FO392,254
+^A0N,26,26
+^FD{card_number} of {number_of_cards}^FS
+^PQ1
+^XZ');

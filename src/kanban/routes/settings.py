@@ -25,16 +25,18 @@ async def index():
 async def save():
     """Save application settings."""
     form = await request.form
-    printer_hostname = form.get("printer_hostname", "").strip() or None
+    printer_hostname = form.get("printer_hostname", "").strip()
     printer_port = int(form.get("printer_port", 9100))
     printer_timeout_seconds = float(form.get("printer_timeout_seconds", 10.0))
+    label_template = form.get("label_template", "").strip()
 
     db = get_db()
     db.execute(
         "UPDATE setting SET printer_hostname = ?, printer_port = ?, "
-        "printer_timeout_seconds = ?, updated_at = CURRENT_TIMESTAMP "
+        "printer_timeout_seconds = ?, label_template = ?, "
+        "updated_at = CURRENT_TIMESTAMP "
         "WHERE id = 1",
-        (printer_hostname, printer_port, printer_timeout_seconds),
+        (printer_hostname, printer_port, printer_timeout_seconds, label_template),
     )
     db.commit()
     await flash("Settings saved successfully.", "success")

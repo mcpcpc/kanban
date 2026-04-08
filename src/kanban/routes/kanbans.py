@@ -265,12 +265,13 @@ async def print_card(id):
     hostname = row["printer_hostname"]
     port = row["printer_port"]
     timeout = row["printer_timeout_seconds"]
+    label_template = row["label_template"]
     printer = ZebraPrinter(hostname, port, timeout)
     
     try:
         for i in range(1, kanban["number_of_cards"] + 1):
             label = KanbanLabelTemplate(**kanban)
-            zpl = label.render(i)
+            zpl = label.render(i, label_template)
             printer.print(zpl)
     except Exception as e:
         await flash(f"Print failed: {e}", "danger")

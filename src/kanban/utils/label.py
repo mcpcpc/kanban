@@ -1,4 +1,4 @@
-class LabelTemplateBase:
+class KanbanLabelTemplate:
     def __init__(self, 
         id: int,
         bin_location: str,
@@ -21,53 +21,16 @@ class LabelTemplateBase:
         self.kanban_quantity = kanban_quantity
         self.number_of_cards = number_of_cards
 
-    def render(self) -> str:
-        raise NotImplementedError(
-            "Subclasses must implement this method" 
+    def render(self, card_number: int, template: str) -> str:
+        return template.format(
+            id=self.id,
+            bin_location=self.bin_location,
+            part_number=self.part_number,
+            part_manufacturer=self.part_manufacturer,
+            part_description=self.part_description,
+            unit_of_measure_abbreviation=self.unit_of_measure_abbreviation,
+            reorder_point=self.reorder_point,
+            kanban_quantity=self.kanban_quantity,
+            number_of_cards=self.number_of_cards,
+            card_number=card_number,
         )
-
-
-class KanbanLabelTemplate(LabelTemplateBase):
-    def render(self, card_number: int) -> str:
-        return f"""
-^XA
-^PW532
-^MNY
-^LL329
-^LH0,0
-^LT10
-^LS-50
-^MD15
-^PR1
-^PON
-^FO16,12
-^BQN,2,6,H
-^FDQA,K{self.id:06d}^FS
-^FO162,18
-^A0N,32,32
-^FDK{self.id:06d}^FS
-^FO392,18
-^A0N,32,32
-^FD{self.bin_location}^FS
-^FO162,55
-^A0N,28,28
-^FD{self.part_number}^FS
-^FO162,99
-^A0N,28,28
-^FD{self.part_manufacturer}^FS
-^FO162,130
-^A0N,20,20
-^TBN,345,96
-^FD{self.part_description}^FS
-^FO162,254
-^A0N,26,26
-^FDQty: {self.kanban_quantity}^FS
-^FO270,254
-^A0N,26,26
-^FDROP: {self.reorder_point}^FS
-^FO392,254
-^A0N,26,26
-^FD{card_number} of {self.number_of_cards}^FS
-^PQ1
-^XZ
-        """
