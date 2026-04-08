@@ -6,7 +6,7 @@
 <nav class="breadcrumb">
     <a href="{{ url_for('dashboard.index') }}">Home</a>
     <span class="breadcrumb-separator">/</span>
-    <a href="{{ url_for('kanbans.list') }}">Kanbans</a>
+    <a href="{{ url_for('kanbans.index') }}">Kanbans</a>
     <span class="breadcrumb-separator">/</span>
     <span class="breadcrumb-current">{% if kanban %}Edit{% else %}New{% endif %}</span>
 </nav>
@@ -113,7 +113,7 @@
                     <svg><use href="#icon-check"></use></svg>
                     {% if kanban %}Update Kanban{% else %}Create Kanban{% endif %}
                 </button>
-                <a href="{% if kanban %}{{ url_for('kanbans.detail', id=kanban.id) }}{% else %}{{ url_for('kanbans.list') }}{% endif %}" 
+                <a href="{% if kanban %}{{ url_for('kanbans.detail', id=kanban.id) }}{% else %}{{ url_for('kanbans.index') }}{% endif %}" 
                    class="btn btn-secondary">Cancel</a>
             </div>
         </form>

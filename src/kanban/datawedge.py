@@ -6,30 +6,23 @@ from logging import exception
 from quart import current_app
 
 from kanban.db import get_db
+from kanban.services import parse_barcode
 
 
 def is_datawedge_running() -> bool:
+    """Check whether the DataWedge TCP server is currently serving."""
     server = getattr(current_app, "_datawedge_server", None)
     return server is not None and server.is_serving()
 
 
 async def save_scan(barcode: str) -> None:
-    kanban_id = None
-    if barcode.upper().startswith("K"):
-        try:
-            kanban_id = int(barcode[1:])
-        except ValueError:
-            pass
-    else:
-        try:
-            kanban_id = int(barcode)
-        except ValueError:
-            pass
-    
+    """Process a scanned barcode received via the DataWedge TCP socket."""
+    kanban_id = parse_barcode(barcode)
+
     if not kanban_id:
         info(f"Invalid barcode format: {barcode}")
         return
-    
+
     db = get_db()
 
     kanban = db.execute(
@@ -151,6 +144,10 @@ async def stop_datawedge_server(app) -> bool:
         return False
 
 def init_datawedge(app) -> None:
+    """Register a ``before_serving`` hook that starts the DataWedge server."""
+
     @app.before_serving
     async def startup():
-        await start_datawedge_server(app, "0.0.0.0", 58627)
+        host = app.config["DATAWEDGE_HOST"]
+        port = app.config["DATAWEDGE_PORT"]
+        await start_datawedge_server(app, host, port)

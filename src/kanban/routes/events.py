@@ -1,4 +1,7 @@
-from quart import Blueprint, render_template, request
+import csv
+from io import StringIO
+
+from quart import Blueprint, render_template, request, Response
 
 from kanban.db import get_db
 
@@ -68,10 +71,6 @@ async def history():
 @bp.route("/export")
 async def export():
     """Export events as CSV."""
-    from quart import Response
-    import csv
-    import io
-    
     db = get_db()
     
     event_type = request.args.get("type", "").strip()
@@ -109,7 +108,7 @@ async def export():
     
     events = db.execute(query, params).fetchall()
     
-    output = io.StringIO()
+    output = StringIO()
     writer = csv.writer(output)
     writer.writerow(["ID", "Timestamp", "Event Type", "Quantity", "Notes", 
                      "Kanban ID", "Part Number", "Manufacturer", "Bin Location"])

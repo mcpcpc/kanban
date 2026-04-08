@@ -1,39 +1,15 @@
-from quart import Blueprint, render_template, request, redirect, url_for, flash, Response
 import csv
 from io import StringIO
-from datetime import datetime, timedelta
+from datetime import datetime
+
+from quart import Blueprint, render_template, request, redirect, url_for, flash, Response
 
 from kanban.db import get_db
+from kanban.services import calculate_demand_stats, determine_inventory_status
 
 bp = Blueprint("inventory", __name__, url_prefix="/inventory")
 
 ITEMS_PER_PAGE = 20
-
-
-def calculate_demand_stats(db, part_id, days=30):
-    """Calculate average daily demand based on restock events."""
-    since_date = datetime.now() - timedelta(days=days)
-    
-    # Get total restocked quantity in the period
-    result = db.execute("""
-        SELECT COALESCE(SUM(ke.quantity), 0) as total_restocked
-        FROM kanban_event ke
-        JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
-        JOIN kanban k ON ke.kanban_id = k.id
-        WHERE k.part_id = ?
-        AND ket.type = 'restock_complete'
-        AND ke.created_at >= ?
-        AND ke.quantity IS NOT NULL
-    """, [part_id, since_date]).fetchone()
-    
-    total_restocked = result["total_restocked"] if result else 0
-    avg_daily_demand = total_restocked / days if days > 0 else 0
-    
-    return {
-        "total_restocked": total_restocked,
-        "avg_daily_demand": avg_daily_demand,
-        "period_days": days
-    }
 
 
 @bp.route("/")
@@ -96,14 +72,12 @@ async def index():
         if stats["avg_daily_demand"] > 0:
             days_of_supply = part["quantity_on_hand"] / stats["avg_daily_demand"]
         
-        # Determine status based on kanban reorder points
-        status = "ok"
-        if part["quantity_on_hand"] <= 0:
-            status = "out"
-        elif part["total_reorder_point"] > 0 and part["quantity_on_hand"] <= part["total_reorder_point"]:
-            status = "low"
-        elif days_of_supply is not None and days_of_supply <= part["reorder_lead_time_days"]:
-            status = "warning"
+        status = determine_inventory_status(
+            part["quantity_on_hand"],
+            part["total_reorder_point"],
+            days_of_supply,
+            part["reorder_lead_time_days"],
+        )
         
         # Apply status filter
         if status_filter and status != status_filter:
@@ -262,13 +236,12 @@ async def export():
         if stats["avg_daily_demand"] > 0:
             days_of_supply = part["quantity_on_hand"] / stats["avg_daily_demand"]
         
-        status = "OK"
-        if part["quantity_on_hand"] <= 0:
-            status = "OUT"
-        elif part["total_reorder_point"] > 0 and part["quantity_on_hand"] <= part["total_reorder_point"]:
-            status = "LOW"
-        elif days_of_supply is not None and days_of_supply <= part["reorder_lead_time_days"]:
-            status = "WARNING"
+        status = determine_inventory_status(
+            part["quantity_on_hand"],
+            part["total_reorder_point"],
+            days_of_supply,
+            part["reorder_lead_time_days"],
+        ).upper()
         
         writer.writerow([
             part["id"],

@@ -6,7 +6,7 @@
 <nav class="breadcrumb">
     <a href="{{ url_for('dashboard.index') }}">Home</a>
     <span class="breadcrumb-separator">/</span>
-    <a href="{{ url_for('parts.list') }}">Parts</a>
+    <a href="{{ url_for('parts.index') }}">Parts</a>
     <span class="breadcrumb-separator">/</span>
     <span class="breadcrumb-current">{% if part %}Edit{% else %}New{% endif %}</span>
 </nav>
@@ -80,7 +80,7 @@
                     <svg><use href="#icon-check"></use></svg>
                     {% if part %}Update Part{% else %}Create Part{% endif %}
                 </button>
-                <a href="{% if part %}{{ url_for('parts.detail', id=part.id) }}{% else %}{{ url_for('parts.list') }}{% endif %}" 
+                <a href="{% if part %}{{ url_for('parts.detail', id=part.id) }}{% else %}{{ url_for('parts.index') }}{% endif %}" 
                    class="btn btn-secondary">Cancel</a>
             </div>
         </form>

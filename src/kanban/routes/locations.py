@@ -4,7 +4,6 @@ from kanban.db import get_db
 
 bp = Blueprint("locations", __name__, url_prefix="/locations")
 
-# Available colors for location tagging
 LOCATION_COLORS = [
     ("red", "#ef4444", "#fef2f2"),
     ("orange", "#f97316", "#fff7ed"),
@@ -18,7 +17,7 @@ LOCATION_COLORS = [
 
 
 @bp.route("/")
-async def list():
+async def index():
     """List all locations."""
     db = get_db()
     
@@ -40,15 +39,14 @@ async def list():
     query += " ORDER BY location"
     
     locations = db.execute(query, params).fetchall()
-    
-    # Get kanban counts for each location
-    location_kanban_counts = {}
-    for location in locations:
-        count = db.execute(
-            "SELECT COUNT(*) FROM kanban WHERE location_id = ? AND is_active = 1",
-            [location["id"]]
-        ).fetchone()[0]
-        location_kanban_counts[location["id"]] = count
+
+    # Single query instead of N+1 per-location lookups.
+    kanban_counts = db.execute(
+        """SELECT location_id, COUNT(*) AS cnt
+           FROM kanban WHERE is_active = 1
+           GROUP BY location_id"""
+    ).fetchall()
+    location_kanban_counts = {row["location_id"]: row["cnt"] for row in kanban_counts}
     
     # Get distinct colors in use for filter dropdown
     colors_in_use = db.execute(
@@ -98,7 +96,7 @@ async def create():
         await flash(f"Error creating location: {str(e)}", "danger")
         return redirect(url_for("locations.new"))
     
-    return redirect(url_for("locations.list"))
+    return redirect(url_for("locations.index"))
 
 
 @bp.route("/<int:id>")
@@ -109,7 +107,7 @@ async def detail(id):
     
     if not location:
         await flash("Location not found.", "danger")
-        return redirect(url_for("locations.list"))
+        return redirect(url_for("locations.index"))
     
     # Get kanbans in this location
     kanbans = db.execute(
@@ -132,7 +130,7 @@ async def edit(id):
     
     if not location:
         await flash("Location not found.", "danger")
-        return redirect(url_for("locations.list"))
+        return redirect(url_for("locations.index"))
     
     return await render_template("locations/form.html", location=location, location_colors=LOCATION_COLORS)
 
@@ -182,4 +180,4 @@ async def delete(id):
         db.commit()
         await flash(f"Location '{location['location']}' deleted.", "success")
     
-    return redirect(url_for("locations.list"))
+    return redirect(url_for("locations.index"))

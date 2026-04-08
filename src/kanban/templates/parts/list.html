@@ -22,7 +22,7 @@
 <!-- Filters -->
 <div class="card mb-2">
     <div class="card-body">
-        <form method="get" action="{{ url_for('parts.list') }}">
+        <form method="get" action="{{ url_for('parts.index') }}">
             <div class="form-row">
                 <div class="form-group" style="margin-bottom: 0; flex: 1;">
                     <div class="search-input-wrapper">
@@ -101,10 +101,10 @@
 <div class="pagination">
     <span class="pagination-info">{{ total_count }} items</span>
     
-    <a href="{{ url_for('parts.list', search=search, category=selected_category, page=1) }}" 
+    <a href="{{ url_for('parts.index', search=search, category=selected_category, page=1) }}" 
        class="pagination-btn {% if page == 1 %}disabled{% endif %}">First</a>
     
-    <a href="{{ url_for('parts.list', search=search, category=selected_category, page=page-1) }}" 
+    <a href="{{ url_for('parts.index', search=search, category=selected_category, page=page-1) }}" 
        class="pagination-btn {% if page == 1 %}disabled{% endif %}">Prev</a>
     
     {% for p in range(1, total_pages + 1) %}
@@ -112,15 +112,15 @@
             {% if loop.previtem is defined and p - loop.previtem > 1 %}
                 <span class="pagination-btn disabled">...</span>
             {% endif %}
-            <a href="{{ url_for('parts.list', search=search, category=selected_category, page=p) }}" 
+            <a href="{{ url_for('parts.index', search=search, category=selected_category, page=p) }}" 
                class="pagination-btn {% if p == page %}active{% endif %}">{{ p }}</a>
         {% endif %}
     {% endfor %}
     
-    <a href="{{ url_for('parts.list', search=search, category=selected_category, page=page+1) }}" 
+    <a href="{{ url_for('parts.index', search=search, category=selected_category, page=page+1) }}" 
        class="pagination-btn {% if page == total_pages %}disabled{% endif %}">Next</a>
     
-    <a href="{{ url_for('parts.list', search=search, category=selected_category, page=total_pages) }}" 
+    <a href="{{ url_for('parts.index', search=search, category=selected_category, page=total_pages) }}" 
        class="pagination-btn {% if page == total_pages %}disabled{% endif %}">Last</a>
 </div>
 {% endif %}
@@ -133,7 +133,7 @@
             <div class="empty-state-title">No Parts Found</div>
             {% if search or selected_category %}
             <p>Try adjusting your search criteria.</p>
-            <a href="{{ url_for('parts.list') }}" class="btn btn-secondary mt-2">Clear Filters</a>
+            <a href="{{ url_for('parts.index') }}" class="btn btn-secondary mt-2">Clear Filters</a>
             {% else %}
             <p>No parts have been created yet.</p>
             {% endif %}

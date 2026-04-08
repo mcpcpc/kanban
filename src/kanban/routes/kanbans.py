@@ -1,8 +1,7 @@
-import math
-
 from quart import Blueprint, render_template, request, redirect, url_for, flash
 
 from kanban.db import get_db
+from kanban.services import calculate_number_of_cards
 from kanban.utils.zebra import ZebraPrinter
 from kanban.utils.label import KanbanLabelTemplate
 
@@ -10,7 +9,7 @@ bp = Blueprint("kanbans", __name__, url_prefix="/kanbans")
 
 
 @bp.route("/")
-async def list():
+async def index():
     """List all kanbans."""
     db = get_db()
     
@@ -90,11 +89,9 @@ async def create():
     # Calculate number of cards: ceil((Demand × (Lead Time + Safety LT)) / Container Qty)
     part = db.execute("SELECT reorder_lead_time_days FROM part WHERE id = ?", [part_id]).fetchone()
     lead_time = part["reorder_lead_time_days"] if part else 7
-    total_lt = lead_time + safety_lead_time_days
-    if kanban_quantity > 0 and estimated_daily_demand > 0:
-        number_of_cards = max(1, math.ceil((estimated_daily_demand * total_lt) / kanban_quantity))
-    else:
-        number_of_cards = 1
+    number_of_cards = calculate_number_of_cards(
+        estimated_daily_demand, lead_time, safety_lead_time_days, kanban_quantity,
+    )
     
     cursor = db.execute(
         """INSERT INTO kanban (part_id, location_id, kanban_quantity,
@@ -129,7 +126,7 @@ async def detail(id):
     
     if not kanban:
         await flash("Kanban not found.", "danger")
-        return redirect(url_for("kanbans.list"))
+        return redirect(url_for("kanbans.index"))
     
     # Get recent events for this kanban
     events = db.execute(
@@ -158,7 +155,7 @@ async def edit(id):
     
     if not kanban:
         await flash("Kanban not found.", "danger")
-        return redirect(url_for("kanbans.list"))
+        return redirect(url_for("kanbans.index"))
     
     parts = db.execute("SELECT * FROM part ORDER BY part_number").fetchall()
     locations = db.execute("SELECT * FROM location ORDER BY location").fetchall()
@@ -193,11 +190,9 @@ async def update(id):
     # Calculate number of cards: ceil((Demand × (Lead Time + Safety LT)) / Container Qty)
     part = db.execute("SELECT reorder_lead_time_days FROM part WHERE id = ?", [part_id]).fetchone()
     lead_time = part["reorder_lead_time_days"] if part else 7
-    total_lt = lead_time + safety_lead_time_days
-    if kanban_quantity > 0 and estimated_daily_demand > 0:
-        number_of_cards = max(1, math.ceil((estimated_daily_demand * total_lt) / kanban_quantity))
-    else:
-        number_of_cards = 1
+    number_of_cards = calculate_number_of_cards(
+        estimated_daily_demand, lead_time, safety_lead_time_days, kanban_quantity,
+    )
     
     db.execute(
         """UPDATE kanban SET part_id = ?, location_id = ?, kanban_quantity = ?, 
@@ -231,7 +226,7 @@ async def delete(id):
     db.commit()
     await flash("Kanban deleted.", "success")
     
-    return redirect(url_for("kanbans.list"))
+    return redirect(url_for("kanbans.index"))
 
 
 @bp.route("/<int:id>/print")
@@ -259,7 +254,7 @@ async def print_card(id):
     
     if not kanban:
         await flash("Kanban not found.", "danger")
-        return redirect(url_for("kanbans.list"))
+        return redirect(url_for("kanbans.index"))
     
     row = db.execute("SELECT * FROM setting LIMIT 1").fetchone()
     hostname = row["printer_hostname"]

@@ -22,7 +22,7 @@
 <!-- Search and Filter -->
 <div class="card mb-2">
     <div class="card-body">
-        <form method="get" action="{{ url_for('locations.list') }}">
+        <form method="get" action="{{ url_for('locations.index') }}">
             <div class="form-row">
                 <div class="form-group" style="margin-bottom: 0; flex: 1;">
                     <div class="search-input-wrapper">
@@ -100,7 +100,7 @@
             <div class="empty-state-title">No Locations Found</div>
             {% if search or color_filter %}
             <p>Try adjusting your search criteria.</p>
-            <a href="{{ url_for('locations.list') }}" class="btn btn-secondary mt-2">Clear Filters</a>
+            <a href="{{ url_for('locations.index') }}" class="btn btn-secondary mt-2">Clear Filters</a>
             {% else %}
             <p>No locations have been created yet.</p>
             {% endif %}

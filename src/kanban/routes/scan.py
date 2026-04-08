@@ -1,6 +1,7 @@
 from quart import Blueprint, render_template, request, redirect, url_for, flash
 
 from kanban.db import get_db
+from kanban.services import get_open_signal_count, parse_barcode
 
 bp = Blueprint("scan", __name__, url_prefix="/scan")
 
@@ -23,7 +24,6 @@ async def process():
     notes = form.get("notes", "").strip()
     return_to = form.get("return_to", "").strip()
     
-    # Determine redirect target
     def get_redirect():
         if return_to:
             return redirect(return_to)
@@ -33,26 +33,14 @@ async def process():
         await flash("No barcode scanned.", "danger")
         return get_redirect()
     
-    # Parse kanban ID from barcode (format: K000001)
-    kanban_id = None
-    if barcode.upper().startswith("K"):
-        try:
-            kanban_id = int(barcode[1:])
-        except ValueError:
-            pass
-    else:
-        try:
-            kanban_id = int(barcode)
-        except ValueError:
-            pass
+    kanban_id = parse_barcode(barcode)
     
     if not kanban_id:
         await flash(f"Invalid barcode format: {barcode}", "danger")
         return get_redirect()
     
-    # Verify kanban exists
     kanban = db.execute(
-        """SELECT k.*, p.part_number as part_name, b.location as location_name
+        """SELECT k.*, p.part_number AS part_name, b.location AS location_name
            FROM kanban k
            JOIN part p ON k.part_id = p.id
            JOIN location b ON k.location_id = b.id
@@ -68,18 +56,7 @@ async def process():
         await flash(f"Kanban is inactive: {kanban['part_name']} @ {kanban['location_name']}", "warning")
         return get_redirect()
     
-    # Count open signals: signals minus completed restocks
-    open_signal_count = db.execute("""
-        SELECT
-            (SELECT COUNT(*) FROM kanban_event ke
-             JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
-             WHERE ke.kanban_id = ? AND ket.type = 'signal')
-            -
-            (SELECT COUNT(*) FROM kanban_event ke
-             JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
-             WHERE ke.kanban_id = ? AND ket.type = 'restock_complete')
-        AS cnt
-    """, [kanban_id, kanban_id]).fetchone()["cnt"]
+    open_signal_count = get_open_signal_count(db, kanban_id)
 
     # Validate signal action: limit active signals to number_of_cards
     if action == "signal":

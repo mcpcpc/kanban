@@ -1170,15 +1170,15 @@
                     </a>
 
                     <div class="nav-section">Manage</div>
-                    <a href="{{ url_for('parts.list') }}" class="nav-item{% if request.endpoint and request.endpoint.startswith('parts.') %} active{% endif %}">
+                    <a href="{{ url_for('parts.index') }}" class="nav-item{% if request.endpoint and request.endpoint.startswith('parts.') %} active{% endif %}">
                         <svg><use href="#icon-parts"></use></svg>
                         Parts
                     </a>
-                    <a href="{{ url_for('locations.list') }}" class="nav-item{% if request.endpoint and request.endpoint.startswith('locations.') %} active{% endif %}">
+                    <a href="{{ url_for('locations.index') }}" class="nav-item{% if request.endpoint and request.endpoint.startswith('locations.') %} active{% endif %}">
                         <svg><use href="#icon-locations"></use></svg>
                         Locations
                     </a>
-                    <a href="{{ url_for('kanbans.list') }}" class="nav-item{% if request.endpoint and request.endpoint.startswith('kanbans.') %} active{% endif %}">
+                    <a href="{{ url_for('kanbans.index') }}" class="nav-item{% if request.endpoint and request.endpoint.startswith('kanbans.') %} active{% endif %}">
                         <svg><use href="#icon-kanban"></use></svg>
                         Kanbans
                     </a>

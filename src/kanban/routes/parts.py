@@ -1,3 +1,5 @@
+from sqlite3 import IntegrityError
+
 from quart import Blueprint, render_template, request, redirect, url_for, flash
 
 from kanban.db import get_db
@@ -8,7 +10,7 @@ ITEMS_PER_PAGE = 20
 
 
 @bp.route("/")
-async def list():
+async def index():
     """List all parts with search and filter."""
     db = get_db()
     
@@ -109,11 +111,11 @@ async def create():
         )
         db.commit()
         await flash(f"Part '{part_number}' created successfully.", "success")
-    except db.IntegrityError:
+    except IntegrityError:
         await flash(f"A part with number '{part_number}' already exists.", "danger")
         return redirect(url_for("parts.new"))
     
-    return redirect(url_for("parts.list"))
+    return redirect(url_for("parts.index"))
 
 
 @bp.route("/<int:id>")
@@ -130,7 +132,7 @@ async def detail(id):
     
     if not part:
         await flash("Part not found.", "danger")
-        return redirect(url_for("parts.list"))
+        return redirect(url_for("parts.index"))
     
     # Get kanbans using this part
     kanbans = db.execute(
@@ -153,7 +155,7 @@ async def edit(id):
     
     if not part:
         await flash("Part not found.", "danger")
-        return redirect(url_for("parts.list"))
+        return redirect(url_for("parts.index"))
     
     units = db.execute("SELECT * FROM unit_of_measure ORDER BY name").fetchall()
     return await render_template("parts/form.html", part=part, units=units)
@@ -197,7 +199,7 @@ async def update(id):
         )
         db.commit()
         await flash(f"Part '{part_number}' updated successfully.", "success")
-    except db.IntegrityError:
+    except IntegrityError:
         await flash(f"A part with number '{part_number}' already exists.", "danger")
         return redirect(url_for("parts.edit", id=id))
     
@@ -224,4 +226,4 @@ async def delete(id):
         db.commit()
         await flash(f"Part '{part['part_number']}' deleted.", "success")
     
-    return redirect(url_for("parts.list"))
+    return redirect(url_for("parts.index"))

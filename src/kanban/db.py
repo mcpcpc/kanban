@@ -11,14 +11,13 @@ from quart import current_app
 from quart import g
 from quart.cli import with_appcontext
 
-
-def convert_datetime(value: bytes):
-    return datetime.fromisoformat(value.decode())
+# Register the datetime converter once at import time, not per-request.
+register_converter("datetime", lambda v: datetime.fromisoformat(v.decode()))
 
 
 def get_db():
+    """Return the request-scoped database connection, creating one if needed."""
     if not hasattr(g, "db"):
-        register_converter("datetime", convert_datetime)
         g.db = connect(
             current_app.config["DATABASE"],
             detect_types=PARSE_DECLTYPES,
