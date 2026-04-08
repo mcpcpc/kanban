@@ -6,8 +6,9 @@ route modules and makes the logic easier to test in isolation.
 
 from __future__ import annotations
 
-import math
-from datetime import datetime, timedelta
+from math import ceil
+from datetime import datetime
+from datetime import timedelta
 
 
 def parse_barcode(barcode: str) -> int | None:
@@ -61,7 +62,7 @@ def calculate_number_of_cards(
     if kanban_quantity <= 0 or estimated_daily_demand <= 0:
         return 1
     total_lt = lead_time_days + safety_lead_time_days
-    return max(1, math.ceil((estimated_daily_demand * total_lt) / kanban_quantity))
+    return max(1, ceil((estimated_daily_demand * total_lt) / kanban_quantity))
 
 
 def build_30_day_trend(rows) -> tuple[list[dict], int]:
