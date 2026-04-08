@@ -855,7 +855,7 @@
             <circle cx="12" cy="12" r="3" fill="currentColor"/>
             <circle cx="12" cy="12" r="1.5" fill="var(--color-bg)"/>
         </symbol>
-        <symbol id="icon-bins" viewBox="0 0 24 24">
+        <symbol id="icon-locations" viewBox="0 0 24 24">
             <!-- Box back face (muted) -->
             <path d="M12 2 L21 7 L21 17 L12 22 L12 12 Z" fill="currentColor" opacity="0.3"/>
             <!-- Box front face (solid) -->
@@ -1063,8 +1063,8 @@
                         <svg><use href="#icon-parts"></use></svg>
                         Parts
                     </a>
-                    <a href="{{ url_for('bins.list') }}" class="nav-item{% if request.endpoint and request.endpoint.startswith('bins.') %} active{% endif %}">
-                        <svg><use href="#icon-bins"></use></svg>
+                    <a href="{{ url_for('locations.list') }}" class="nav-item{% if request.endpoint and request.endpoint.startswith('locations.') %} active{% endif %}">
+                        <svg><use href="#icon-locations"></use></svg>
                         Locations
                     </a>
                     <a href="{{ url_for('kanbans.list') }}" class="nav-item{% if request.endpoint and request.endpoint.startswith('kanbans.') %} active{% endif %}">

@@ -13,7 +13,7 @@
 {% block content %}
 <div class="page-header">
     <h1 class="page-title">Locations</h1>
-    <a href="{{ url_for('bins.new') }}" class="btn btn-primary">
+    <a href="{{ url_for('locations.new') }}" class="btn btn-primary">
         <svg><use href="#icon-plus"></use></svg>
         New Location
     </a>
@@ -22,7 +22,7 @@
 <!-- Search and Filter -->
 <div class="card mb-2">
     <div class="card-body">
-        <form method="get" action="{{ url_for('bins.list') }}">
+        <form method="get" action="{{ url_for('locations.list') }}">
             <div class="form-row">
                 <div class="form-group" style="margin-bottom: 0; flex: 1;">
                     <div style="position: relative;">
@@ -77,7 +77,7 @@
                     </h3>
                 </div>
                 <svg style="width: 24px; height: 24px; color: var(--color-text-muted); flex-shrink: 0;">
-                    <use href="#icon-bins"></use>
+                    <use href="#icon-locations"></use>
                 </svg>
             </div>
             {% if bin.description %}
@@ -87,7 +87,7 @@
                 <span class="text-muted" style="font-size: 0.875rem;">
                     {{ bin_kanban_counts.get(bin.id, 0) }} kanban{% if bin_kanban_counts.get(bin.id, 0) != 1 %}s{% endif %}
                 </span>
-                <a href="{{ url_for('bins.detail', id=bin.id) }}" class="btn btn-sm btn-secondary" title="View">
+                <a href="{{ url_for('locations.detail', id=bin.id) }}" class="btn btn-sm btn-secondary" title="View">
                     <svg><use href="#icon-eye"></use></svg>
                 </a>
             </div>
@@ -99,11 +99,11 @@
 <div class="card">
     <div class="card-body">
         <div class="empty-state">
-            <svg><use href="#icon-bins"></use></svg>
+            <svg><use href="#icon-locations"></use></svg>
             <div class="empty-state-title">No Locations Found</div>
             {% if search or color_filter %}
             <p>Try adjusting your search criteria.</p>
-            <a href="{{ url_for('bins.list') }}" class="btn btn-secondary mt-2">Clear Filters</a>
+            <a href="{{ url_for('locations.list') }}" class="btn btn-secondary mt-2">Clear Filters</a>
             {% else %}
             <p>No locations have been created yet.</p>
             {% endif %}

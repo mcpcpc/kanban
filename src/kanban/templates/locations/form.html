@@ -6,7 +6,7 @@
 <nav class="breadcrumb">
     <a href="{{ url_for('dashboard.index') }}">Home</a>
     <span class="breadcrumb-separator">/</span>
-    <a href="{{ url_for('bins.list') }}">Locations</a>
+    <a href="{{ url_for('locations.list') }}">Locations</a>
     <span class="breadcrumb-separator">/</span>
     <span class="breadcrumb-current">{% if bin %}Edit{% else %}New{% endif %}</span>
 </nav>
@@ -19,7 +19,7 @@
 
 <div class="card" style="max-width: 500px;">
     <div class="card-body">
-        <form method="post" action="{% if bin %}{{ url_for('bins.update', id=bin.id) }}{% else %}{{ url_for('bins.create') }}{% endif %}">
+        <form method="post" action="{% if bin %}{{ url_for('locations.update', id=bin.id) }}{% else %}{{ url_for('locations.create') }}{% endif %}">
             <div class="form-group">
                 <label class="form-label" for="location">Location *</label>
                 <input type="text" id="location" name="location" class="form-control" required
@@ -67,7 +67,7 @@
                     <svg><use href="#icon-check"></use></svg>
                     {% if bin %}Update Location{% else %}Create Location{% endif %}
                 </button>
-                <a href="{% if bin %}{{ url_for('bins.detail', id=bin.id) }}{% else %}{{ url_for('bins.list') }}{% endif %}" 
+                <a href="{% if bin %}{{ url_for('locations.detail', id=bin.id) }}{% else %}{{ url_for('locations.list') }}{% endif %}" 
                    class="btn btn-secondary">Cancel</a>
             </div>
         </form>

@@ -226,7 +226,7 @@ src/kanban/
 ├── routes/
 │   ├── __init__.py       # Blueprint registration
 │   ├── api.py            # JSON API endpoints (/api)
-│   ├── bins.py           # Bins CRUD (/locations)
+│   ├── locations.py      # Locations CRUD (/locations)
 │   ├── dashboard.py      # Dashboard views (/)
 │   ├── events.py         # Event history & export (/events)
 │   ├── help.py           # Help/documentation page (/help)
@@ -238,7 +238,7 @@ src/kanban/
 │   └── settings.py       # App settings & printer config (/settings)
 ├── templates/
 │   ├── base.html         # Base layout with embedded CSS, JS, and theme support
-│   ├── bins/
+│   ├── locations/
 │   │   ├── detail.html
 │   │   ├── form.html
 │   │   └── list.html

@@ -56,7 +56,7 @@
                 </dd>
 
                 <dt class="text-muted">Location</dt>
-                <dd><a href="{{ url_for('bins.detail', id=kanban.bin_id) }}">{{ kanban.bin_location }}</a></dd>
+                <dd><a href="{{ url_for('locations.detail', id=kanban.bin_id) }}">{{ kanban.bin_location }}</a></dd>
 
                 <dt class="text-muted">Container Quantity</dt>
                 <dd>{{ kanban.kanban_quantity }} {{ kanban.uom_abbr }}</dd>

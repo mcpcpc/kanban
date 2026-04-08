@@ -2,7 +2,7 @@ from quart import Blueprint, render_template, request, redirect, url_for, flash
 
 from kanban.db import get_db
 
-bp = Blueprint("bins", __name__, url_prefix="/locations")
+bp = Blueprint("locations", __name__, url_prefix="/locations")
 
 # Available colors for bin tagging
 BIN_COLORS = [
@@ -57,7 +57,7 @@ async def list():
     colors_in_use = [row["color"] for row in colors_in_use]
     
     return await render_template(
-        "bins/list.html",
+        "locations/list.html",
         bins=bins,
         bin_kanban_counts=bin_kanban_counts,
         search=search,
@@ -70,7 +70,7 @@ async def list():
 @bp.route("/new")
 async def new():
     """Show new bin form."""
-    return await render_template("bins/form.html", bin=None, bin_colors=BIN_COLORS)
+    return await render_template("locations/form.html", bin=None, bin_colors=BIN_COLORS)
 
 
 @bp.route("/", methods=["POST"])
@@ -85,7 +85,7 @@ async def create():
     
     if not location:
         await flash("Location is required.", "danger")
-        return redirect(url_for("bins.new"))
+        return redirect(url_for("locations.new"))
     
     try:
         db.execute(
@@ -96,9 +96,9 @@ async def create():
         await flash(f"Location '{location}' created successfully.", "success")
     except Exception as e:
         await flash(f"Error creating location: {str(e)}", "danger")
-        return redirect(url_for("bins.new"))
+        return redirect(url_for("locations.new"))
     
-    return redirect(url_for("bins.list"))
+    return redirect(url_for("locations.list"))
 
 
 @bp.route("/<int:id>")
@@ -109,7 +109,7 @@ async def detail(id):
     
     if not bin:
         await flash("Location not found.", "danger")
-        return redirect(url_for("bins.list"))
+        return redirect(url_for("locations.list"))
     
     # Get kanbans in this bin
     kanbans = db.execute(
@@ -121,7 +121,7 @@ async def detail(id):
         [id]
     ).fetchall()
     
-    return await render_template("bins/detail.html", bin=bin, kanbans=kanbans, bin_colors=BIN_COLORS)
+    return await render_template("locations/detail.html", bin=bin, kanbans=kanbans, bin_colors=BIN_COLORS)
 
 
 @bp.route("/<int:id>/edit")
@@ -132,9 +132,9 @@ async def edit(id):
     
     if not bin:
         await flash("Location not found.", "danger")
-        return redirect(url_for("bins.list"))
+        return redirect(url_for("locations.list"))
     
-    return await render_template("bins/form.html", bin=bin, bin_colors=BIN_COLORS)
+    return await render_template("locations/form.html", bin=bin, bin_colors=BIN_COLORS)
 
 
 @bp.route("/<int:id>", methods=["POST"])
@@ -149,7 +149,7 @@ async def update(id):
     
     if not location:
         await flash("Location is required.", "danger")
-        return redirect(url_for("bins.edit", id=id))
+        return redirect(url_for("locations.edit", id=id))
     
     db.execute(
         """UPDATE bin SET location = ?, description = ?, color = ?,
@@ -159,7 +159,7 @@ async def update(id):
     db.commit()
     await flash(f"Location '{location}' updated successfully.", "success")
     
-    return redirect(url_for("bins.detail", id=id))
+    return redirect(url_for("locations.detail", id=id))
 
 
 @bp.route("/<int:id>/delete", methods=["POST"])
@@ -174,7 +174,7 @@ async def delete(id):
     
     if kanban_count > 0:
         await flash(f"Cannot delete location: it is used in {kanban_count} kanban(s).", "danger")
-        return redirect(url_for("bins.detail", id=id))
+        return redirect(url_for("locations.detail", id=id))
     
     bin = db.execute("SELECT location FROM bin WHERE id = ?", [id]).fetchone()
     if bin:
@@ -182,4 +182,4 @@ async def delete(id):
         db.commit()
         await flash(f"Location '{bin['location']}' deleted.", "success")
     
-    return redirect(url_for("bins.list"))
+    return redirect(url_for("locations.list"))
