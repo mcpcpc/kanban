@@ -2,7 +2,7 @@ from quart import Blueprint, render_template, request, redirect, url_for, flash
 
 from kanban.db import get_db
 
-bp = Blueprint("bins", __name__, url_prefix="/bins")
+bp = Blueprint("bins", __name__, url_prefix="/locations")
 
 # Available colors for bin tagging
 BIN_COLORS = [

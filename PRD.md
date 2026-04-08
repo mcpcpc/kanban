@@ -226,7 +226,7 @@ src/kanban/
 ├── routes/
 │   ├── __init__.py       # Blueprint registration
 │   ├── api.py            # JSON API endpoints (/api)
-│   ├── bins.py           # Bins CRUD (/bins)
+│   ├── bins.py           # Bins CRUD (/locations)
 │   ├── dashboard.py      # Dashboard views (/)
 │   ├── events.py         # Event history & export (/events)
 │   ├── help.py           # Help/documentation page (/help)
@@ -283,10 +283,10 @@ src/kanban/
 | GET | `/parts/<id>` | Part detail |
 | GET | `/parts/new` | New part form |
 | GET | `/parts/<id>/edit` | Edit part form |
-| GET | `/bins` | Bins list |
-| GET | `/bins/<id>` | Bin detail |
-| GET | `/bins/new` | New bin form |
-| GET | `/bins/<id>/edit` | Edit bin form |
+| GET | `/locations` | Locations list |
+| GET | `/locations/<id>` | Location detail |
+| GET | `/locations/new` | New location form |
+| GET | `/locations/<id>/edit` | Edit location form |
 | GET | `/kanbans` | Kanbans list |
 | GET | `/kanbans/<id>` | Kanban detail |
 | GET | `/kanbans/new` | New kanban form |
@@ -308,9 +308,9 @@ src/kanban/
 | POST | `/parts` | Create part |
 | POST | `/parts/<id>` | Update part |
 | POST | `/parts/<id>/delete` | Delete part |
-| POST | `/bins` | Create bin |
-| POST | `/bins/<id>` | Update bin |
-| POST | `/bins/<id>/delete` | Delete bin |
+| POST | `/locations` | Create location |
+| POST | `/locations/<id>` | Update location |
+| POST | `/locations/<id>/delete` | Delete location |
 | POST | `/kanbans` | Create kanban |
 | POST | `/kanbans/<id>` | Update kanban |
 | POST | `/kanbans/<id>/delete` | Delete kanban |
