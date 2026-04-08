@@ -1,6 +1,6 @@
 from quart import Blueprint, render_template, request, redirect, url_for, flash, Response
 import csv
-import io
+from io import StringIO
 from datetime import datetime, timedelta
 
 from kanban.db import get_db
@@ -247,7 +247,7 @@ async def export():
         ORDER BY p.part_number
     """).fetchall()
     
-    output = io.StringIO()
+    output = StringIO()
     writer = csv.writer(output)
     writer.writerow([
         "Part ID", "Part Number", "Manufacturer", "Description", "Category",
