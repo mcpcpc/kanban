@@ -4,8 +4,6 @@ Keeping reusable calculations in one place avoids duplication across
 route modules and makes the logic easier to test in isolation.
 """
 
-from __future__ import annotations
-
 from math import ceil
 from datetime import datetime
 from datetime import timedelta
@@ -65,7 +63,7 @@ def calculate_number_of_cards(
     return max(1, ceil((estimated_daily_demand * total_lt) / kanban_quantity))
 
 
-def build_30_day_trend(rows) -> tuple[list[dict], int]:
+def build_30_day_trend(rows) -> tuple:
     """Fill a 30-day window from *rows* (each having ``day`` and ``count``).
 
     Returns ``(trend_list, max_value)`` where *trend_list* contains one
