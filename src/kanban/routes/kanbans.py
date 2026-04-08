@@ -20,11 +20,11 @@ async def list():
     query = """
         SELECT k.*, p.part_number as part_name, p.manufacturer, 
                p.reorder_lead_time_days,
-               b.location as bin_location,
+               b.location as location_name,
                CAST(k.estimated_daily_demand * (p.reorder_lead_time_days + k.safety_lead_time_days) AS INTEGER) as reorder_point
         FROM kanban k
         JOIN part p ON k.part_id = p.id
-        JOIN bin b ON k.bin_id = b.id
+        JOIN location b ON k.location_id = b.id
         WHERE 1=1
     """
     params = []
@@ -56,10 +56,10 @@ async def new():
     """Show new kanban form."""
     db = get_db()
     parts = db.execute("SELECT * FROM part ORDER BY part_number").fetchall()
-    bins = db.execute("SELECT * FROM bin ORDER BY location").fetchall()
-    selected_bin_id = request.args.get("bin_id", type=int)
+    locations = db.execute("SELECT * FROM location ORDER BY location").fetchall()
+    selected_location_id = request.args.get("location_id", type=int)
     selected_part_id = request.args.get("part_id", type=int)
-    return await render_template("kanbans/form.html", kanban=None, parts=parts, bins=bins, selected_bin_id=selected_bin_id, selected_part_id=selected_part_id)
+    return await render_template("kanbans/form.html", kanban=None, parts=parts, locations=locations, selected_location_id=selected_location_id, selected_part_id=selected_part_id)
 
 
 @bp.route("/", methods=["POST"])
@@ -69,13 +69,13 @@ async def create():
     form = await request.form
     
     part_id = form.get("part_id")
-    bin_id = form.get("bin_id")
+    location_id = form.get("location_id")
     kanban_quantity = form.get("kanban_quantity", "100")
     safety_lead_time_days = form.get("safety_lead_time_days", "0")
     estimated_daily_demand = form.get("estimated_daily_demand", "0")
     is_active = form.get("is_active") == "on"
     
-    if not part_id or not bin_id:
+    if not part_id or not location_id:
         await flash("Part and Location are required.", "danger")
         return redirect(url_for("kanbans.new"))
     
@@ -97,10 +97,10 @@ async def create():
         number_of_cards = 1
     
     cursor = db.execute(
-        """INSERT INTO kanban (part_id, bin_id, kanban_quantity,
+        """INSERT INTO kanban (part_id, location_id, kanban_quantity,
            safety_lead_time_days, estimated_daily_demand, number_of_cards, is_active)
            VALUES (?, ?, ?, ?, ?, ?, ?)""",
-        [part_id, bin_id, kanban_quantity,
+        [part_id, location_id, kanban_quantity,
          safety_lead_time_days, estimated_daily_demand, number_of_cards, 1 if is_active else 0]
     )
     db.commit()
@@ -116,12 +116,12 @@ async def detail(id):
     kanban = db.execute(
         """SELECT k.*, p.part_number as part_name, p.manufacturer, p.description as part_description,
                   p.reorder_lead_time_days,
-                  b.location as bin_location,
+                  b.location as location_name,
                   u.name as uom_name, u.abbreviation as uom_abbr,
                   CAST(k.estimated_daily_demand * (p.reorder_lead_time_days + k.safety_lead_time_days) AS INTEGER) as reorder_point
            FROM kanban k
            JOIN part p ON k.part_id = p.id
-           JOIN bin b ON k.bin_id = b.id
+           JOIN location b ON k.location_id = b.id
            JOIN unit_of_measure u ON p.unit_of_measure_id = u.id
            WHERE k.id = ?""",
         [id]
@@ -161,8 +161,8 @@ async def edit(id):
         return redirect(url_for("kanbans.list"))
     
     parts = db.execute("SELECT * FROM part ORDER BY part_number").fetchall()
-    bins = db.execute("SELECT * FROM bin ORDER BY location").fetchall()
-    return await render_template("kanbans/form.html", kanban=kanban, parts=parts, bins=bins)
+    locations = db.execute("SELECT * FROM location ORDER BY location").fetchall()
+    return await render_template("kanbans/form.html", kanban=kanban, parts=parts, locations=locations)
 
 
 @bp.route("/<int:id>", methods=["POST"])
@@ -172,13 +172,13 @@ async def update(id):
     form = await request.form
     
     part_id = form.get("part_id")
-    bin_id = form.get("bin_id")
+    location_id = form.get("location_id")
     kanban_quantity = form.get("kanban_quantity", "100")
     safety_lead_time_days = form.get("safety_lead_time_days", "0")
     estimated_daily_demand = form.get("estimated_daily_demand", "0")
     is_active = form.get("is_active") == "on"
     
-    if not part_id or not bin_id:
+    if not part_id or not location_id:
         await flash("Part and Location are required.", "danger")
         return redirect(url_for("kanbans.edit", id=id))
     
@@ -200,11 +200,11 @@ async def update(id):
         number_of_cards = 1
     
     db.execute(
-        """UPDATE kanban SET part_id = ?, bin_id = ?, kanban_quantity = ?, 
+        """UPDATE kanban SET part_id = ?, location_id = ?, kanban_quantity = ?, 
            safety_lead_time_days = ?, estimated_daily_demand = ?,
            number_of_cards = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
            WHERE id = ?""",
-        [part_id, bin_id, kanban_quantity,
+        [part_id, location_id, kanban_quantity,
          safety_lead_time_days, estimated_daily_demand, number_of_cards, 1 if is_active else 0, id]
     )
     db.commit()
@@ -245,12 +245,12 @@ async def print_card(id):
             p.part_number as part_number,
             p.manufacturer as part_manufacturer,
             p.description as part_description,
-            b.location as bin_location,
+            b.location as location_name,
             u.abbreviation as unit_of_measure_abbreviation,
             CAST(k.estimated_daily_demand * (p.reorder_lead_time_days + k.safety_lead_time_days) AS INTEGER) as reorder_point
         FROM kanban k
             JOIN part p ON k.part_id = p.id
-            JOIN bin b ON k.bin_id = b.id
+            JOIN location b ON k.location_id = b.id
             JOIN unit_of_measure u ON p.unit_of_measure_id = u.id
         WHERE k.id = ?
         """,

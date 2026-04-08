@@ -14,7 +14,7 @@ async def index():
 
     # Get counts
     total_parts = db.execute("SELECT COUNT(*) FROM part").fetchone()[0]
-    total_bins = db.execute("SELECT COUNT(*) FROM bin").fetchone()[0]
+    total_locations = db.execute("SELECT COUNT(*) FROM location").fetchone()[0]
     total_kanbans = db.execute("SELECT COUNT(*) FROM kanban WHERE is_active = 1").fetchone()[0]
 
     # Get recent events
@@ -27,12 +27,12 @@ async def index():
             ket.type as event_type,
             k.id as kanban_id,
             p.part_number as part_name,
-            b.location as bin_location
+            b.location as location_name
         FROM kanban_event ke
         JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
         JOIN kanban k ON ke.kanban_id = k.id
         JOIN part p ON k.part_id = p.id
-        JOIN bin b ON k.bin_id = b.id
+        JOIN location b ON k.location_id = b.id
         ORDER BY ke.created_at DESC
         LIMIT 10
     """).fetchall()
@@ -44,7 +44,7 @@ async def index():
                 k.id as kanban_id,
                 p.part_number as part_name,
                 p.manufacturer,
-                b.location as bin_location,
+                b.location as location_name,
                 (
                     SELECT COUNT(*) FROM kanban_event ke
                     JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
@@ -61,7 +61,7 @@ async def index():
                 ) AS signal_time
             FROM kanban k
             JOIN part p ON k.part_id = p.id
-            JOIN bin b ON k.bin_id = b.id
+            JOIN location b ON k.location_id = b.id
             WHERE k.is_active = 1
         ) WHERE pending_count > 0
         ORDER BY signal_time ASC
@@ -111,20 +111,20 @@ async def index():
     parts_max = max((p['count'] for p in parts_trend), default=1) or 1
 
     # Bins creation trend
-    daily_bins = db.execute("""
+    daily_locations = db.execute("""
         SELECT date(created_at) as day, COUNT(*) as count
-        FROM bin
+        FROM location
         WHERE created_at >= ?
         GROUP BY date(created_at)
         ORDER BY day
     """, (thirty_days_ago,)).fetchall()
 
-    bins_trend = []
-    bins_dict = {row['day']: row['count'] for row in daily_bins}
+    locations_trend = []
+    locations_dict = {row['day']: row['count'] for row in daily_locations}
     for i in range(30):
         day = (datetime.now() - timedelta(days=29-i)).strftime('%Y-%m-%d')
-        bins_trend.append({'day': day, 'count': bins_dict.get(day, 0)})
-    bins_max = max((p['count'] for p in bins_trend), default=1) or 1
+        locations_trend.append({'day': day, 'count': locations_dict.get(day, 0)})
+    locations_max = max((p['count'] for p in locations_trend), default=1) or 1
 
     # Signals trend
     daily_signals = db.execute("""
@@ -146,7 +146,7 @@ async def index():
     return await render_template(
         "dashboard/index.html",
         total_parts=total_parts,
-        total_bins=total_bins,
+        total_locations=total_locations,
         total_kanbans=total_kanbans,
         active_signals=active_signals,
         pending_signals=pending_signals,
@@ -156,8 +156,8 @@ async def index():
         kanban_max=kanban_max,
         parts_trend=parts_trend,
         parts_max=parts_max,
-        bins_trend=bins_trend,
-        bins_max=bins_max,
+        locations_trend=locations_trend,
+        locations_max=locations_max,
         signals_trend=signals_trend,
         signals_max=signals_max
     )

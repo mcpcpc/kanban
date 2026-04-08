@@ -92,19 +92,19 @@
                 <svg><use href="#icon-locations"></use></svg>
             </div>
         </div>
-        <div class="stat-card-value">{{ total_bins }}</div>
-        {% if bins_trend %}
+        <div class="stat-card-value">{{ total_locations }}</div>
+        {% if locations_trend %}
         <div class="stat-card-sparkline">
             <svg viewBox="0 0 300 40" preserveAspectRatio="none">
                 <path fill="url(#sparkline-gradient-warning)" d="
                     M 0 40
-                    {% for point in bins_trend %}
-                    L {{ loop.index0 * 10 }} {{ 40 - (point.count / bins_max * 35) }}
+                    {% for point in locations_trend %}
+                    L {{ loop.index0 * 10 }} {{ 40 - (point.count / locations_max * 35) }}
                     {% endfor %}
                     L 290 40 Z
                 "/>
                 <polyline fill="none" stroke="var(--color-warning)" stroke-width="1.5" points="
-                    {% for point in bins_trend %}{{ loop.index0 * 10 }},{{ 40 - (point.count / bins_max * 35) }} {% endfor %}
+                    {% for point in locations_trend %}{{ loop.index0 * 10 }},{{ 40 - (point.count / locations_max * 35) }} {% endfor %}
                 "/>
             </svg>
             <span class="stat-card-trend-label">New (30 days)</span>
@@ -169,7 +169,7 @@
                                 {% if signal.pending_count > 1 %}<span class="badge badge-danger" style="margin-left: 0.25rem;">{{ signal.pending_count }} cards</span>{% endif %}
                                 <div class="text-muted text-truncate" style="font-size: 0.75rem;" title="{{ signal.part_name }}">{{ signal.part_name }}</div>
                             </td>
-                            <td class="cell-truncate" title="{{ signal.bin_location }}">{{ signal.bin_location }}</td>
+                            <td class="cell-truncate" title="{{ signal.location_name }}">{{ signal.location_name }}</td>
                             <td class="text-muted" style="white-space: nowrap;">
                                 {% set delta = (current_time - signal.signal_time) %}
                                 {% if delta.days > 0 %}
@@ -262,7 +262,7 @@
                         <td class="cell-truncate-lg" title="{{ event.part_name }}">
                             <a href="{{ url_for('kanbans.detail', id=event.kanban_id) }}">{{ event.part_name }}</a>
                         </td>
-                        <td class="cell-truncate" title="{{ event.bin_location }}">{{ event.bin_location }}</td>
+                        <td class="cell-truncate" title="{{ event.location_name }}">{{ event.location_name }}</td>
                         <td>{{ event.quantity if event.quantity else '-' }}</td>
                     </tr>
                     {% endfor %}

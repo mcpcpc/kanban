@@ -134,9 +134,9 @@ async def detail(id):
     
     # Get kanbans using this part
     kanbans = db.execute(
-        """SELECT k.*, b.location as bin_location
+        """SELECT k.*, b.location as location_name
            FROM kanban k
-           JOIN bin b ON k.bin_id = b.id
+           JOIN location b ON k.location_id = b.id
            WHERE k.part_id = ?
            ORDER BY b.location""",
         [id]

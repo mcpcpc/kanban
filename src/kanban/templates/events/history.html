@@ -101,7 +101,7 @@
                     {{ event.part_name }}
                     <div class="text-muted text-truncate" style="font-size: 0.8125rem;">{{ event.manufacturer }}</div>
                 </td>
-                <td class="cell-truncate" title="{{ event.bin_location }}">{{ event.bin_location }}</td>
+                <td class="cell-truncate" title="{{ event.location_name }}">{{ event.location_name }}</td>
                 <td>{{ event.quantity if event.quantity else '-' }}</td>
                 <td class="text-muted" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
                     {{ event.notes if event.notes else '-' }}

@@ -52,10 +52,10 @@ async def process():
     
     # Verify kanban exists
     kanban = db.execute(
-        """SELECT k.*, p.part_number as part_name, b.location as bin_location
+        """SELECT k.*, p.part_number as part_name, b.location as location_name
            FROM kanban k
            JOIN part p ON k.part_id = p.id
-           JOIN bin b ON k.bin_id = b.id
+           JOIN location b ON k.location_id = b.id
            WHERE k.id = ?""",
         [kanban_id]
     ).fetchone()
@@ -65,7 +65,7 @@ async def process():
         return get_redirect()
     
     if not kanban["is_active"]:
-        await flash(f"Kanban is inactive: {kanban['part_name']} @ {kanban['bin_location']}", "warning")
+        await flash(f"Kanban is inactive: {kanban['part_name']} @ {kanban['location_name']}", "warning")
         return get_redirect()
     
     # Count open signals: signals minus completed restocks
@@ -86,7 +86,7 @@ async def process():
         if open_signal_count >= kanban["number_of_cards"]:
             await flash(
                 f"All {kanban['number_of_cards']} cards already signaled for "
-                f"{kanban['part_name']} @ {kanban['bin_location']} — waiting for restock",
+                f"{kanban['part_name']} @ {kanban['location_name']} — waiting for restock",
                 "warning"
             )
             return get_redirect()
@@ -95,7 +95,7 @@ async def process():
     if action in ("restock_start", "restock_complete"):
         if open_signal_count <= 0:
             action_label = "start restocking" if action == "restock_start" else "complete restocking"
-            await flash(f"Cannot {action_label}: no open signal for {kanban['part_name']} @ {kanban['bin_location']}", "danger")
+            await flash(f"Cannot {action_label}: no open signal for {kanban['part_name']} @ {kanban['location_name']}", "danger")
             return get_redirect()
     
     # Get event type ID
@@ -124,7 +124,7 @@ async def process():
         [kanban_id, event_type_row["id"], qty, notes or None]
     )
     
-    # Decrease inventory on signal (bin was depleted)
+    # Decrease inventory on signal (location was depleted)
     if action == "signal":
         db.execute("""
             UPDATE inventory 
@@ -143,7 +143,7 @@ async def process():
         "adjustment": "Adjustment recorded"
     }
     
-    msg = f"{action_names.get(action, action)}: {kanban['part_name']} @ {kanban['bin_location']}"
+    msg = f"{action_names.get(action, action)}: {kanban['part_name']} @ {kanban['location_name']}"
     if qty is not None:
         msg += f" (qty: {qty})"
     

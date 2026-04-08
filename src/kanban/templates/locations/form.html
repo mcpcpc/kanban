@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{% if bin %}Edit Location{% else %}New Location{% endif %}{% endblock %}
+{% block title %}{% if location %}Edit Location{% else %}New Location{% endif %}{% endblock %}
 
 {% block breadcrumb %}
 <nav class="breadcrumb">
@@ -8,22 +8,22 @@
     <span class="breadcrumb-separator">/</span>
     <a href="{{ url_for('locations.list') }}">Locations</a>
     <span class="breadcrumb-separator">/</span>
-    <span class="breadcrumb-current">{% if bin %}Edit{% else %}New{% endif %}</span>
+    <span class="breadcrumb-current">{% if location %}Edit{% else %}New{% endif %}</span>
 </nav>
 {% endblock %}
 
 {% block content %}
 <div class="page-header">
-    <h1 class="page-title">{% if bin %}Edit Location{% else %}New Location{% endif %}</h1>
+    <h1 class="page-title">{% if location %}Edit Location{% else %}New Location{% endif %}</h1>
 </div>
 
 <div class="card" style="max-width: 500px;">
     <div class="card-body">
-        <form method="post" action="{% if bin %}{{ url_for('locations.update', id=bin.id) }}{% else %}{{ url_for('locations.create') }}{% endif %}">
+        <form method="post" action="{% if location %}{{ url_for('locations.update', id=location.id) }}{% else %}{{ url_for('locations.create') }}{% endif %}">
             <div class="form-group">
                 <label class="form-label" for="location">Location *</label>
                 <input type="text" id="location" name="location" class="form-control" required
-                       value="{{ bin.location if bin else '' }}" 
+                       value="{{ location.location if location else '' }}" 
                        placeholder="e.g., A1-01, Shelf-3-B, Warehouse-2">
                 <div class="form-text">Unique identifier for this physical location</div>
             </div>
@@ -31,22 +31,22 @@
             <div class="form-group">
                 <label class="form-label" for="description">Description</label>
                 <textarea id="description" name="description" class="form-control" 
-                          placeholder="Optional notes about this location...">{{ bin.description if bin and bin.description else '' }}</textarea>
+                          placeholder="Optional notes about this location...">{{ location.description if location and location.description else '' }}</textarea>
             </div>
 
             <div class="form-group">
                 <label class="form-label">Color Tag</label>
                 <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: stretch;">
                     <label style="cursor: pointer;">
-                        <input type="radio" name="color" value="" {% if not bin or not bin.color %}checked{% endif %} style="display: none;">
+                        <input type="radio" name="color" value="" {% if not location or not location.color %}checked{% endif %} style="display: none;">
                         <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; border-radius: 6px; border: 2px solid var(--color-border); height: 100%; box-sizing: border-box; transition: border-color 0.15s;">
                             <span style="display: inline-block; width: 20px; height: 20px; border-radius: 4px; border: 2px dashed var(--color-border);"></span>
                             <span class="text-muted" style="font-size: 0.875rem;">None</span>
                         </span>
                     </label>
-                    {% for color_name, color_dark, color_light in bin_colors %}
+                    {% for color_name, color_dark, color_light in location_colors %}
                     <label style="cursor: pointer;" title="{{ color_name|capitalize }}">
-                        <input type="radio" name="color" value="{{ color_name }}" {% if bin and bin.color == color_name %}checked{% endif %} style="display: none;">
+                        <input type="radio" name="color" value="{{ color_name }}" {% if location and location.color == color_name %}checked{% endif %} style="display: none;">
                         <span style="display: inline-flex; align-items: center; padding: 0.25rem; border-radius: 6px; border: 2px solid var(--color-border); height: 100%; box-sizing: border-box; transition: border-color 0.15s;">
                             <span style="display: inline-block; width: 20px; height: 20px; border-radius: 4px; background: {{ color_dark }};"></span>
                         </span>
@@ -65,9 +65,9 @@
             <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
                 <button type="submit" class="btn btn-primary">
                     <svg><use href="#icon-check"></use></svg>
-                    {% if bin %}Update Location{% else %}Create Location{% endif %}
+                    {% if location %}Update Location{% else %}Create Location{% endif %}
                 </button>
-                <a href="{% if bin %}{{ url_for('locations.detail', id=bin.id) }}{% else %}{{ url_for('locations.list') }}{% endif %}" 
+                <a href="{% if location %}{{ url_for('locations.detail', id=location.id) }}{% else %}{{ url_for('locations.list') }}{% endif %}" 
                    class="btn btn-secondary">Cancel</a>
             </div>
         </form>

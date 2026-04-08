@@ -2,7 +2,7 @@
 
 ## Overview
 
-A lightweight, production-grade kanban management system designed for physical inventory tracking using Zebra barcode scanners (via DataWedge TCP and web-based scanning), physical bins, and kanban cards. The system prioritizes ease of use for 1-2 operators while providing comprehensive performance analytics and direct Zebra label printer integration.
+A lightweight, production-grade kanban management system designed for physical inventory tracking using Zebra barcode scanners (via DataWedge TCP and web-based scanning), physical locations, and kanban cards. The system prioritizes ease of use for 1-2 operators while providing comprehensive performance analytics and direct Zebra label printer integration.
 
 ---
 
@@ -10,7 +10,7 @@ A lightweight, production-grade kanban management system designed for physical i
 
 Production environments need a simple, reliable way to:
 - Track physical kanban card movements via barcode scanning
-- Monitor inventory health across multiple bin locations
+- Monitor inventory health across multiple locations
 - Analyze kanban cycle times and replenishment performance
 - Operate seamlessly across mobile scanners and desktop workstations
 - Print kanban labels directly to Zebra label printers
@@ -49,7 +49,7 @@ Production environments need a simple, reliable way to:
 
 ### Supervisor (Secondary)
 - Reviews kanban health and performance dashboards
-- Manages parts, bins, and kanban configurations
+- Manages parts, locations, and kanban configurations
 - Works primarily on desktop
 
 ---
@@ -63,14 +63,14 @@ Production environments need a simple, reliable way to:
 - Fields: part number (MPN), manufacturer, description, category, datasheet URL, unit of measure, reorder lead time
 - Search and filter by part number, manufacturer, category
 
-#### FR-1.2: Bins Management
-- CRUD operations for physical bin locations
+#### FR-1.2: Locations Management
+- CRUD operations for physical storage locations
 - Fields: location code, description, color
-- Visual bin status indicator (healthy/warning/critical)
+- Visual location status indicator (healthy/warning/critical)
 
 #### FR-1.3: Kanban Management
 - CRUD operations for kanban cards
-- Fields: part, bin, kanban quantity, safety lead time days, estimated daily demand, number of cards, active status
+- Fields: part, location, kanban quantity, safety lead time days, estimated daily demand, number of cards, active status
 - Reorder point calculated dynamically from `safety_lead_time_days × estimated_daily_demand`
 - Print kanban labels with QR codes directly to Zebra printers via ZPL
 
@@ -114,7 +114,7 @@ Production environments need a simple, reliable way to:
 #### FR-2.4: Label Generation & Printing
 - ZPL-based label templates for Zebra label printers
 - QR code (BQN) encoding kanban ID as `K<id>` format
-- Labels include: QR code, kanban ID, bin location, part number, manufacturer, description, quantity, reorder point, card number
+- Labels include: QR code, kanban ID, location, part number, manufacturer, description, quantity, reorder point, card number
 - Direct TCP printing to networked Zebra printers via `utils/zebra.py`
 
 ### FR-3: Event Tracking
@@ -340,8 +340,8 @@ src/kanban/
 |-------|---------|
 | `unit_of_measure` | Pre-seeded measurement units (ea, kg, g, m, cm, mm, L, mL, ft, in) |
 | `part` | Items tracked in inventory (part number, manufacturer, category, etc.) |
-| `bin` | Physical storage locations (location code, description, color) |
-| `kanban` | Links parts to bins with reorder parameters (quantity, safety lead time, demand) |
+| `location` | Physical storage locations (location code, description, color) |
+| `kanban` | Links parts to locations with reorder parameters (quantity, safety lead time, demand) |
 | `kanban_event_type` | Enumerated event types (signal, restock_start, restock_complete, adjustment) |
 | `kanban_event` | Records all kanban lifecycle events with timestamps |
 | `inventory` | Tracks current stock levels per part (quantity on hand) |

@@ -33,10 +33,10 @@ async def save_scan(barcode: str) -> None:
     db = get_db()
 
     kanban = db.execute(
-        """SELECT k.*, p.part_number as part_name, b.location as bin_location
+        """SELECT k.*, p.part_number as part_name, b.location as location_name
            FROM kanban k
            JOIN part p ON k.part_id = p.id
-           JOIN bin b ON k.bin_id = b.id
+           JOIN location b ON k.location_id = b.id
            WHERE k.id = ?""",
         [kanban_id]
     ).fetchone()
@@ -46,7 +46,7 @@ async def save_scan(barcode: str) -> None:
         return
 
     if not kanban["is_active"]:
-        info(f"Kanban is inactive: {kanban['part_name']} @ {kanban['bin_location']}")
+        info(f"Kanban is inactive: {kanban['part_name']} @ {kanban['location_name']}")
         return
 
     open_signal_count = db.execute("""
@@ -64,7 +64,7 @@ async def save_scan(barcode: str) -> None:
     if open_signal_count >= kanban["number_of_cards"]:
         info(
             f"All {kanban['number_of_cards']} cards already signaled for "
-            f"{kanban['part_name']} @ {kanban['bin_location']} — waiting for restock"
+            f"{kanban['part_name']} @ {kanban['location_name']} — waiting for restock"
         )
         return
 
@@ -88,7 +88,7 @@ async def save_scan(barcode: str) -> None:
 
     db.commit()
 
-    info(f"Signal recorded: {kanban['part_name']} @ {kanban['bin_location']}")
+    info(f"Signal recorded: {kanban['part_name']} @ {kanban['location_name']}")
 
 
 async def client_handler(reader, writer):

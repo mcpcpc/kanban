@@ -1,6 +1,6 @@
 # Kanban
 
-A lightweight, production-grade kanban management system for physical inventory tracking. Built for manufacturing environments using barcode scanners, physical bins, and Toyota-style kanban cards.
+A lightweight, production-grade kanban management system for physical inventory tracking. Built for manufacturing environments using barcode scanners, physical locations, and Toyota-style kanban cards.
 
 ## Features
 
@@ -8,7 +8,7 @@ A lightweight, production-grade kanban management system for physical inventory 
 - **Toyota-Style Cards** — Printable kanban cards with Code128 barcodes
 - **Event Tracking** — Signal, restock, stockout, and adjustment events
 - **Health Monitoring** — Dashboard with kanban health scores and cycle time analytics
-- **Parts & Bins** — Full CRUD for parts inventory and bin locations
+- **Parts & Locations** — Full CRUD for parts inventory and storage locations
 - **Reports** — Performance metrics, consumption trends, and CSV export
 - **Mobile-First UI** — Responsive design with light/dark theme support
 
@@ -26,7 +26,7 @@ cd kanban
 
 # Create virtual environment
 python -m venv venv
-source venv/bin/activate  # Linux/macOS
+source venv/location/activate  # Linux/macOS
 # venv\Scripts\activate   # Windows
 
 # Install dependencies
@@ -81,8 +81,8 @@ The scan interface auto-focuses and auto-submits on barcode input.
 ## Workflow
 
 1. **Create Parts** — Add parts with MPN, manufacturer, and lead times
-2. **Create Bins** — Define physical bin locations
-3. **Create Kanbans** — Link parts to bins with quantities and reorder points
+2. **Create Locations** — Define physical storage locations
+3. **Create Kanbans** — Link parts to locations with quantities and reorder points
 4. **Print Cards** — Generate Toyota-style kanban cards with barcodes
 5. **Scan Events** — Signal replenishment, track restocks, log adjustments
 6. **Monitor Health** — Review dashboard for cycle times and stockout alerts

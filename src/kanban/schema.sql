@@ -3,7 +3,7 @@
 
 DROP TABLE IF EXISTS unit_of_measure;
 DROP TABLE IF EXISTS part;
-DROP TABLE IF EXISTS bin;
+DROP TABLE IF EXISTS location;
 DROP TABLE IF EXISTS kanban;
 DROP TABLE IF EXISTS kanban_event_type;
 DROP TABLE IF EXISTS kanban_event;
@@ -43,8 +43,8 @@ CREATE TABLE part (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Bins: Physical locations holding inventory
-CREATE TABLE bin (
+-- Locations: Physical locations holding inventory
+CREATE TABLE location (
     id INTEGER PRIMARY KEY,
     location TEXT NOT NULL,
     description TEXT,
@@ -53,11 +53,11 @@ CREATE TABLE bin (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Kanbans: Links components to bins with reorder parameters
+-- Kanbans: Links components to locations with reorder parameters
 CREATE TABLE kanban (
     id INTEGER PRIMARY KEY,
     part_id INTEGER NOT NULL REFERENCES part(id),
-    bin_id INTEGER NOT NULL REFERENCES bin(id),
+    location_id INTEGER NOT NULL REFERENCES location(id),
     kanban_quantity INTEGER NOT NULL DEFAULT 100,
     safety_lead_time_days REAL NOT NULL DEFAULT 0,
     estimated_daily_demand REAL NOT NULL DEFAULT 0,
@@ -132,7 +132,7 @@ INSERT INTO setting (printer_hostname, printer_port, printer_timeout_seconds, la
 ^FDK{id:06d}^FS
 ^FO392,18
 ^A0N,32,32
-^FD{bin_location}^FS
+^FD{location_name}^FS
 ^FO162,55
 ^A0N,28,28
 ^FD{part_number}^FS

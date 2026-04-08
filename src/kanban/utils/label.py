@@ -1,7 +1,7 @@
 class KanbanLabelTemplate:
     def __init__(self, 
         id: int,
-        bin_location: str,
+        location_name: str,
         part_number: str,
         part_manufacturer: str,
         part_description: str,
@@ -12,7 +12,7 @@ class KanbanLabelTemplate:
         **kwargs
     ) -> None:
         self.id = id
-        self.bin_location = bin_location
+        self.location_name = location_name
         self.part_number = part_number
         self.part_manufacturer = part_manufacturer
         self.part_description = part_description
@@ -24,7 +24,7 @@ class KanbanLabelTemplate:
     def render(self, card_number: int, template: str) -> str:
         return template.format(
             id=self.id,
-            bin_location=self.bin_location,
+            location_name=self.location_name,
             part_number=self.part_number,
             part_manufacturer=self.part_manufacturer,
             part_description=self.part_description,

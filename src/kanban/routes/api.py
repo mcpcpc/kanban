@@ -13,11 +13,11 @@ async def list_kanbans():
     kanbans = db.execute("""
         SELECT k.*, p.part_number as part_name, p.manufacturer, 
                p.reorder_lead_time_days,
-               b.location as bin_location,
+               b.location as location_name,
                CAST(k.estimated_daily_demand * (p.reorder_lead_time_days + k.safety_lead_time_days) AS INTEGER) as reorder_point
         FROM kanban k
         JOIN part p ON k.part_id = p.id
-        JOIN bin b ON k.bin_id = b.id
+        JOIN location b ON k.location_id = b.id
         WHERE k.is_active = 1
         ORDER BY p.part_number
     """).fetchall()
@@ -28,7 +28,7 @@ async def list_kanbans():
             "id": k["id"],
             "part_name": k["part_name"],
             "manufacturer": k["manufacturer"],
-            "bin_location": k["bin_location"],
+            "location_name": k["location_name"],
             "kanban_quantity": k["kanban_quantity"],
             "reorder_point": k["reorder_point"],
             "safety_lead_time_days": k["safety_lead_time_days"],
@@ -48,11 +48,11 @@ async def get_kanban(id):
     kanban = db.execute("""
         SELECT k.*, p.part_number as part_name, p.manufacturer, 
                p.reorder_lead_time_days,
-               b.location as bin_location,
+               b.location as location_name,
                CAST(k.estimated_daily_demand * (p.reorder_lead_time_days + k.safety_lead_time_days) AS INTEGER) as reorder_point
         FROM kanban k
         JOIN part p ON k.part_id = p.id
-        JOIN bin b ON k.bin_id = b.id
+        JOIN location b ON k.location_id = b.id
         WHERE k.id = ?
     """, [id]).fetchone()
     
@@ -72,7 +72,7 @@ async def get_kanban(id):
         "id": kanban["id"],
         "part_name": kanban["part_name"],
         "manufacturer": kanban["manufacturer"],
-        "bin_location": kanban["bin_location"],
+        "location_name": kanban["location_name"],
         "kanban_quantity": kanban["kanban_quantity"],
         "reorder_point": kanban["reorder_point"],
         "safety_lead_time_days": kanban["safety_lead_time_days"],
@@ -163,7 +163,7 @@ async def health():
     
     total_kanbans = db.execute("SELECT COUNT(*) FROM kanban WHERE is_active = 1").fetchone()[0]
     total_parts = db.execute("SELECT COUNT(*) FROM part").fetchone()[0]
-    total_bins = db.execute("SELECT COUNT(*) FROM bin").fetchone()[0]
+    total_locations = db.execute("SELECT COUNT(*) FROM location").fetchone()[0]
     total_events = db.execute("SELECT COUNT(*) FROM kanban_event").fetchone()[0]
     
     # Count kanbans with pending signals (more signals than restock_completes)
@@ -187,7 +187,7 @@ async def health():
     return jsonify({
         "total_kanbans": total_kanbans,
         "total_parts": total_parts,
-        "total_bins": total_bins,
+        "total_locations": total_locations,
         "total_events": total_events,
         "pending_signals": pending_signals,
         "health": {

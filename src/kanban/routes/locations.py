@@ -4,8 +4,8 @@ from kanban.db import get_db
 
 bp = Blueprint("locations", __name__, url_prefix="/locations")
 
-# Available colors for bin tagging
-BIN_COLORS = [
+# Available colors for location tagging
+LOCATION_COLORS = [
     ("red", "#ef4444", "#fef2f2"),
     ("orange", "#f97316", "#fff7ed"),
     ("yellow", "#eab308", "#fefce8"),
@@ -19,13 +19,13 @@ BIN_COLORS = [
 
 @bp.route("/")
 async def list():
-    """List all bins."""
+    """List all locations."""
     db = get_db()
     
     search = request.args.get("search", "").strip()
     color_filter = request.args.get("color", "").strip()
     
-    query = "SELECT * FROM bin WHERE 1=1"
+    query = "SELECT * FROM location WHERE 1=1"
     params = []
     
     if search:
@@ -39,43 +39,43 @@ async def list():
     
     query += " ORDER BY location"
     
-    bins = db.execute(query, params).fetchall()
+    locations = db.execute(query, params).fetchall()
     
-    # Get kanban counts for each bin
-    bin_kanban_counts = {}
-    for bin in bins:
+    # Get kanban counts for each location
+    location_kanban_counts = {}
+    for location in locations:
         count = db.execute(
-            "SELECT COUNT(*) FROM kanban WHERE bin_id = ? AND is_active = 1",
-            [bin["id"]]
+            "SELECT COUNT(*) FROM kanban WHERE location_id = ? AND is_active = 1",
+            [location["id"]]
         ).fetchone()[0]
-        bin_kanban_counts[bin["id"]] = count
+        location_kanban_counts[location["id"]] = count
     
     # Get distinct colors in use for filter dropdown
     colors_in_use = db.execute(
-        "SELECT DISTINCT color FROM bin WHERE color IS NOT NULL ORDER BY color"
+        "SELECT DISTINCT color FROM location WHERE color IS NOT NULL ORDER BY color"
     ).fetchall()
     colors_in_use = [row["color"] for row in colors_in_use]
     
     return await render_template(
         "locations/list.html",
-        bins=bins,
-        bin_kanban_counts=bin_kanban_counts,
+        locations=locations,
+        location_kanban_counts=location_kanban_counts,
         search=search,
         color_filter=color_filter,
         colors_in_use=colors_in_use,
-        bin_colors=BIN_COLORS
+        location_colors=LOCATION_COLORS
     )
 
 
 @bp.route("/new")
 async def new():
-    """Show new bin form."""
-    return await render_template("locations/form.html", bin=None, bin_colors=BIN_COLORS)
+    """Show new location form."""
+    return await render_template("locations/form.html", location=None, location_colors=LOCATION_COLORS)
 
 
 @bp.route("/", methods=["POST"])
 async def create():
-    """Create a new bin."""
+    """Create a new location."""
     db = get_db()
     form = await request.form
     
@@ -89,7 +89,7 @@ async def create():
     
     try:
         db.execute(
-            "INSERT INTO bin (location, description, color) VALUES (?, ?, ?)",
+            "INSERT INTO location (location, description, color) VALUES (?, ?, ?)",
             [location, description or None, color]
         )
         db.commit()
@@ -103,43 +103,43 @@ async def create():
 
 @bp.route("/<int:id>")
 async def detail(id):
-    """Show bin details."""
+    """Show location details."""
     db = get_db()
-    bin = db.execute("SELECT * FROM bin WHERE id = ?", [id]).fetchone()
+    location = db.execute("SELECT * FROM location WHERE id = ?", [id]).fetchone()
     
-    if not bin:
+    if not location:
         await flash("Location not found.", "danger")
         return redirect(url_for("locations.list"))
     
-    # Get kanbans in this bin
+    # Get kanbans in this location
     kanbans = db.execute(
         """SELECT k.*, p.part_number as part_name, p.manufacturer
            FROM kanban k
            JOIN part p ON k.part_id = p.id
-           WHERE k.bin_id = ?
+           WHERE k.location_id = ?
            ORDER BY p.part_number""",
         [id]
     ).fetchall()
     
-    return await render_template("locations/detail.html", bin=bin, kanbans=kanbans, bin_colors=BIN_COLORS)
+    return await render_template("locations/detail.html", location=location, kanbans=kanbans, location_colors=LOCATION_COLORS)
 
 
 @bp.route("/<int:id>/edit")
 async def edit(id):
-    """Show edit bin form."""
+    """Show edit location form."""
     db = get_db()
-    bin = db.execute("SELECT * FROM bin WHERE id = ?", [id]).fetchone()
+    location = db.execute("SELECT * FROM location WHERE id = ?", [id]).fetchone()
     
-    if not bin:
+    if not location:
         await flash("Location not found.", "danger")
         return redirect(url_for("locations.list"))
     
-    return await render_template("locations/form.html", bin=bin, bin_colors=BIN_COLORS)
+    return await render_template("locations/form.html", location=location, location_colors=LOCATION_COLORS)
 
 
 @bp.route("/<int:id>", methods=["POST"])
 async def update(id):
-    """Update a bin."""
+    """Update a location."""
     db = get_db()
     form = await request.form
     
@@ -152,7 +152,7 @@ async def update(id):
         return redirect(url_for("locations.edit", id=id))
     
     db.execute(
-        """UPDATE bin SET location = ?, description = ?, color = ?,
+        """UPDATE location SET location = ?, description = ?, color = ?,
            updated_at = CURRENT_TIMESTAMP WHERE id = ?""",
         [location, description or None, color, id]
     )
@@ -164,22 +164,22 @@ async def update(id):
 
 @bp.route("/<int:id>/delete", methods=["POST"])
 async def delete(id):
-    """Delete a bin."""
+    """Delete a location."""
     db = get_db()
     
-    # Check if bin is used in any kanbans
+    # Check if location is used in any kanbans
     kanban_count = db.execute(
-        "SELECT COUNT(*) FROM kanban WHERE bin_id = ?", [id]
+        "SELECT COUNT(*) FROM kanban WHERE location_id = ?", [id]
     ).fetchone()[0]
     
     if kanban_count > 0:
         await flash(f"Cannot delete location: it is used in {kanban_count} kanban(s).", "danger")
         return redirect(url_for("locations.detail", id=id))
     
-    bin = db.execute("SELECT location FROM bin WHERE id = ?", [id]).fetchone()
-    if bin:
-        db.execute("DELETE FROM bin WHERE id = ?", [id])
+    location = db.execute("SELECT location FROM location WHERE id = ?", [id]).fetchone()
+    if location:
+        db.execute("DELETE FROM location WHERE id = ?", [id])
         db.commit()
-        await flash(f"Location '{bin['location']}' deleted.", "success")
+        await flash(f"Location '{location['location']}' deleted.", "success")
     
     return redirect(url_for("locations.list"))

@@ -25,11 +25,11 @@ async def index():
     
     # Most active kanbans
     active_kanbans = db.execute("""
-        SELECT k.id, p.part_number as part_name, b.location as bin_location, COUNT(*) as event_count
+        SELECT k.id, p.part_number as part_name, b.location as location_name, COUNT(*) as event_count
         FROM kanban_event ke
         JOIN kanban k ON ke.kanban_id = k.id
         JOIN part p ON k.part_id = p.id
-        JOIN bin b ON k.bin_id = b.id
+        JOIN location b ON k.location_id = b.id
         GROUP BY k.id
         ORDER BY event_count DESC
         LIMIT 10

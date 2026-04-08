@@ -118,7 +118,7 @@
                             <td>
                                 <a href="{{ url_for('kanbans.detail', id=kanban.id) }}">{{ kanban.part_name }}</a>
                             </td>
-                            <td>{{ kanban.bin_location }}</td>
+                            <td>{{ kanban.location_name }}</td>
                             <td style="text-align: right; font-weight: 500;">{{ kanban.event_count }}</td>
                         </tr>
                         {% endfor %}

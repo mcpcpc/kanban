@@ -97,7 +97,7 @@
                     <tbody>
                         {% for kanban in kanbans %}
                         <tr>
-                            <td>{{ kanban.bin_location }}</td>
+                            <td>{{ kanban.location_name }}</td>
                             <td>{{ kanban.kanban_quantity * kanban.number_of_cards }}</td>
                             <td>
                                 {% if kanban.is_active %}

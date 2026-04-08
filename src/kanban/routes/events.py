@@ -25,12 +25,12 @@ async def history():
             p.id as part_id,
             p.part_number as part_name,
             p.manufacturer,
-            b.location as bin_location
+            b.location as location_name
         FROM kanban_event ke
         JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
         JOIN kanban k ON ke.kanban_id = k.id
         JOIN part p ON k.part_id = p.id
-        JOIN bin b ON k.bin_id = b.id
+        JOIN location b ON k.location_id = b.id
         WHERE 1=1
     """
     params = []
@@ -87,12 +87,12 @@ async def export():
             k.id as kanban_id,
             p.part_number as part_name,
             p.manufacturer,
-            b.location as bin_location
+            b.location as location_name
         FROM kanban_event ke
         JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
         JOIN kanban k ON ke.kanban_id = k.id
         JOIN part p ON k.part_id = p.id
-        JOIN bin b ON k.bin_id = b.id
+        JOIN location b ON k.location_id = b.id
         WHERE 1=1
     """
     params = []
@@ -124,7 +124,7 @@ async def export():
             event["kanban_id"],
             event["part_name"],
             event["manufacturer"],
-            event["bin_location"]
+            event["location_name"]
         ])
     
     return Response(

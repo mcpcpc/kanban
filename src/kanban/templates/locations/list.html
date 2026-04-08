@@ -58,36 +58,36 @@
 </div>
 
 <!-- Bins List -->
-{% if bins %}
+{% if locations %}
 <div class="grid grid-3">
-    {% for bin in bins %}
+    {% for location in locations %}
     <div class="card">
         <div class="card-body">
             <div style="display: flex; justify-content: space-between; align-items: start;">
                 <div style="min-width: 0; display: flex; align-items: center; gap: 0.5rem;">
-                    {% if bin.color %}
-                    {% for color_name, color_dark, color_light in bin_colors %}
-                    {% if color_name == bin.color %}
+                    {% if location.color %}
+                    {% for color_name, color_dark, color_light in location_colors %}
+                    {% if color_name == location.color %}
                     <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: {{ color_dark }}; flex-shrink: 0;"></span>
                     {% endif %}
                     {% endfor %}
                     {% endif %}
-                    <h3 class="text-truncate" style="margin: 0; font-size: 1.125rem;" title="{{ bin.location }}">
-                        {{ bin.location }}
+                    <h3 class="text-truncate" style="margin: 0; font-size: 1.125rem;" title="{{ location.location }}">
+                        {{ location.location }}
                     </h3>
                 </div>
                 <svg style="width: 24px; height: 24px; color: var(--color-text-muted); flex-shrink: 0;">
                     <use href="#icon-locations"></use>
                 </svg>
             </div>
-            {% if bin.description %}
-            <p class="text-muted text-truncate" style="margin: 0.25rem 0 0 0; font-size: 0.875rem;" title="{{ bin.description }}">{{ bin.description }}</p>
+            {% if location.description %}
+            <p class="text-muted text-truncate" style="margin: 0.25rem 0 0 0; font-size: 0.875rem;" title="{{ location.description }}">{{ location.description }}</p>
             {% endif %}
             <div style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
                 <span class="text-muted" style="font-size: 0.875rem;">
-                    {{ bin_kanban_counts.get(bin.id, 0) }} kanban{% if bin_kanban_counts.get(bin.id, 0) != 1 %}s{% endif %}
+                    {{ location_kanban_counts.get(location.id, 0) }} kanban{% if location_kanban_counts.get(location.id, 0) != 1 %}s{% endif %}
                 </span>
-                <a href="{{ url_for('locations.detail', id=bin.id) }}" class="btn btn-sm btn-secondary" title="View">
+                <a href="{{ url_for('locations.detail', id=location.id) }}" class="btn btn-sm btn-secondary" title="View">
                     <svg><use href="#icon-eye"></use></svg>
                 </a>
             </div>
