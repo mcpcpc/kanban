@@ -1,11 +1,8 @@
 import socket
-from logging import getLogger
 from logging import debug
 from logging import info
 from logging import warning
 from time import sleep
-
-logger = getLogger(__name__)
 
 class ZebraPrinter:
     def __init__(self, host: str, port: int, timeout: float):
