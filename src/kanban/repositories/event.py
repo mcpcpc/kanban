@@ -1,6 +1,6 @@
 """Repository for ``kanban_event`` and ``kanban_event_type`` tables."""
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from sqlite3 import Connection
 
 from kanban.enums import EventType
