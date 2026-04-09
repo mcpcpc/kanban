@@ -1,3 +1,4 @@
+x = """
 from kanban.repositories.kanban import KanbanRepository
 from kanban.repositories.event import EventRepository
 from kanban.repositories.part import PartRepository
@@ -13,3 +14,4 @@ __all__ = [
     "InventoryRepository",
     "SettingRepository",
 ]
+"""
