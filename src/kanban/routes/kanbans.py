@@ -2,8 +2,8 @@ from quart import Blueprint, render_template, request, redirect, url_for, flash
 
 from kanban.db import get_db
 from kanban.services import calculate_number_of_cards
-from kanban.utils.zebra import ZebraPrinter
-from kanban.utils.label import KanbanLabelTemplate
+from kanban.zebra import ZebraPrinter
+from kanban.zebra import KanbanLabelTemplate
 
 bp = Blueprint("kanbans", __name__, url_prefix="/kanbans")
 

@@ -1,4 +1,7 @@
-import socket
+from socket import AF_INET
+from socket import SOCK_STREAM
+from socket import SHUT_RDWR
+from socket import socket
 from logging import debug
 from logging import info
 from logging import warning
@@ -16,7 +19,7 @@ class ZebraPrinter:
             debug("Already connected to %s:%d", self.host, self.port)
             return
         info("Connecting to %s:%d …", self.host, self.port)
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock = socket(AF_INET, SOCK_STREAM)
         sock.settimeout(self.timeout)
         sock.connect((self.host, self.port))
         self.sock = sock
@@ -25,7 +28,7 @@ class ZebraPrinter:
     def disconnect(self) -> None:
         if self.sock:
             try:
-                self.sock.shutdown(socket.SHUT_RDWR)
+                self.sock.shutdown(SHUT_RDWR)
             except OSError:
                 pass
             self.sock.close()
@@ -80,3 +83,41 @@ class ZebraPrinter:
             except socket.timeout:
                 pass  # Expected -- printer stops sending when done
         return response.decode("utf-8", errors="replace")
+
+
+class KanbanLabelTemplate:
+    def __init__(self, 
+        id: int,
+        location_name: str,
+        part_number: str,
+        part_manufacturer: str,
+        part_description: str,
+        unit_of_measure_abbreviation: str,
+        reorder_point: int,
+        kanban_quantity: int,
+        number_of_cards: int,
+        **kwargs
+    ) -> None:
+        self.id = id
+        self.location_name = location_name
+        self.part_number = part_number
+        self.part_manufacturer = part_manufacturer
+        self.part_description = part_description
+        self.unit_of_measure_abbreviation = unit_of_measure_abbreviation
+        self.reorder_point = reorder_point
+        self.kanban_quantity = kanban_quantity
+        self.number_of_cards = number_of_cards
+
+    def render(self, card_number: int, template: str) -> str:
+        return template.format(
+            id=self.id,
+            location_name=self.location_name,
+            part_number=self.part_number,
+            part_manufacturer=self.part_manufacturer,
+            part_description=self.part_description,
+            unit_of_measure_abbreviation=self.unit_of_measure_abbreviation,
+            reorder_point=self.reorder_point,
+            kanban_quantity=self.kanban_quantity,
+            number_of_cards=self.number_of_cards,
+            card_number=card_number,
+        )
