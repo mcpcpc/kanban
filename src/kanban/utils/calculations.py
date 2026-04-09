@@ -5,7 +5,8 @@ tested in isolation and reused from any layer.
 """
 
 from math import ceil
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
 
 from kanban.enums import InventoryStatus
 
