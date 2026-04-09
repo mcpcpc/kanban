@@ -25,8 +25,6 @@ class KanbanService:
         self.setting_repo = setting_repo
         self._printer_factory = printer_factory
 
-    # ── Queries ──────────────────────────────────────────────────────
-
     def list(self, search: str = "", status: str = ""):
         return self.kanban_repo.find_all(search=search, status=status)
 
@@ -45,8 +43,6 @@ class KanbanService:
         from kanban.repositories.location import LocationRepository
         locations = LocationRepository(self.kanban_repo.db).find_all()
         return kanban, parts, locations
-
-    # ── Commands ─────────────────────────────────────────────────────
 
     def create(self, *, part_id, location_id, kanban_quantity,
                safety_lead_time_days, estimated_daily_demand, is_active) -> ServiceResult:
@@ -127,8 +123,6 @@ class KanbanService:
             return ServiceResult(False, f"Print failed: {e}", "danger")
 
         return ServiceResult(True, "Kanban card(s) printed.")
-
-    # ── API helpers ──────────────────────────────────────────────────
 
     def list_api(self):
         kanbans = self.kanban_repo.find_active_for_api()
