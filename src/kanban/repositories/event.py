@@ -155,8 +155,6 @@ class EventRepository:
         params.append(limit)
         return self.db.execute(query, params).fetchall()
 
-    # ── Aggregations ─────────────────────────────────────────────────
-
     def count_all(self) -> int:
         return self.db.execute("SELECT COUNT(*) FROM kanban_event").fetchone()[0]
 
