@@ -7,8 +7,6 @@ class PartRepository:
     def __init__(self, db: Connection) -> None:
         self.db = db
 
-    # ── Reads ────────────────────────────────────────────────────────
-
     def find_by_id(self, part_id: int):
         return self.db.execute(
             "SELECT * FROM part WHERE id = ?", [part_id]
@@ -92,8 +90,6 @@ class PartRepository:
         return self.db.execute(
             "SELECT * FROM unit_of_measure ORDER BY name"
         ).fetchall()
-
-    # ── Writes ───────────────────────────────────────────────────────
 
     def create(self, *, part_number, manufacturer, description=None,
                category=None, datasheet=None, unit_of_measure_id,

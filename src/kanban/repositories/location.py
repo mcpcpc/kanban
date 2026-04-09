@@ -7,8 +7,6 @@ class LocationRepository:
     def __init__(self, db: Connection) -> None:
         self.db = db
 
-    # ── Reads ────────────────────────────────────────────────────────
-
     def find_by_id(self, location_id: int):
         return self.db.execute(
             "SELECT * FROM location WHERE id = ?", [location_id]
@@ -55,8 +53,6 @@ class LocationRepository:
             FROM location WHERE created_at >= ?
             GROUP BY date(created_at) ORDER BY day
         """, (since,)).fetchall()
-
-    # ── Writes ───────────────────────────────────────────────────────
 
     def create(self, *, location: str, description: str | None = None,
                color: str | None = None) -> int:

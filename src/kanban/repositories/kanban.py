@@ -9,8 +9,6 @@ class KanbanRepository:
     def __init__(self, db: Connection) -> None:
         self.db = db
 
-    # ── Reads ────────────────────────────────────────────────────────
-
     def find_by_id(self, kanban_id: int):
         return self.db.execute(
             "SELECT * FROM kanban WHERE id = ?", [kanban_id]
@@ -149,8 +147,6 @@ class KanbanRepository:
             JOIN part p ON k.part_id = p.id
             WHERE k.id = ?
         """, [kanban_id]).fetchone()
-
-    # ── Writes ───────────────────────────────────────────────────────
 
     def create(
         self, *, part_id, location_id, kanban_quantity, safety_lead_time_days,

@@ -7,8 +7,6 @@ class InventoryRepository:
     def __init__(self, db: Connection) -> None:
         self.db = db
 
-    # ── Reads ────────────────────────────────────────────────────────
-
     def find_all_with_details(self, *, search: str = ""):
         query = """
             SELECT
@@ -49,8 +47,6 @@ class InventoryRepository:
             params.extend([s, s, s])
         query += " ORDER BY p.part_number"
         return self.db.execute(query, params).fetchall()
-
-    # ── Writes ───────────────────────────────────────────────────────
 
     def upsert(self, part_id: int, quantity: float,
                notes: str | None = None) -> None:

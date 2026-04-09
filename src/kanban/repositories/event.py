@@ -10,8 +10,6 @@ class EventRepository:
     def __init__(self, db: Connection) -> None:
         self.db = db
 
-    # ── Event-type helpers ───────────────────────────────────────────
-
     def get_event_type_id(self, event_type: EventType) -> int | None:
         row = self.db.execute(
             "SELECT id FROM kanban_event_type WHERE type = ?", [event_type.value]
@@ -22,8 +20,6 @@ class EventRepository:
         return self.db.execute(
             "SELECT * FROM kanban_event_type ORDER BY type"
         ).fetchall()
-
-    # ── Signal helpers ───────────────────────────────────────────────
 
     def get_open_signal_count(self, kanban_id: int) -> int:
         row = self.db.execute(
@@ -87,8 +83,6 @@ class EventRepository:
                 )
             )
         """, [EventType.SIGNAL, EventType.RESTOCK_COMPLETE]).fetchone()[0]
-
-    # ── CRUD ─────────────────────────────────────────────────────────
 
     def create(self, kanban_id: int, event_type_id: int,
                quantity: int | None = None, notes: str | None = None) -> int:
