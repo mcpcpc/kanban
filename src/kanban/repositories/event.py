@@ -66,24 +66,6 @@ class EventRepository:
             ORDER BY signal_time ASC
         """, [EventType.SIGNAL, EventType.RESTOCK_COMPLETE, EventType.SIGNAL]).fetchall()
 
-    def count_pending_signal_kanbans(self) -> int:
-        return self.db.execute("""
-            SELECT COUNT(*) FROM (
-                SELECT k.id
-                FROM kanban k
-                WHERE k.is_active = 1
-                AND (
-                    SELECT COUNT(*) FROM kanban_event ke
-                    JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
-                    WHERE ke.kanban_id = k.id AND ket.type = ?
-                ) > (
-                    SELECT COUNT(*) FROM kanban_event ke
-                    JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
-                    WHERE ke.kanban_id = k.id AND ket.type = ?
-                )
-            )
-        """, [EventType.SIGNAL, EventType.RESTOCK_COMPLETE]).fetchone()[0]
-
     def create(self, kanban_id: int, event_type_id: int,
                quantity: int | None = None, notes: str | None = None) -> int:
         cursor = self.db.execute(
@@ -166,15 +148,6 @@ class EventRepository:
             GROUP BY ket.id ORDER BY count DESC
         """).fetchall()
 
-    def get_events_in_period(self, days: int = 7):
-        return self.db.execute("""
-            SELECT ket.type, COUNT(*) AS count
-            FROM kanban_event ke
-            JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
-            WHERE ke.created_at >= datetime('now', ? || ' days')
-            GROUP BY ket.id
-        """, [f"-{days}"]).fetchall()
-
     def get_cycle_times(self):
         return self.db.execute("""
             SELECT ke_signal.kanban_id,
@@ -201,22 +174,6 @@ class EventRepository:
         """, [EventType.SIGNAL, EventType.RESTOCK_COMPLETE,
               EventType.SIGNAL, EventType.RESTOCK_COMPLETE]).fetchall()
 
-    def get_avg_cycle_time(self):
-        return self.db.execute("""
-            SELECT AVG(julianday(ke_complete.created_at)
-                       - julianday(ke_signal.created_at)) AS avg_days
-            FROM kanban_event ke_signal
-            JOIN kanban_event_type ket_signal
-                 ON ke_signal.kanban_event_type = ket_signal.id
-            JOIN kanban_event ke_complete
-                 ON ke_complete.kanban_id = ke_signal.kanban_id
-            JOIN kanban_event_type ket_complete
-                 ON ke_complete.kanban_event_type = ket_complete.id
-            WHERE ket_signal.type   = ?
-              AND ket_complete.type = ?
-              AND ke_complete.created_at > ke_signal.created_at
-        """, [EventType.SIGNAL, EventType.RESTOCK_COMPLETE]).fetchone()
-
     def get_30_day_signal_trend(self, since: str):
         return self.db.execute("""
             SELECT date(ke.created_at) AS day, COUNT(*) AS count
@@ -239,20 +196,3 @@ class EventRepository:
             [part_id, EventType.RESTOCK_COMPLETE, since_date],
         ).fetchone()
         return result["total_restocked"] if result else 0
-
-    def has_active_signal(self, kanban_id: int) -> bool:
-        """Check if there's an unresolved signal (used by API)."""
-        row = self.db.execute("""
-            SELECT ke.created_at FROM kanban_event ke
-            JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
-            WHERE ke.kanban_id = ? AND ket.type = ?
-              AND NOT EXISTS (
-                  SELECT 1 FROM kanban_event ke2
-                  JOIN kanban_event_type ket2 ON ke2.kanban_event_type = ket2.id
-                  WHERE ke2.kanban_id = ke.kanban_id
-                    AND ket2.type = ?
-                    AND ke2.created_at > ke.created_at
-              )
-            LIMIT 1
-        """, [kanban_id, EventType.SIGNAL, EventType.RESTOCK_COMPLETE]).fetchone()
-        return row is not None

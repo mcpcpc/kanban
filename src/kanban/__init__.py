@@ -5,7 +5,6 @@ from quart import Quart
 
 from kanban.db import init_db
 from kanban.datawedge import init_datawedge
-from kanban.routes.api import bp as api_bp
 from kanban.routes.dashboard import bp as dashboard_bp
 from kanban.routes.events import bp as events_bp
 from kanban.routes.help import bp as help_bp
@@ -20,7 +19,6 @@ from kanban.routes.settings import bp as settings_bp
 __version__ = "0.0.1"
 
 _BLUEPRINTS = [
-    api_bp,
     dashboard_bp,
     events_bp,
     help_bp,

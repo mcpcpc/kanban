@@ -69,21 +69,6 @@ class KanbanRepository:
         query += " ORDER BY p.part_number, b.location"
         return self.db.execute(query, params).fetchall()
 
-    def find_active_for_api(self):
-        return self.db.execute("""
-            SELECT k.*, p.part_number AS part_name, p.manufacturer,
-                   p.reorder_lead_time_days,
-                   b.location AS location_name,
-                   CAST(k.estimated_daily_demand
-                        * (p.reorder_lead_time_days + k.safety_lead_time_days) AS INTEGER
-                   ) AS reorder_point
-            FROM kanban k
-            JOIN part p     ON k.part_id     = p.id
-            JOIN location b ON k.location_id = b.id
-            WHERE k.is_active = 1
-            ORDER BY p.part_number
-        """).fetchall()
-
     def find_by_part_id(self, part_id: int):
         return self.db.execute(
             """SELECT k.*, b.location AS location_name

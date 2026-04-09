@@ -32,31 +32,3 @@ class ReportService:
             "active_kanbans": active_kanbans,
             "avg_cycle_days": avg_cycle_days,
         }
-
-    def get_health(self) -> dict:
-        total_kanbans = self.kanban_repo.count_active()
-        total_parts = self.event_repo.db.execute("SELECT COUNT(*) FROM part").fetchone()[0]
-        total_locations = self.event_repo.db.execute("SELECT COUNT(*) FROM location").fetchone()[0]
-        total_events = self.event_repo.count_all()
-        pending_signals = self.event_repo.count_pending_signal_kanbans()
-
-        return {
-            "total_kanbans": total_kanbans,
-            "total_parts": total_parts,
-            "total_locations": total_locations,
-            "total_events": total_events,
-            "pending_signals": pending_signals,
-            "health": {
-                "healthy": total_kanbans - pending_signals,
-                "warning": pending_signals,
-                "critical": 0,
-            },
-        }
-
-    def get_metrics(self) -> dict:
-        events_7d = self.event_repo.get_events_in_period(days=7)
-        cycle = self.event_repo.get_avg_cycle_time()
-        return {
-            "events_7d": {row["type"]: row["count"] for row in events_7d},
-            "avg_cycle_time_days": cycle["avg_days"] if cycle else None,
-        }

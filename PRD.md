@@ -151,7 +151,7 @@ Production environments need a simple, reliable way to:
 - Stockout rate per kanban
 - Reorder point accuracy
 - Trend analysis over configurable time periods
-- Suggested reorder point calculation via API
+- Suggested reorder point calculation
 
 #### FR-4.4: Reports
 - Kanban performance summary
@@ -213,7 +213,7 @@ Production environments need a simple, reliable way to:
 - Dependency injection via request-scoped factories
 - Enums for domain constants; no magic strings
 - Protocol-based abstractions for external integrations (e.g. printers)
-- Documented API endpoints
+- Documented endpoints
 - Schema migrations via `init-db` CLI command
 
 ---
@@ -251,11 +251,10 @@ src/kanban/
 │   ├── __init__.py       # ServiceResult dataclass
 │   ├── dashboard.py      # DashboardService — overview aggregation
 │   ├── inventory.py      # InventoryService — stock management & export
-│   ├── kanban.py         # KanbanService — CRUD, printing, API helpers
-│   ├── report.py         # ReportService — health scores & metrics
+│   ├── kanban.py         # KanbanService — CRUD, printing
+│   ├── report.py         # ReportService — health scores
 │   └── scan.py           # ScanService — barcode processing (web + DataWedge)
 ├── routes/
-│   ├── api.py            # JSON API endpoints (/api)
 │   ├── dashboard.py      # Dashboard views (/)
 │   ├── events.py         # Event history & export (/events)
 │   ├── help.py           # Help/documentation page (/help)
@@ -349,16 +348,6 @@ src/kanban/
 | POST | `/settings/save` | Save settings |
 | GET | `/settings/datawedge/start` | Start DataWedge TCP server |
 | GET | `/settings/datawedge/stop` | Stop DataWedge TCP server |
-
-### JSON API
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/kanbans` | List kanbans with status |
-| GET | `/api/kanbans/<id>` | Kanban detail with events |
-| GET | `/api/kanbans/<id>/suggest-reorder-point` | Suggested reorder point |
-| POST | `/api/events` | Record event |
-| GET | `/api/health` | System health summary |
-| GET | `/api/metrics` | Performance metrics |
 
 ---
 
