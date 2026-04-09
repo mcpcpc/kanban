@@ -21,8 +21,6 @@ from kanban.services.report import ReportService
 from kanban.zebra import ZebraPrinter
 
 
-# ── Repositories ─────────────────────────────────────────────────────
-
 def get_kanban_repo() -> KanbanRepository:
     if not hasattr(g, "_kanban_repo"):
         g._kanban_repo = KanbanRepository(get_db())
@@ -58,8 +56,6 @@ def get_setting_repo() -> SettingRepository:
         g._setting_repo = SettingRepository(get_db())
     return g._setting_repo
 
-
-# ── Services ─────────────────────────────────────────────────────────
 
 def get_scan_service() -> ScanService:
     if not hasattr(g, "_scan_service"):
