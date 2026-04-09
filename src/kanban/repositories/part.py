@@ -1,6 +1,6 @@
 """Repository for the ``part`` table."""
 
-from sqlite3 import Connection, IntegrityError
+from sqlite3 import Connection
 
 
 class PartRepository:

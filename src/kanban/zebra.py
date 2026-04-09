@@ -55,7 +55,7 @@ class ZebraPrinter:
                 self.sock.sendall(payload)
                 info("Sent %d bytes to %s:%d", len(payload), self.host, self.port)
                 return
-            except (OSError, socket.error) as exc:
+            except OSError as exc:
                 warning(
                     "Send attempt %d/%d failed: %s", attempt + 1, retries + 1, exc
                 )
@@ -68,21 +68,6 @@ class ZebraPrinter:
     def print(self, zpl: str | bytes) -> None:
         with self:
             self.send(zpl)
-
-    def query(self, command: str, buffer_size: int = 1024) -> str:
-        response = b""
-        with self:
-            self.send(command)
-            self.sock.settimeout(2.0)
-            try:
-                while True:
-                    chunk = self.sock.recv(buffer_size)
-                    if not chunk:
-                        break
-                    response += chunk
-            except socket.timeout:
-                pass  # Expected -- printer stops sending when done
-        return response.decode("utf-8", errors="replace")
 
 
 class KanbanLabelTemplate:

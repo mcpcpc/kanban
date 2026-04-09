@@ -143,8 +143,6 @@ class KanbanService:
         ]
 
     def get_api_detail(self, kanban_id: int):
-        kanban = self.kanban_repo.find_active_for_api()
-        # Re-query for single kanban with events
         kanban_row = self.kanban_repo.find_with_details(kanban_id)
         if not kanban_row:
             return None
