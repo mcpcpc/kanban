@@ -223,9 +223,9 @@ Production environments need a simple, reliable way to:
 The codebase follows a layered architecture aligned with SOLID design principles:
 
 - **Routes** — thin HTTP controllers that delegate to services
-- **Services** — business logic orchestration (scan processing, kanban lifecycle, inventory, dashboard, reports)
+- **Services** — business logic orchestration (scan processing, kanban lifecycle, part/location CRUD, printing, inventory, dashboard, reports)
 - **Repositories** — data-access layer encapsulating all SQL queries
-- **Deps** — request-scoped dependency injection using Quart's `g` object
+- **Deps** — request-scoped dependency injection using Quart's `g` object; shared service factories usable outside request context (e.g. DataWedge TCP handler)
 - **Enums** — `EventType` and `InventoryStatus` StrEnums eliminating magic strings
 - **Protocols** — structural typing for external integrations (e.g. `Printer`)
 
@@ -251,7 +251,10 @@ src/kanban/
 │   ├── __init__.py       # ServiceResult dataclass
 │   ├── dashboard.py      # DashboardService — overview aggregation
 │   ├── inventory.py      # InventoryService — stock management & export
-│   ├── kanban.py         # KanbanService — CRUD, printing
+│   ├── kanban.py         # KanbanService — kanban CRUD
+│   ├── location.py       # LocationService — location CRUD
+│   ├── part.py           # PartService — part CRUD
+│   ├── print.py          # PrintService — Zebra label printing
 │   ├── report.py         # ReportService — health scores
 │   └── scan.py           # ScanService — barcode processing (web + DataWedge)
 ├── routes/

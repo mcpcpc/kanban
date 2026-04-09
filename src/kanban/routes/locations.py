@@ -1,6 +1,6 @@
 from quart import Blueprint, render_template, request, redirect, url_for, flash
 
-from kanban.deps import get_location_repo, get_kanban_repo
+from kanban.deps import get_location_service
 
 bp = Blueprint("locations", __name__, url_prefix="/locations")
 
@@ -19,13 +19,12 @@ LOCATION_COLORS = [
 @bp.route("/")
 async def index():
     """List all locations."""
-    repo = get_location_repo()
     search = request.args.get("search", "").strip()
     color_filter = request.args.get("color", "").strip()
 
-    locations = repo.find_all(search=search, color=color_filter)
-    location_kanban_counts = repo.get_kanban_counts()
-    colors_in_use = repo.get_colors_in_use()
+    locations, location_kanban_counts, colors_in_use = get_location_service().list(
+        search=search, color=color_filter,
+    )
 
     return await render_template(
         "locations/list.html", locations=locations,
@@ -50,28 +49,24 @@ async def create():
         await flash("Location is required.", "danger")
         return redirect(url_for("locations.new"))
 
-    try:
-        get_location_repo().create(
-            location=location,
-            description=form.get("description", "").strip() or None,
-            color=form.get("color", "").strip() or None,
-        )
-        await flash(f"Location '{location}' created successfully.", "success")
-    except Exception as e:
-        await flash(f"Error creating location: {str(e)}", "danger")
-        return redirect(url_for("locations.new"))
-
-    return redirect(url_for("locations.index"))
+    result = get_location_service().create(
+        location=location,
+        description=form.get("description", "").strip() or None,
+        color=form.get("color", "").strip() or None,
+    )
+    await flash(result.message, result.category)
+    if result.success:
+        return redirect(url_for("locations.index"))
+    return redirect(url_for("locations.new"))
 
 
 @bp.route("/<int:id>")
 async def detail(id):
     """Show location details."""
-    location = get_location_repo().find_by_id(id)
+    location, kanbans = get_location_service().get_detail(id)
     if not location:
         await flash("Location not found.", "danger")
         return redirect(url_for("locations.index"))
-    kanbans = get_kanban_repo().find_by_location_id(id)
     return await render_template(
         "locations/detail.html", location=location, kanbans=kanbans,
         location_colors=LOCATION_COLORS,
@@ -81,7 +76,7 @@ async def detail(id):
 @bp.route("/<int:id>/edit")
 async def edit(id):
     """Show edit location form."""
-    location = get_location_repo().find_by_id(id)
+    location = get_location_service().get_edit_context(id)
     if not location:
         await flash("Location not found.", "danger")
         return redirect(url_for("locations.index"))
@@ -97,26 +92,20 @@ async def update(id):
         await flash("Location is required.", "danger")
         return redirect(url_for("locations.edit", id=id))
 
-    get_location_repo().update(
+    result = get_location_service().update(
         id, location=location,
         description=form.get("description", "").strip() or None,
         color=form.get("color", "").strip() or None,
     )
-    await flash(f"Location '{location}' updated successfully.", "success")
+    await flash(result.message, result.category)
     return redirect(url_for("locations.detail", id=id))
 
 
 @bp.route("/<int:id>/delete", methods=["POST"])
 async def delete(id):
     """Delete a location."""
-    repo = get_location_repo()
-    kanban_count = repo.count_kanbans(id)
-    if kanban_count > 0:
-        await flash(f"Cannot delete location: it is used in {kanban_count} kanban(s).", "danger")
-        return redirect(url_for("locations.detail", id=id))
-
-    location = repo.find_by_id(id)
-    if location:
-        repo.delete(id)
-        await flash(f"Location '{location['location']}' deleted.", "success")
-    return redirect(url_for("locations.index"))
+    result = get_location_service().delete(id)
+    await flash(result.message, result.category)
+    if result.success:
+        return redirect(url_for("locations.index"))
+    return redirect(url_for("locations.detail", id=id))

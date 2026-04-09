@@ -1,6 +1,6 @@
 from quart import Blueprint, render_template, request, redirect, url_for, flash
 
-from kanban.deps import get_kanban_service, get_part_repo, get_location_repo
+from kanban.deps import get_kanban_service, get_print_service
 
 bp = Blueprint("kanbans", __name__, url_prefix="/kanbans")
 
@@ -19,8 +19,7 @@ async def index():
 @bp.route("/new")
 async def new():
     """Show new kanban form."""
-    parts, _ = get_part_repo().find_all(per_page=9999)
-    locations = get_location_repo().find_all()
+    parts, locations = get_kanban_service().get_new_context()
     selected_location_id = request.args.get("location_id", type=int)
     selected_part_id = request.args.get("part_id", type=int)
     return await render_template(
@@ -100,6 +99,6 @@ async def delete(id):
 @bp.route("/<int:id>/print")
 async def print_card(id):
     """Print kanban card(s) to Zebra printer."""
-    result = get_kanban_service().print_cards(id)
+    result = get_print_service().print_cards(id)
     await flash(result.message, result.category)
     return redirect(url_for("kanbans.detail", id=id))

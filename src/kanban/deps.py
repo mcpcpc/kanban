@@ -4,6 +4,8 @@ All factory functions cache their result on ``quart.g`` so repositories
 and services are created at most once per request.
 """
 
+from sqlite3 import Connection
+
 from quart import g
 
 from kanban.db import get_db
@@ -18,8 +20,13 @@ from kanban.services.kanban import KanbanService
 from kanban.services.inventory import InventoryService
 from kanban.services.dashboard import DashboardService
 from kanban.services.report import ReportService
+from kanban.services.print import PrintService
+from kanban.services.part import PartService
+from kanban.services.location import LocationService
 from kanban.zebra import ZebraPrinter
 
+
+# ── Repository factories ───────────────────────────────────────────
 
 def get_kanban_repo() -> KanbanRepository:
     if not hasattr(g, "_kanban_repo"):
@@ -57,13 +64,24 @@ def get_setting_repo() -> SettingRepository:
     return g._setting_repo
 
 
+# ── Service factories ──────────────────────────────────────────────
+
+def make_scan_service(db: Connection) -> ScanService:
+    """Create a ScanService from a database connection.
+
+    Usable both inside (via ``get_scan_service``) and outside
+    (DataWedge TCP handler) a request context.
+    """
+    return ScanService(
+        kanban_repo=KanbanRepository(db),
+        event_repo=EventRepository(db),
+        inventory_repo=InventoryRepository(db),
+    )
+
+
 def get_scan_service() -> ScanService:
     if not hasattr(g, "_scan_service"):
-        g._scan_service = ScanService(
-            kanban_repo=get_kanban_repo(),
-            event_repo=get_event_repo(),
-            inventory_repo=get_inventory_repo(),
-        )
+        g._scan_service = make_scan_service(get_db())
     return g._scan_service
 
 
@@ -73,10 +91,37 @@ def get_kanban_service() -> KanbanService:
             kanban_repo=get_kanban_repo(),
             event_repo=get_event_repo(),
             part_repo=get_part_repo(),
+            location_repo=get_location_repo(),
+        )
+    return g._kanban_service
+
+
+def get_print_service() -> PrintService:
+    if not hasattr(g, "_print_service"):
+        g._print_service = PrintService(
+            kanban_repo=get_kanban_repo(),
             setting_repo=get_setting_repo(),
             printer_factory=ZebraPrinter,
         )
-    return g._kanban_service
+    return g._print_service
+
+
+def get_part_service() -> PartService:
+    if not hasattr(g, "_part_service"):
+        g._part_service = PartService(
+            part_repo=get_part_repo(),
+            kanban_repo=get_kanban_repo(),
+        )
+    return g._part_service
+
+
+def get_location_service() -> LocationService:
+    if not hasattr(g, "_location_service"):
+        g._location_service = LocationService(
+            location_repo=get_location_repo(),
+            kanban_repo=get_kanban_repo(),
+        )
+    return g._location_service
 
 
 def get_inventory_service() -> InventoryService:

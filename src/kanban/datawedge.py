@@ -6,10 +6,7 @@ from logging import exception
 from quart import current_app
 
 from kanban.db import get_db
-from kanban.repositories.kanban import KanbanRepository
-from kanban.repositories.event import EventRepository
-from kanban.repositories.inventory import InventoryRepository
-from kanban.services.scan import ScanService
+from kanban.deps import make_scan_service
 
 
 def is_datawedge_running() -> bool:
@@ -18,19 +15,9 @@ def is_datawedge_running() -> bool:
     return server is not None and server.is_serving()
 
 
-def _make_scan_service() -> ScanService:
-    """Build a ScanService with a fresh DB connection (no request context)."""
-    db = get_db()
-    return ScanService(
-        kanban_repo=KanbanRepository(db),
-        event_repo=EventRepository(db),
-        inventory_repo=InventoryRepository(db),
-    )
-
-
 async def save_scan(barcode: str) -> None:
     """Process a scanned barcode received via the DataWedge TCP socket."""
-    service = _make_scan_service()
+    service = make_scan_service(get_db())
     service.process_datawedge_scan(barcode)
 
 
