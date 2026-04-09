@@ -1,6 +1,6 @@
 from quart import Blueprint, render_template, request, redirect, url_for, flash
 
-from kanban.db import get_db
+from kanban.deps import get_location_repo, get_kanban_repo
 
 bp = Blueprint("locations", __name__, url_prefix="/locations")
 
@@ -19,49 +19,19 @@ LOCATION_COLORS = [
 @bp.route("/")
 async def index():
     """List all locations."""
-    db = get_db()
-    
+    repo = get_location_repo()
     search = request.args.get("search", "").strip()
     color_filter = request.args.get("color", "").strip()
-    
-    query = "SELECT * FROM location WHERE 1=1"
-    params = []
-    
-    if search:
-        query += " AND (location LIKE ? OR description LIKE ?)"
-        search_param = f"%{search}%"
-        params.extend([search_param, search_param])
-    
-    if color_filter:
-        query += " AND color = ?"
-        params.append(color_filter)
-    
-    query += " ORDER BY location"
-    
-    locations = db.execute(query, params).fetchall()
 
-    # Single query instead of N+1 per-location lookups.
-    kanban_counts = db.execute(
-        """SELECT location_id, COUNT(*) AS cnt
-           FROM kanban WHERE is_active = 1
-           GROUP BY location_id"""
-    ).fetchall()
-    location_kanban_counts = {row["location_id"]: row["cnt"] for row in kanban_counts}
-    
-    # Get distinct colors in use for filter dropdown
-    colors_in_use = db.execute(
-        "SELECT DISTINCT color FROM location WHERE color IS NOT NULL ORDER BY color"
-    ).fetchall()
-    colors_in_use = [row["color"] for row in colors_in_use]
-    
+    locations = repo.find_all(search=search, color=color_filter)
+    location_kanban_counts = repo.get_kanban_counts()
+    colors_in_use = repo.get_colors_in_use()
+
     return await render_template(
-        "locations/list.html",
-        locations=locations,
+        "locations/list.html", locations=locations,
         location_kanban_counts=location_kanban_counts,
-        search=search,
-        color_filter=color_filter,
-        colors_in_use=colors_in_use,
-        location_colors=LOCATION_COLORS
+        search=search, color_filter=color_filter,
+        colors_in_use=colors_in_use, location_colors=LOCATION_COLORS,
     )
 
 
@@ -74,110 +44,79 @@ async def new():
 @bp.route("/", methods=["POST"])
 async def create():
     """Create a new location."""
-    db = get_db()
     form = await request.form
-    
     location = form.get("location", "").strip()
-    description = form.get("description", "").strip()
-    color = form.get("color", "").strip() or None
-    
     if not location:
         await flash("Location is required.", "danger")
         return redirect(url_for("locations.new"))
-    
+
     try:
-        db.execute(
-            "INSERT INTO location (location, description, color) VALUES (?, ?, ?)",
-            [location, description or None, color]
+        get_location_repo().create(
+            location=location,
+            description=form.get("description", "").strip() or None,
+            color=form.get("color", "").strip() or None,
         )
-        db.commit()
         await flash(f"Location '{location}' created successfully.", "success")
     except Exception as e:
         await flash(f"Error creating location: {str(e)}", "danger")
         return redirect(url_for("locations.new"))
-    
+
     return redirect(url_for("locations.index"))
 
 
 @bp.route("/<int:id>")
 async def detail(id):
     """Show location details."""
-    db = get_db()
-    location = db.execute("SELECT * FROM location WHERE id = ?", [id]).fetchone()
-    
+    location = get_location_repo().find_by_id(id)
     if not location:
         await flash("Location not found.", "danger")
         return redirect(url_for("locations.index"))
-    
-    # Get kanbans in this location
-    kanbans = db.execute(
-        """SELECT k.*, p.part_number as part_name, p.manufacturer
-           FROM kanban k
-           JOIN part p ON k.part_id = p.id
-           WHERE k.location_id = ?
-           ORDER BY p.part_number""",
-        [id]
-    ).fetchall()
-    
-    return await render_template("locations/detail.html", location=location, kanbans=kanbans, location_colors=LOCATION_COLORS)
+    kanbans = get_kanban_repo().find_by_location_id(id)
+    return await render_template(
+        "locations/detail.html", location=location, kanbans=kanbans,
+        location_colors=LOCATION_COLORS,
+    )
 
 
 @bp.route("/<int:id>/edit")
 async def edit(id):
     """Show edit location form."""
-    db = get_db()
-    location = db.execute("SELECT * FROM location WHERE id = ?", [id]).fetchone()
-    
+    location = get_location_repo().find_by_id(id)
     if not location:
         await flash("Location not found.", "danger")
         return redirect(url_for("locations.index"))
-    
     return await render_template("locations/form.html", location=location, location_colors=LOCATION_COLORS)
 
 
 @bp.route("/<int:id>", methods=["POST"])
 async def update(id):
     """Update a location."""
-    db = get_db()
     form = await request.form
-    
     location = form.get("location", "").strip()
-    description = form.get("description", "").strip()
-    color = form.get("color", "").strip() or None
-    
     if not location:
         await flash("Location is required.", "danger")
         return redirect(url_for("locations.edit", id=id))
-    
-    db.execute(
-        """UPDATE location SET location = ?, description = ?, color = ?,
-           updated_at = CURRENT_TIMESTAMP WHERE id = ?""",
-        [location, description or None, color, id]
+
+    get_location_repo().update(
+        id, location=location,
+        description=form.get("description", "").strip() or None,
+        color=form.get("color", "").strip() or None,
     )
-    db.commit()
     await flash(f"Location '{location}' updated successfully.", "success")
-    
     return redirect(url_for("locations.detail", id=id))
 
 
 @bp.route("/<int:id>/delete", methods=["POST"])
 async def delete(id):
     """Delete a location."""
-    db = get_db()
-    
-    # Check if location is used in any kanbans
-    kanban_count = db.execute(
-        "SELECT COUNT(*) FROM kanban WHERE location_id = ?", [id]
-    ).fetchone()[0]
-    
+    repo = get_location_repo()
+    kanban_count = repo.count_kanbans(id)
     if kanban_count > 0:
         await flash(f"Cannot delete location: it is used in {kanban_count} kanban(s).", "danger")
         return redirect(url_for("locations.detail", id=id))
-    
-    location = db.execute("SELECT location FROM location WHERE id = ?", [id]).fetchone()
+
+    location = repo.find_by_id(id)
     if location:
-        db.execute("DELETE FROM location WHERE id = ?", [id])
-        db.commit()
+        repo.delete(id)
         await flash(f"Location '{location['location']}' deleted.", "success")
-    
     return redirect(url_for("locations.index"))

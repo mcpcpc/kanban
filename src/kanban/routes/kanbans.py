@@ -1,9 +1,6 @@
 from quart import Blueprint, render_template, request, redirect, url_for, flash
 
-from kanban.db import get_db
-from kanban.services import calculate_number_of_cards
-from kanban.zebra import ZebraPrinter
-from kanban.zebra import KanbanLabelTemplate
+from kanban.deps import get_kanban_service, get_part_repo, get_location_repo
 
 bp = Blueprint("kanbans", __name__, url_prefix="/kanbans")
 
@@ -11,267 +8,98 @@ bp = Blueprint("kanbans", __name__, url_prefix="/kanbans")
 @bp.route("/")
 async def index():
     """List all kanbans."""
-    db = get_db()
-    
     search = request.args.get("search", "").strip()
     status = request.args.get("status", "").strip()
-    
-    query = """
-        SELECT k.*, p.part_number as part_name, p.manufacturer, 
-               p.reorder_lead_time_days,
-               b.location as location_name,
-               CAST(k.estimated_daily_demand * (p.reorder_lead_time_days + k.safety_lead_time_days) AS INTEGER) as reorder_point
-        FROM kanban k
-        JOIN part p ON k.part_id = p.id
-        JOIN location b ON k.location_id = b.id
-        WHERE 1=1
-    """
-    params = []
-    
-    if search:
-        query += " AND (p.part_number LIKE ? OR p.manufacturer LIKE ? OR b.location LIKE ?)"
-        search_param = f"%{search}%"
-        params.extend([search_param, search_param, search_param])
-    
-    if status == "active":
-        query += " AND k.is_active = 1"
-    elif status == "inactive":
-        query += " AND k.is_active = 0"
-    
-    query += " ORDER BY p.part_number, b.location"
-    
-    kanbans = db.execute(query, params).fetchall()
-    
+    kanbans = get_kanban_service().list(search, status)
     return await render_template(
-        "kanbans/list.html",
-        kanbans=kanbans,
-        search=search,
-        selected_status=status
+        "kanbans/list.html", kanbans=kanbans, search=search, selected_status=status,
     )
 
 
 @bp.route("/new")
 async def new():
     """Show new kanban form."""
-    db = get_db()
-    parts = db.execute("SELECT * FROM part ORDER BY part_number").fetchall()
-    locations = db.execute("SELECT * FROM location ORDER BY location").fetchall()
+    parts, _ = get_part_repo().find_all(per_page=9999)
+    locations = get_location_repo().find_all()
     selected_location_id = request.args.get("location_id", type=int)
     selected_part_id = request.args.get("part_id", type=int)
-    return await render_template("kanbans/form.html", kanban=None, parts=parts, locations=locations, selected_location_id=selected_location_id, selected_part_id=selected_part_id)
+    return await render_template(
+        "kanbans/form.html", kanban=None, parts=parts, locations=locations,
+        selected_location_id=selected_location_id, selected_part_id=selected_part_id,
+    )
 
 
 @bp.route("/", methods=["POST"])
 async def create():
     """Create a new kanban."""
-    db = get_db()
     form = await request.form
-    
-    part_id = form.get("part_id")
-    location_id = form.get("location_id")
-    kanban_quantity = form.get("kanban_quantity", "100")
-    safety_lead_time_days = form.get("safety_lead_time_days", "0")
-    estimated_daily_demand = form.get("estimated_daily_demand", "0")
-    is_active = form.get("is_active") == "on"
-    
-    if not part_id or not location_id:
-        await flash("Part and Location are required.", "danger")
-        return redirect(url_for("kanbans.new"))
-    
-    try:
-        kanban_quantity = int(kanban_quantity) if kanban_quantity else 100
-        safety_lead_time_days = float(safety_lead_time_days) if safety_lead_time_days else 0
-        estimated_daily_demand = float(estimated_daily_demand) if estimated_daily_demand else 0
-    except ValueError:
-        await flash("Invalid quantity values.", "danger")
-        return redirect(url_for("kanbans.new"))
-    
-    # Calculate number of cards: ceil((Demand × (Lead Time + Safety LT)) / Container Qty)
-    part = db.execute("SELECT reorder_lead_time_days FROM part WHERE id = ?", [part_id]).fetchone()
-    lead_time = part["reorder_lead_time_days"] if part else 7
-    number_of_cards = calculate_number_of_cards(
-        estimated_daily_demand, lead_time, safety_lead_time_days, kanban_quantity,
+    result = get_kanban_service().create(
+        part_id=form.get("part_id"),
+        location_id=form.get("location_id"),
+        kanban_quantity=form.get("kanban_quantity", "100"),
+        safety_lead_time_days=form.get("safety_lead_time_days", "0"),
+        estimated_daily_demand=form.get("estimated_daily_demand", "0"),
+        is_active=form.get("is_active") == "on",
     )
-    
-    cursor = db.execute(
-        """INSERT INTO kanban (part_id, location_id, kanban_quantity,
-           safety_lead_time_days, estimated_daily_demand, number_of_cards, is_active)
-           VALUES (?, ?, ?, ?, ?, ?, ?)""",
-        [part_id, location_id, kanban_quantity,
-         safety_lead_time_days, estimated_daily_demand, number_of_cards, 1 if is_active else 0]
-    )
-    db.commit()
-    
-    await flash("Kanban created successfully.", "success")
-    return redirect(url_for("kanbans.detail", id=cursor.lastrowid))
+    await flash(result.message, result.category)
+    if result.success:
+        return redirect(url_for("kanbans.detail", id=result.data["id"]))
+    return redirect(url_for("kanbans.new"))
 
 
 @bp.route("/<int:id>")
 async def detail(id):
     """Show kanban details."""
-    db = get_db()
-    kanban = db.execute(
-        """SELECT k.*, p.part_number as part_name, p.manufacturer, p.description as part_description,
-                  p.reorder_lead_time_days,
-                  b.location as location_name,
-                  u.name as uom_name, u.abbreviation as uom_abbr,
-                  CAST(k.estimated_daily_demand * (p.reorder_lead_time_days + k.safety_lead_time_days) AS INTEGER) as reorder_point
-           FROM kanban k
-           JOIN part p ON k.part_id = p.id
-           JOIN location b ON k.location_id = b.id
-           JOIN unit_of_measure u ON p.unit_of_measure_id = u.id
-           WHERE k.id = ?""",
-        [id]
-    ).fetchone()
-    
+    svc = get_kanban_service()
+    kanban, events = svc.get_detail(id)
     if not kanban:
         await flash("Kanban not found.", "danger")
         return redirect(url_for("kanbans.index"))
-    
-    # Get recent events for this kanban
-    events = db.execute(
-        """SELECT ke.*, ket.type as event_type
-           FROM kanban_event ke
-           JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
-           WHERE ke.kanban_id = ?
-           ORDER BY ke.created_at DESC
-           LIMIT 20""",
-        [id]
-    ).fetchall()
-    
     return await render_template("kanbans/detail.html", kanban=kanban, events=events)
 
 
 @bp.route("/<int:id>/edit")
 async def edit(id):
     """Show edit kanban form."""
-    db = get_db()
-    kanban = db.execute("""
-        SELECT k.*, p.reorder_lead_time_days as lead_time_days
-        FROM kanban k
-        JOIN part p ON k.part_id = p.id
-        WHERE k.id = ?
-    """, [id]).fetchone()
-    
+    kanban, parts, locations = get_kanban_service().get_edit_context(id)
     if not kanban:
         await flash("Kanban not found.", "danger")
         return redirect(url_for("kanbans.index"))
-    
-    parts = db.execute("SELECT * FROM part ORDER BY part_number").fetchall()
-    locations = db.execute("SELECT * FROM location ORDER BY location").fetchall()
     return await render_template("kanbans/form.html", kanban=kanban, parts=parts, locations=locations)
 
 
 @bp.route("/<int:id>", methods=["POST"])
 async def update(id):
     """Update a kanban."""
-    db = get_db()
     form = await request.form
-    
-    part_id = form.get("part_id")
-    location_id = form.get("location_id")
-    kanban_quantity = form.get("kanban_quantity", "100")
-    safety_lead_time_days = form.get("safety_lead_time_days", "0")
-    estimated_daily_demand = form.get("estimated_daily_demand", "0")
-    is_active = form.get("is_active") == "on"
-    
-    if not part_id or not location_id:
-        await flash("Part and Location are required.", "danger")
-        return redirect(url_for("kanbans.edit", id=id))
-    
-    try:
-        kanban_quantity = int(kanban_quantity) if kanban_quantity else 100
-        safety_lead_time_days = float(safety_lead_time_days) if safety_lead_time_days else 0
-        estimated_daily_demand = float(estimated_daily_demand) if estimated_daily_demand else 0
-    except ValueError:
-        await flash("Invalid quantity values.", "danger")
-        return redirect(url_for("kanbans.edit", id=id))
-    
-    # Calculate number of cards: ceil((Demand × (Lead Time + Safety LT)) / Container Qty)
-    part = db.execute("SELECT reorder_lead_time_days FROM part WHERE id = ?", [part_id]).fetchone()
-    lead_time = part["reorder_lead_time_days"] if part else 7
-    number_of_cards = calculate_number_of_cards(
-        estimated_daily_demand, lead_time, safety_lead_time_days, kanban_quantity,
+    result = get_kanban_service().update(
+        id,
+        part_id=form.get("part_id"),
+        location_id=form.get("location_id"),
+        kanban_quantity=form.get("kanban_quantity", "100"),
+        safety_lead_time_days=form.get("safety_lead_time_days", "0"),
+        estimated_daily_demand=form.get("estimated_daily_demand", "0"),
+        is_active=form.get("is_active") == "on",
     )
-    
-    db.execute(
-        """UPDATE kanban SET part_id = ?, location_id = ?, kanban_quantity = ?, 
-           safety_lead_time_days = ?, estimated_daily_demand = ?,
-           number_of_cards = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
-           WHERE id = ?""",
-        [part_id, location_id, kanban_quantity,
-         safety_lead_time_days, estimated_daily_demand, number_of_cards, 1 if is_active else 0, id]
-    )
-    db.commit()
-    
-    await flash("Kanban updated successfully.", "success")
-    return redirect(url_for("kanbans.detail", id=id))
+    await flash(result.message, result.category)
+    if result.success:
+        return redirect(url_for("kanbans.detail", id=id))
+    return redirect(url_for("kanbans.edit", id=id))
 
 
 @bp.route("/<int:id>/delete", methods=["POST"])
 async def delete(id):
     """Delete a kanban."""
-    db = get_db()
-    
-    # Check if kanban has events
-    event_count = db.execute(
-        "SELECT COUNT(*) FROM kanban_event WHERE kanban_id = ?", [id]
-    ).fetchone()[0]
-    
-    if event_count > 0:
-        await flash(f"Cannot delete kanban: it has {event_count} event(s). Consider deactivating instead.", "danger")
-        return redirect(url_for("kanbans.detail", id=id))
-    
-    db.execute("DELETE FROM kanban WHERE id = ?", [id])
-    db.commit()
-    await flash("Kanban deleted.", "success")
-    
-    return redirect(url_for("kanbans.index"))
+    result = get_kanban_service().delete(id)
+    await flash(result.message, result.category)
+    if result.success:
+        return redirect(url_for("kanbans.index"))
+    return redirect(url_for("kanbans.detail", id=id))
 
 
 @bp.route("/<int:id>/print")
 async def print_card(id):
-    """Show printable kanban card."""
-    db = get_db()
-    kanban = db.execute(
-        """
-        SELECT
-            k.*,
-            p.part_number as part_number,
-            p.manufacturer as part_manufacturer,
-            p.description as part_description,
-            b.location as location_name,
-            u.abbreviation as unit_of_measure_abbreviation,
-            CAST(k.estimated_daily_demand * (p.reorder_lead_time_days + k.safety_lead_time_days) AS INTEGER) as reorder_point
-        FROM kanban k
-            JOIN part p ON k.part_id = p.id
-            JOIN location b ON k.location_id = b.id
-            JOIN unit_of_measure u ON p.unit_of_measure_id = u.id
-        WHERE k.id = ?
-        """,
-        [id]
-    ).fetchone()
-    
-    if not kanban:
-        await flash("Kanban not found.", "danger")
-        return redirect(url_for("kanbans.index"))
-    
-    row = db.execute("SELECT * FROM setting LIMIT 1").fetchone()
-    hostname = row["printer_hostname"]
-    port = row["printer_port"]
-    timeout = row["printer_timeout_seconds"]
-    label_template = row["label_template"]
-    printer = ZebraPrinter(hostname, port, timeout)
-    
-    try:
-        for i in range(1, kanban["number_of_cards"] + 1):
-            label = KanbanLabelTemplate(**kanban)
-            zpl = label.render(i, label_template)
-            printer.print(zpl)
-    except Exception as e:
-        await flash(f"Print failed: {e}", "danger")
-        return redirect(url_for("kanbans.detail", id=id))
-    
-    await flash("Kanban card(s) printed.", "success")
-    
+    """Print kanban card(s) to Zebra printer."""
+    result = get_kanban_service().print_cards(id)
+    await flash(result.message, result.category)
     return redirect(url_for("kanbans.detail", id=id))

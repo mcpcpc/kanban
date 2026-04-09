@@ -1,9 +1,9 @@
 from quart import Blueprint, current_app, render_template, request, redirect, url_for, flash
 
-from kanban.db import get_db
 from kanban.datawedge import is_datawedge_running
 from kanban.datawedge import start_datawedge_server
 from kanban.datawedge import stop_datawedge_server
+from kanban.deps import get_setting_repo
 
 bp = Blueprint("settings", __name__, url_prefix="/settings")
 
@@ -11,13 +11,10 @@ bp = Blueprint("settings", __name__, url_prefix="/settings")
 @bp.route("/")
 async def index():
     """Show settings page."""
-    db = get_db()
-    setting = db.execute("SELECT * FROM setting LIMIT 1").fetchone()
+    setting = get_setting_repo().get()
     datawedge_status = "Running" if is_datawedge_running() else "Stopped"
     return await render_template(
-        "settings/index.html",
-        setting=setting,
-        datawedge_status=datawedge_status
+        "settings/index.html", setting=setting, datawedge_status=datawedge_status,
     )
 
 
@@ -25,20 +22,12 @@ async def index():
 async def save():
     """Save application settings."""
     form = await request.form
-    printer_hostname = form.get("printer_hostname", "").strip()
-    printer_port = int(form.get("printer_port", 9100))
-    printer_timeout_seconds = float(form.get("printer_timeout_seconds", 10.0))
-    label_template = form.get("label_template", "").strip()
-
-    db = get_db()
-    db.execute(
-        "UPDATE setting SET printer_hostname = ?, printer_port = ?, "
-        "printer_timeout_seconds = ?, label_template = ?, "
-        "updated_at = CURRENT_TIMESTAMP "
-        "WHERE id = 1",
-        (printer_hostname, printer_port, printer_timeout_seconds, label_template),
+    get_setting_repo().update(
+        printer_hostname=form.get("printer_hostname", "").strip(),
+        printer_port=int(form.get("printer_port", 9100)),
+        printer_timeout_seconds=float(form.get("printer_timeout_seconds", 10.0)),
+        label_template=form.get("label_template", "").strip(),
     )
-    db.commit()
     await flash("Settings saved successfully.", "success")
     return redirect(url_for("settings.index"))
 

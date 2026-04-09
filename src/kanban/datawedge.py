@@ -6,7 +6,10 @@ from logging import exception
 from quart import current_app
 
 from kanban.db import get_db
-from kanban.services import parse_barcode
+from kanban.repositories.kanban import KanbanRepository
+from kanban.repositories.event import EventRepository
+from kanban.repositories.inventory import InventoryRepository
+from kanban.services.scan import ScanService
 
 
 def is_datawedge_running() -> bool:
@@ -15,73 +18,20 @@ def is_datawedge_running() -> bool:
     return server is not None and server.is_serving()
 
 
-async def save_scan(barcode: str) -> None:
-    """Process a scanned barcode received via the DataWedge TCP socket."""
-    kanban_id = parse_barcode(barcode)
-
-    if not kanban_id:
-        info(f"Invalid barcode format: {barcode}")
-        return
-
+def _make_scan_service() -> ScanService:
+    """Build a ScanService with a fresh DB connection (no request context)."""
     db = get_db()
-
-    kanban = db.execute(
-        """SELECT k.*, p.part_number as part_name, b.location as location_name
-           FROM kanban k
-           JOIN part p ON k.part_id = p.id
-           JOIN location b ON k.location_id = b.id
-           WHERE k.id = ?""",
-        [kanban_id]
-    ).fetchone()
-
-    if not kanban:
-        info(f"Kanban not found: {barcode}")
-        return
-
-    if not kanban["is_active"]:
-        info(f"Kanban is inactive: {kanban['part_name']} @ {kanban['location_name']}")
-        return
-
-    open_signal_count = db.execute("""
-        SELECT
-            (SELECT COUNT(*) FROM kanban_event ke
-             JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
-             WHERE ke.kanban_id = ? AND ket.type = 'signal')
-            -
-            (SELECT COUNT(*) FROM kanban_event ke
-             JOIN kanban_event_type ket ON ke.kanban_event_type = ket.id
-             WHERE ke.kanban_id = ? AND ket.type = 'restock_complete')
-        AS cnt
-    """, [kanban_id, kanban_id]).fetchone()["cnt"]
-
-    if open_signal_count >= kanban["number_of_cards"]:
-        info(
-            f"All {kanban['number_of_cards']} cards already signaled for "
-            f"{kanban['part_name']} @ {kanban['location_name']} — waiting for restock"
-        )
-        return
-
-    event_type_row = db.execute(
-        "SELECT id FROM kanban_event_type WHERE type = ?",
-        ["signal"]
-    ).fetchone()
-
-    db.execute(
-        """INSERT INTO kanban_event (kanban_id, kanban_event_type, quantity, notes)
-           VALUES (?, ?, ?, ?)""",
-        [kanban_id, event_type_row["id"], None, None]
+    return ScanService(
+        kanban_repo=KanbanRepository(db),
+        event_repo=EventRepository(db),
+        inventory_repo=InventoryRepository(db),
     )
 
-    db.execute("""
-        UPDATE inventory
-        SET quantity_on_hand = MAX(0, quantity_on_hand - ?),
-            updated_at = CURRENT_TIMESTAMP
-        WHERE part_id = ?
-    """, [kanban["kanban_quantity"], kanban["part_id"]])
 
-    db.commit()
-
-    info(f"Signal recorded: {kanban['part_name']} @ {kanban['location_name']}")
+async def save_scan(barcode: str) -> None:
+    """Process a scanned barcode received via the DataWedge TCP socket."""
+    service = _make_scan_service()
+    service.process_datawedge_scan(barcode)
 
 
 async def client_handler(reader, writer):
