@@ -18,19 +18,6 @@ from kanban.routes.settings import bp as settings_bp
 
 __version__ = "0.0.1"
 
-_BLUEPRINTS = [
-    dashboard_bp,
-    events_bp,
-    help_bp,
-    inventory_bp,
-    kanbans_bp,
-    locations_bp,
-    parts_bp,
-    reports_bp,
-    scan_bp,
-    settings_bp,
-]
-
 
 def create_app(test_config=None) -> Quart:
     """Application factory — creates and configures the Quart app."""
@@ -56,7 +43,15 @@ def create_app(test_config=None) -> Quart:
     init_db(app)
     init_datawedge(app)
 
-    for blueprint in _BLUEPRINTS:
-        app.register_blueprint(blueprint)
+    app.register_blueprint(dashboard_bp)
+    app.register_blueprint(events_bp)
+    app.register_blueprint(help_bp)
+    app.register_blueprint(inventory_bp)
+    app.register_blueprint(kanbans_bp)
+    app.register_blueprint(locations_bp)
+    app.register_blueprint(parts_bp)
+    app.register_blueprint(reports_bp)
+    app.register_blueprint(scan_bp)
+    app.register_blueprint(settings_bp)
 
     return app
