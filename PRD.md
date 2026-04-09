@@ -209,7 +209,10 @@ Production environments need a simple, reliable way to:
 - SECRET_KEY should be overridden from default via instance config in production
 
 ### NFR-4: Maintainability
-- Clean separation of routes, templates, utilities
+- Layered architecture following SOLID principles (repositories → services → routes)
+- Dependency injection via request-scoped factories
+- Enums for domain constants; no magic strings
+- Protocol-based abstractions for external integrations (e.g. printers)
 - Documented API endpoints
 - Schema migrations via `init-db` CLI command
 
@@ -217,31 +220,54 @@ Production environments need a simple, reliable way to:
 
 ## Architecture
 
+The codebase follows a layered architecture aligned with SOLID design principles:
+
+- **Routes** — thin HTTP controllers that delegate to services
+- **Services** — business logic orchestration (scan processing, kanban lifecycle, inventory, dashboard, reports)
+- **Repositories** — data-access layer encapsulating all SQL queries
+- **Deps** — request-scoped dependency injection using Quart's `g` object
+- **Enums** — `EventType` and `InventoryStatus` StrEnums eliminating magic strings
+- **Protocols** — structural typing for external integrations (e.g. `Printer`)
+
 ```
 src/kanban/
 ├── __init__.py           # App factory, version, configuration
 ├── datawedge.py          # DataWedge TCP server (async socket handler)
 ├── db.py                 # Database connection management, CLI commands
+├── deps.py               # Request-scoped dependency injection factories
+├── enums.py              # EventType, InventoryStatus StrEnums
+├── protocols.py          # Printer protocol (structural typing)
 ├── schema.sql            # SQLite schema with seed data
+├── zebra.py              # Zebra printer TCP client (ZebraPrinter)
+├── repositories/
+│   ├── __init__.py       # Package exports
+│   ├── event.py          # EventRepository — event/signal queries
+│   ├── inventory.py      # InventoryRepository — stock level queries
+│   ├── kanban.py         # KanbanRepository — kanban CRUD & joins
+│   ├── location.py       # LocationRepository — location CRUD
+│   ├── part.py           # PartRepository — part CRUD & search
+│   └── setting.py        # SettingRepository — app settings
+├── services/
+│   ├── __init__.py       # ServiceResult dataclass
+│   ├── dashboard.py      # DashboardService — overview aggregation
+│   ├── inventory.py      # InventoryService — stock management & export
+│   ├── kanban.py         # KanbanService — CRUD, printing, API helpers
+│   ├── report.py         # ReportService — health scores & metrics
+│   └── scan.py           # ScanService — barcode processing (web + DataWedge)
 ├── routes/
-│   ├── __init__.py       # Blueprint registration
 │   ├── api.py            # JSON API endpoints (/api)
-│   ├── locations.py      # Locations CRUD (/locations)
 │   ├── dashboard.py      # Dashboard views (/)
 │   ├── events.py         # Event history & export (/events)
 │   ├── help.py           # Help/documentation page (/help)
 │   ├── inventory.py      # Inventory tracking & adjustment (/inventory)
 │   ├── kanbans.py        # Kanban CRUD & label printing (/kanbans)
+│   ├── locations.py      # Locations CRUD (/locations)
 │   ├── parts.py          # Parts CRUD (/parts)
 │   ├── reports.py        # Reports dashboard (/reports)
 │   ├── scan.py           # Quick scan interface (/scan)
 │   └── settings.py       # App settings & printer config (/settings)
 ├── templates/
 │   ├── base.html         # Base layout with embedded CSS, JS, and theme support
-│   ├── locations/
-│   │   ├── detail.html
-│   │   ├── form.html
-│   │   └── list.html
 │   ├── dashboard/
 │   │   └── index.html
 │   ├── events/
@@ -252,6 +278,10 @@ src/kanban/
 │   │   ├── adjust.html
 │   │   └── index.html
 │   ├── kanbans/
+│   │   ├── detail.html
+│   │   ├── form.html
+│   │   └── list.html
+│   ├── locations/
 │   │   ├── detail.html
 │   │   ├── form.html
 │   │   └── list.html
@@ -267,8 +297,8 @@ src/kanban/
 │       └── index.html
 └── utils/
     ├── __init__.py
-    ├── label.py          # ZPL label templates (KanbanLabelTemplate)
-    └── zebra.py          # Zebra printer TCP client (ZebraPrinter)
+    ├── calculations.py   # Pure functions (parse_barcode, number_of_cards, trends, status)
+    └── label.py          # ZPL label templates (KanbanLabelTemplate)
 ```
 
 ---
@@ -376,9 +406,10 @@ The system supports two scanning modes:
 6. **Template Organization**: Flat per-module template directories (no shared components directory); reusable markup is inline in `base.html`
 7. **Reorder Point**: Calculated dynamically from `safety_lead_time_days × estimated_daily_demand` rather than stored as a static field
 8. **DataWedge Integration**: TCP socket server (not just keyboard-wedge) for reliable headless scanning
+9. **SOLID Architecture**: Layered repository → service → route design with dependency injection; enums replace magic strings; protocols enable testable printer abstractions
 
 ---
 
-*PRD Version: 2.0*
+*PRD Version: 3.0*
 *Created: 2026-03-14*
-*Updated: 2026-04-08*
+*Updated: 2026-04-09*
