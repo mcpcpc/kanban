@@ -26,8 +26,6 @@ from kanban.services.location import LocationService
 from kanban.zebra import ZebraPrinter
 
 
-# ── Repository factories ───────────────────────────────────────────
-
 def get_kanban_repo() -> KanbanRepository:
     if not hasattr(g, "_kanban_repo"):
         g._kanban_repo = KanbanRepository(get_db())
@@ -63,8 +61,6 @@ def get_setting_repo() -> SettingRepository:
         g._setting_repo = SettingRepository(get_db())
     return g._setting_repo
 
-
-# ── Service factories ──────────────────────────────────────────────
 
 def make_scan_service(db: Connection) -> ScanService:
     """Create a ScanService from a database connection.
