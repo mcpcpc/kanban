@@ -1,5 +1,6 @@
 from quart import Blueprint, current_app, render_template, request, redirect, url_for, flash
 
+from kanban.auth import admin_required
 from kanban.datawedge import is_datawedge_running
 from kanban.datawedge import start_datawedge_server
 from kanban.datawedge import stop_datawedge_server
@@ -9,6 +10,7 @@ bp = Blueprint("settings", __name__, url_prefix="/settings")
 
 
 @bp.route("/")
+@admin_required
 async def index():
     """Show settings page."""
     setting = get_setting_repo().get()
@@ -19,6 +21,7 @@ async def index():
 
 
 @bp.route("/save", methods=["POST"])
+@admin_required
 async def save():
     """Save application settings."""
     form = await request.form
@@ -33,6 +36,7 @@ async def save():
 
 
 @bp.route("/datawedge/start")
+@admin_required
 async def start_datawedge():
     """Start the DataWedge server."""
     app = current_app._get_current_object()
@@ -45,6 +49,7 @@ async def start_datawedge():
 
 
 @bp.route("/datawedge/stop")
+@admin_required
 async def stop_datawedge():
     """Stop the DataWedge server."""
     app = current_app._get_current_object()

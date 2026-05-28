@@ -67,11 +67,13 @@ class EventRepository:
         """, [EventType.SIGNAL, EventType.RESTOCK_COMPLETE, EventType.SIGNAL]).fetchall()
 
     def create(self, kanban_id: int, event_type_id: int,
-               quantity: int | None = None, notes: str | None = None) -> int:
+               quantity: int | None = None, notes: str | None = None,
+               user_id: int | None = None) -> int:
         cursor = self.db.execute(
-            """INSERT INTO kanban_event (kanban_id, kanban_event_type, quantity, notes)
-               VALUES (?, ?, ?, ?)""",
-            [kanban_id, event_type_id, quantity, notes],
+            """INSERT INTO kanban_event
+                   (kanban_id, kanban_event_type, user_id, quantity, notes)
+               VALUES (?, ?, ?, ?, ?)""",
+            [kanban_id, event_type_id, user_id, quantity, notes],
         )
         return cursor.lastrowid
 

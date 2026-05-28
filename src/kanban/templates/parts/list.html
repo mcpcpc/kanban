@@ -55,7 +55,7 @@
 <!-- Parts List -->
 {% if parts %}
 <div class="table-container">
-    <table>
+    <table class="table-responsive">
         <thead>
             <tr>
                 <th>Part Number</th>
@@ -69,23 +69,23 @@
         <tbody>
             {% for part in parts %}
             <tr>
-                <td class="cell-truncate-lg" title="{{ part.part_number }}{% if part.description %} - {{ part.description }}{% endif %}">
+                <td data-label="Part Number" class="cell-truncate-lg" title="{{ part.part_number }}{% if part.description %} - {{ part.description }}{% endif %}">
                     <strong>{{ part.part_number }}</strong>
                     {% if part.description %}
                     <div class="text-muted text-truncate" style="font-size: 0.8125rem;">{{ part.description }}</div>
                     {% endif %}
                 </td>
-                <td class="cell-truncate" title="{{ part.manufacturer }}">{{ part.manufacturer }}</td>
-                <td>
+                <td data-label="Manufacturer" class="cell-truncate" title="{{ part.manufacturer }}">{{ part.manufacturer }}</td>
+                <td data-label="Category">
                     {% if part.category %}
                     <span class="badge badge-info">{{ part.category }}</span>
                     {% else %}
                     <span class="text-muted">-</span>
                     {% endif %}
                 </td>
-                <td>{{ part.uom_abbr }}</td>
-                <td>{{ part.reorder_lead_time_days }} days</td>
-                <td class="text-right">
+                <td data-label="UoM">{{ part.uom_abbr }}</td>
+                <td data-label="Lead Time">{{ part.reorder_lead_time_days }} days</td>
+                <td data-label="" class="text-right">
                     <a href="{{ url_for('parts.detail', id=part.id) }}" class="btn btn-sm btn-secondary" title="View">
                         <svg><use href="#icon-eye"></use></svg>
                     </a>

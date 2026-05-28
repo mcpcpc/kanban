@@ -82,7 +82,7 @@
         <div class="card-body" style="padding: 0;">
             {% if kanbans %}
             <div class="table-container" style="border: none; border-radius: 0;">
-                <table>
+                <table class="table-responsive">
                     <thead>
                         <tr>
                             <th>Part</th>
@@ -94,19 +94,19 @@
                     <tbody>
                         {% for kanban in kanbans %}
                         <tr>
-                            <td>
+                            <td data-label="Part">
                                 <strong>{{ kanban.part_name }}</strong>
                                 <div class="text-muted" style="font-size: 0.8125rem;">{{ kanban.manufacturer }}</div>
                             </td>
-                            <td>{{ kanban.kanban_quantity * kanban.number_of_cards }}</td>
-                            <td>
+                            <td data-label="Total Qty">{{ kanban.kanban_quantity * kanban.number_of_cards }}</td>
+                            <td data-label="Status">
                                 {% if kanban.is_active %}
                                 <span class="badge badge-success">Active</span>
                                 {% else %}
                                 <span class="badge badge-warning">Inactive</span>
                                 {% endif %}
                             </td>
-                            <td class="text-right">
+                            <td data-label="" class="text-right">
                                 <a href="{{ url_for('kanbans.detail', id=kanban.id) }}" class="btn btn-sm btn-secondary" title="View">
                                     <svg><use href="#icon-eye"></use></svg>
                                 </a>

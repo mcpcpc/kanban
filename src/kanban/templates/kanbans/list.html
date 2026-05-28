@@ -52,7 +52,7 @@
 <!-- Kanbans List -->
 {% if kanbans %}
 <div class="table-container">
-    <table>
+    <table class="table-responsive">
         <thead>
             <tr>
                 <th>ID</th>
@@ -68,23 +68,23 @@
         <tbody>
             {% for kanban in kanbans %}
             <tr>
-                <td class="font-mono">K{{ '%06d' % kanban.id }}</td>
-                <td class="cell-truncate-lg" title="{{ kanban.part_name }} - {{ kanban.manufacturer }}">
+                <td data-label="ID" class="font-mono">K{{ '%06d' % kanban.id }}</td>
+                <td data-label="Part" class="cell-truncate-lg" title="{{ kanban.part_name }} - {{ kanban.manufacturer }}">
                     <strong>{{ kanban.part_name }}</strong>
                     <div class="text-muted text-truncate" style="font-size: 0.8125rem;">{{ kanban.manufacturer }}</div>
                 </td>
-                <td class="cell-truncate" title="{{ kanban.location_name }}">{{ kanban.location_name }}</td>
-                <td>{{ kanban.kanban_quantity }}</td>
-                <td>{{ kanban.number_of_cards }}</td>
-                <td>{{ kanban.reorder_point }}</td>
-                <td>
+                <td data-label="Location" class="cell-truncate" title="{{ kanban.location_name }}">{{ kanban.location_name }}</td>
+                <td data-label="Container Qty">{{ kanban.kanban_quantity }}</td>
+                <td data-label="Cards">{{ kanban.number_of_cards }}</td>
+                <td data-label="Reorder Point">{{ kanban.reorder_point }}</td>
+                <td data-label="Status">
                     {% if kanban.is_active %}
                     <span class="badge badge-success">Active</span>
                     {% else %}
                     <span class="badge badge-warning">Inactive</span>
                     {% endif %}
                 </td>
-                <td class="text-right">
+                <td data-label="" class="text-right">
                     <a href="{{ url_for('kanbans.detail', id=kanban.id) }}" class="btn btn-sm btn-secondary" title="View">
                         <svg><use href="#icon-eye"></use></svg>
                     </a>

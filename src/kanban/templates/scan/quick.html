@@ -15,32 +15,49 @@
     .action-option {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem;
+        gap: 0.625rem;
+        padding: 0.875rem 1rem;
         border: 2px solid var(--color-border);
-        border-radius: var(--radius-sm);
+        border-radius: var(--radius-md);
         cursor: pointer;
-        transition: all 0.15s;
+        transition: all 0.15s ease;
+        font-weight: 500;
+        color: var(--color-text-secondary);
+        background-color: var(--color-bg);
+        user-select: none;
     }
-    .action-option:hover,
-    .action-option:focus-within {
-        border-color: var(--color-success);
+    .action-option:hover {
+        border-color: var(--color-primary);
+        background-color: var(--color-primary-light);
+        color: var(--color-primary);
     }
     .action-option.selected {
-        background-color: var(--color-success-bg);
-        border-color: var(--color-success);
+        background-color: var(--color-primary-light);
+        border-color: var(--color-primary);
+        color: var(--color-primary);
     }
     .action-option input {
         display: none;
     }
     .action-option .check-icon {
         display: none;
-        width: 18px;
-        height: 18px;
-        color: var(--color-success);
+        width: 16px;
+        height: 16px;
+        color: var(--color-primary);
+        flex-shrink: 0;
     }
     .action-option.selected .check-icon {
         display: block;
+    }
+    .scan-section {
+        background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-bg-secondary) 100%);
+        border: 2px solid var(--color-primary-muted);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        margin-bottom: 1.25rem;
+    }
+    [data-theme="dark"] .scan-section {
+        background: linear-gradient(135deg, var(--color-primary-muted) 0%, var(--color-bg-secondary) 100%);
     }
 </style>
 
@@ -51,15 +68,18 @@
 <div class="grid grid-2">
     <div class="card">
         <div class="card-body">
-            <form method="post" action="{{ url_for('scan.process') }}" id="scanForm">
-                <div class="form-group">
-                    <label class="form-label" for="barcode">Scan Barcode</label>
-                    <input type="text" id="barcode" name="barcode" 
-                           class="form-control scan-input" 
-                           placeholder="Scan or enter barcode..."
-                           autocomplete="off" autofocus>
-                    <div class="form-text text-center">
-                        Position cursor here and scan kanban card barcode
+            <form method="post" action="{{ url_for('scan.process') }}" id="scanForm" data-no-loading>
+                <div class="scan-section">
+                    <label class="form-label" for="barcode" style="font-size: 0.9375rem; margin-bottom: 0.625rem; display: block; text-align: center;">
+                        Scan or Enter Barcode
+                    </label>
+                    <input type="text" id="barcode" name="barcode"
+                           class="form-control scan-input"
+                           placeholder="K000001"
+                           autocomplete="off" autocorrect="off" autocapitalize="characters"
+                           inputmode="text" autofocus>
+                    <div class="form-text text-center" style="margin-top: 0.5rem;">
+                        Point scanner at kanban card, or type barcode above
                     </div>
                 </div>
 
@@ -86,21 +106,21 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label" for="quantity">Quantity (optional)</label>
+                        <label class="form-label" for="quantity">Quantity <span class="text-muted" style="font-weight:400;">(optional)</span></label>
                         <input type="number" id="quantity" name="quantity" class="form-control"
-                               placeholder="Enter quantity...">
+                               placeholder="e.g. 50" min="0" step="any">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="notes">Notes (optional)</label>
+                    <label class="form-label" for="notes">Notes <span class="text-muted" style="font-weight:400;">(optional)</span></label>
                     <input type="text" id="notes" name="notes" class="form-control"
                            placeholder="Optional notes...">
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">
                     <svg><use href="#icon-check"></use></svg>
-                    Submit
+                    Submit Scan
                 </button>
             </form>
         </div>

@@ -129,7 +129,7 @@
     <div class="card-body" style="padding: 0;">
         {% if events %}
         <div class="table-container" style="border: none; border-radius: 0;">
-            <table>
+            <table class="table-responsive">
                 <thead>
                     <tr>
                         <th>Time</th>
@@ -141,10 +141,10 @@
                 <tbody>
                     {% for event in events %}
                     <tr>
-                        <td class="text-muted" style="white-space: nowrap;">
+                        <td data-label="Time" class="text-muted" style="white-space: nowrap;">
                             {{ event.created_at.strftime('%Y-%m-%d %H:%M') if event.created_at else '-' }}
                         </td>
-                        <td>
+                        <td data-label="Event">
                             {% if event.event_type == 'signal' %}
                             <span class="badge badge-warning">Signal</span>
                             {% elif event.event_type == 'restock_start' %}
@@ -155,8 +155,8 @@
                             <span class="badge badge-purple">Adjustment</span>
                             {% endif %}
                         </td>
-                        <td>{{ event.quantity if event.quantity else '-' }}</td>
-                        <td class="text-muted">{{ event.notes if event.notes else '-' }}</td>
+                        <td data-label="Quantity">{{ event.quantity if event.quantity else '-' }}</td>
+                        <td data-label="Notes" class="text-muted">{{ event.notes if event.notes else '-' }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

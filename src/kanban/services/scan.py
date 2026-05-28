@@ -27,6 +27,7 @@ class ScanService:
         action: str = "signal",
         quantity: str = "",
         notes: str = "",
+        user_id: int | None = None,
     ) -> ServiceResult:
         """Validate and record a scan event.  Returns a ``ServiceResult``."""
         if not barcode:
@@ -86,7 +87,7 @@ class ScanService:
                 return ServiceResult(False, "Invalid quantity.", "danger")
 
         # Record event
-        self.event_repo.create(kanban_id, event_type_id, qty, notes or None)
+        self.event_repo.create(kanban_id, event_type_id, qty, notes or None, user_id)
 
         # Decrease inventory on signal
         if event_type is EventType.SIGNAL:

@@ -152,7 +152,7 @@
         <div class="card-body" style="padding: 0;">
             {% if pending_signals %}
             <div class="table-container" style="border: none; border-radius: 0;">
-                <table>
+                <table class="table-responsive">
                     <thead>
                         <tr>
                             <th>Kanban</th>
@@ -164,13 +164,13 @@
                     <tbody>
                         {% for signal in pending_signals %}
                         <tr>
-                            <td>
+                            <td data-label="Kanban">
                                 <span class="font-mono">K{{ '%06d' % signal.kanban_id }}</span>
                                 {% if signal.pending_count > 1 %}<span class="badge badge-danger" style="margin-left: 0.25rem;">{{ signal.pending_count }} cards</span>{% endif %}
                                 <div class="text-muted text-truncate" style="font-size: 0.75rem;" title="{{ signal.part_name }}">{{ signal.part_name }}</div>
                             </td>
-                            <td class="cell-truncate" title="{{ signal.location_name }}">{{ signal.location_name }}</td>
-                            <td class="text-muted" style="white-space: nowrap;">
+                            <td data-label="Location" class="cell-truncate" title="{{ signal.location_name }}">{{ signal.location_name }}</td>
+                            <td data-label="Waiting" class="text-muted" style="white-space: nowrap;">
                                 {% set delta = (current_time - signal.signal_time) %}
                                 {% if delta.days > 0 %}
                                     {{ delta.days }}d ago
@@ -180,7 +180,7 @@
                                     {{ (delta.seconds // 60) }}m ago
                                 {% endif %}
                             </td>
-                            <td class="text-right">
+                            <td data-label="" class="text-right">
                                 <a href="{{ url_for('kanbans.detail', id=signal.kanban_id) }}" class="btn btn-sm btn-secondary" title="View">
                                     <svg><use href="#icon-eye"></use></svg>
                                 </a>
@@ -232,7 +232,7 @@
     <div class="card-body" style="padding: 0;">
         {% if recent_events %}
         <div class="table-container" style="border: none; border-radius: 0;">
-            <table>
+            <table class="table-responsive">
                 <thead>
                     <tr>
                         <th>Time</th>
@@ -245,10 +245,10 @@
                 <tbody>
                     {% for event in recent_events %}
                     <tr>
-                        <td class="text-muted" style="white-space: nowrap;">
+                        <td data-label="Time" class="text-muted" style="white-space: nowrap;">
                             {{ event.created_at.strftime('%m/%d %H:%M') if event.created_at else '-' }}
                         </td>
-                        <td>
+                        <td data-label="Event">
                             {% if event.event_type == 'signal' %}
                             <span class="badge badge-warning">Signal</span>
                             {% elif event.event_type == 'restock_start' %}
@@ -259,11 +259,11 @@
                             <span class="badge badge-purple">Adjustment</span>
                             {% endif %}
                         </td>
-                        <td class="cell-truncate-lg" title="{{ event.part_name }}">
+                        <td data-label="Part" class="cell-truncate-lg" title="{{ event.part_name }}">
                             <a href="{{ url_for('kanbans.detail', id=event.kanban_id) }}">{{ event.part_name }}</a>
                         </td>
-                        <td class="cell-truncate" title="{{ event.location_name }}">{{ event.location_name }}</td>
-                        <td>{{ event.quantity if event.quantity else '-' }}</td>
+                        <td data-label="Location" class="cell-truncate" title="{{ event.location_name }}">{{ event.location_name }}</td>
+                        <td data-label="Qty">{{ event.quantity if event.quantity else '-' }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

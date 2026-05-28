@@ -54,7 +54,7 @@
 <!-- Inventory List -->
 {% if inventory_data %}
 <div class="table-container">
-    <table>
+    <table class="table-responsive">
         <thead>
             <tr>
                 <th>Part</th>
@@ -70,45 +70,44 @@
         <tbody>
             {% for item in inventory_data %}
             <tr>
-                <td class="cell-truncate-lg" title="{{ item.part.part_number }} - {{ item.part.manufacturer }}">
+                <td data-label="Part" class="cell-truncate-lg" title="{{ item.part.part_number }} - {{ item.part.manufacturer }}">
                     <a href="{{ url_for('parts.detail', id=item.part.id) }}">
                         <strong>{{ item.part.part_number }}</strong>
                     </a>
                     <div class="text-muted text-truncate" style="font-size: 0.8125rem;">{{ item.part.manufacturer }}</div>
                 </td>
-                <td>
-                    <strong>{{ item.part.quantity_on_hand|round(1) }}</strong>
-                    <span class="text-muted">{{ item.part.uom_abbr }}</span>
+                <td data-label="Qty On Hand">
+                    <span><strong>{{ item.part.quantity_on_hand|round(1) }}</strong> <span class="text-muted">{{ item.part.uom_abbr }}</span></span>
                 </td>
-                <td>
+                <td data-label="Kanban Total">
                     {% if item.total_kanban_quantity > 0 %}
                     {{ item.total_kanban_quantity|round(1) }}
                     {% else %}
                     <span class="text-muted">-</span>
                     {% endif %}
                 </td>
-                <td>
+                <td data-label="Reorder Point">
                     {% if item.total_reorder_point > 0 %}
                     {{ item.total_reorder_point|round(1) }}
                     {% else %}
                     <span class="text-muted">-</span>
                     {% endif %}
                 </td>
-                <td>
+                <td data-label="Avg Daily Demand">
                     {% if item.avg_daily_demand > 0 %}
                     {{ item.avg_daily_demand|round(1) }}/day
                     {% else %}
                     <span class="text-muted">No data</span>
                     {% endif %}
                 </td>
-                <td>
+                <td data-label="Days of Supply">
                     {% if item.days_of_supply is not none %}
                     {{ item.days_of_supply|round(1) }} days
                     {% else %}
                     <span class="text-muted">-</span>
                     {% endif %}
                 </td>
-                <td>
+                <td data-label="Status">
                     {% if item.status == 'out' %}
                     <span class="badge badge-danger">Out</span>
                     {% elif item.status == 'low' %}
@@ -119,7 +118,7 @@
                     <span class="badge badge-success">OK</span>
                     {% endif %}
                 </td>
-                <td class="text-right">
+                <td data-label="" class="text-right">
                     <a href="{{ url_for('inventory.adjust', part_id=item.part.id) }}" class="btn btn-sm btn-secondary" title="Adjust">
                         <svg><use href="#icon-edit"></use></svg>
                     </a>

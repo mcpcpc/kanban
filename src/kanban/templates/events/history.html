@@ -65,7 +65,7 @@
 <!-- Events List -->
 {% if events %}
 <div class="table-container">
-    <table>
+    <table class="table-responsive">
         <thead>
             <tr>
                 <th>Time</th>
@@ -80,10 +80,10 @@
         <tbody>
             {% for event in events %}
             <tr>
-                <td class="text-muted" style="white-space: nowrap;">
+                <td data-label="Time" class="text-muted" style="white-space: nowrap;">
                     {{ event.created_at.strftime('%Y-%m-%d %H:%M') if event.created_at else '-' }}
                 </td>
-                <td>
+                <td data-label="Event">
                     {% if event.event_type == 'signal' %}
                     <span class="badge badge-warning">Signal</span>
                     {% elif event.event_type == 'restock_start' %}
@@ -94,16 +94,16 @@
                     <span class="badge badge-purple">Adjustment</span>
                     {% endif %}
                 </td>
-                <td class="cell-truncate-lg" title="{{ event.part_name }} - {{ event.manufacturer }}">
+                <td data-label="Part" class="cell-truncate-lg" title="{{ event.part_name }} - {{ event.manufacturer }}">
                     {{ event.part_name }}
                     <div class="text-muted text-truncate" style="font-size: 0.8125rem;">{{ event.manufacturer }}</div>
                 </td>
-                <td class="cell-truncate" title="{{ event.location_name }}">{{ event.location_name }}</td>
-                <td>{{ event.quantity if event.quantity else '-' }}</td>
-                <td class="cell-truncate text-muted">
+                <td data-label="Location" class="cell-truncate" title="{{ event.location_name }}">{{ event.location_name }}</td>
+                <td data-label="Qty">{{ event.quantity if event.quantity else '-' }}</td>
+                <td data-label="Notes" class="cell-truncate text-muted">
                     {{ event.notes if event.notes else '-' }}
                 </td>
-                <td class="text-right nowrap">
+                <td data-label="" class="text-right nowrap">
                     <a href="{{ url_for('parts.detail', id=event.part_id) }}" class="btn btn-sm btn-secondary" title="View Part">
                         <svg><use href="#icon-parts"></use></svg>
                     </a>

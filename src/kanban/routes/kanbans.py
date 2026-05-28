@@ -1,5 +1,6 @@
 from quart import Blueprint, render_template, request, redirect, url_for, flash
 
+from kanban.auth import manager_required
 from kanban.deps import get_kanban_service, get_print_service
 
 bp = Blueprint("kanbans", __name__, url_prefix="/kanbans")
@@ -17,6 +18,7 @@ async def index():
 
 
 @bp.route("/new")
+@manager_required
 async def new():
     """Show new kanban form."""
     parts, locations = get_kanban_service().get_new_context()
@@ -29,6 +31,7 @@ async def new():
 
 
 @bp.route("/", methods=["POST"])
+@manager_required
 async def create():
     """Create a new kanban."""
     form = await request.form
@@ -58,6 +61,7 @@ async def detail(id):
 
 
 @bp.route("/<int:id>/edit")
+@manager_required
 async def edit(id):
     """Show edit kanban form."""
     kanban, parts, locations = get_kanban_service().get_edit_context(id)
@@ -68,6 +72,7 @@ async def edit(id):
 
 
 @bp.route("/<int:id>", methods=["POST"])
+@manager_required
 async def update(id):
     """Update a kanban."""
     form = await request.form
@@ -87,6 +92,7 @@ async def update(id):
 
 
 @bp.route("/<int:id>/delete", methods=["POST"])
+@manager_required
 async def delete(id):
     """Delete a kanban."""
     result = get_kanban_service().delete(id)

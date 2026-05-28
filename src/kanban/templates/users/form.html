@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit User' if user else 'New User' }}{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}">Home</a>
+    <span class="breadcrumb-separator">/</span>
+    <a href="{{ url_for('users.index') }}">Users</a>
+    <span class="breadcrumb-separator">/</span>
+    <span class="breadcrumb-current">{{ 'Edit' if user else 'New' }}</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">{{ 'Edit User' if user else 'New User' }}</h1>
+</div>
+
+<div class="grid grid-2">
+    <div class="card">
+        <div class="card-header">Account Details</div>
+        <div class="card-body">
+            <form method="post" action="{{ url_for('users.update', id=user.id) if user else url_for('users.create') }}">
+                <div class="form-group">
+                    <label class="form-label" for="display_name">Display Name</label>
+                    <input type="text" id="display_name" name="display_name" class="form-control"
+                           value="{{ user.display_name if user else '' }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="email">Email</label>
+                    <input type="email" id="email" name="email" class="form-control"
+                           value="{{ user.email if user else '' }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="role">Role</label>
+                    <select id="role" name="role" class="form-control">
+                        {% for r in roles %}
+                        <option value="{{ r }}" {% if user and user.role == r %}selected{% endif %}>
+                            {{ r|capitalize }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% if user %}
+                <div class="form-group">
+                    <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" name="is_active" {% if user.is_active %}checked{% endif %}>
+                        Active
+                    </label>
+                </div>
+                {% endif %}
+                {% if not user %}
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" id="password" name="password" class="form-control"
+                           required autocomplete="new-password"
+                           placeholder="Min 8 chars, uppercase, lowercase, number">
+                </div>
+                {% endif %}
+                <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+                    <button type="submit" class="btn btn-primary">
+                        <svg><use href="#icon-check"></use></svg>
+                        {{ 'Save Changes' if user else 'Create User' }}
+                    </button>
+                    <a href="{{ url_for('users.index') }}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if user %}
+    <div class="card">
+        <div class="card-header">Reset Password</div>
+        <div class="card-body">
+            <form method="post" action="{{ url_for('users.set_password', id=user.id) }}">
+                <div class="form-group">
+                    <label class="form-label" for="new_password">New Password</label>
+                    <input type="password" id="new_password" name="password" class="form-control"
+                           required autocomplete="new-password"
+                           placeholder="Min 8 chars, uppercase, lowercase, number">
+                </div>
+                <button type="submit" class="btn btn-secondary">
+                    <svg><use href="#icon-refresh"></use></svg>
+                    Reset Password
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

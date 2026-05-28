@@ -1,5 +1,6 @@
 from quart import Blueprint, render_template, request, redirect, url_for, flash
 
+from kanban.auth import manager_required
 from kanban.deps import get_location_service
 
 bp = Blueprint("locations", __name__, url_prefix="/locations")
@@ -18,14 +19,11 @@ LOCATION_COLORS = [
 
 @bp.route("/")
 async def index():
-    """List all locations."""
     search = request.args.get("search", "").strip()
     color_filter = request.args.get("color", "").strip()
-
     locations, location_kanban_counts, colors_in_use = get_location_service().list(
         search=search, color=color_filter,
     )
-
     return await render_template(
         "locations/list.html", locations=locations,
         location_kanban_counts=location_kanban_counts,
@@ -35,34 +33,30 @@ async def index():
 
 
 @bp.route("/new")
+@manager_required
 async def new():
-    """Show new location form."""
     return await render_template("locations/form.html", location=None, location_colors=LOCATION_COLORS)
 
 
 @bp.route("/", methods=["POST"])
+@manager_required
 async def create():
-    """Create a new location."""
     form = await request.form
     location = form.get("location", "").strip()
     if not location:
         await flash("Location is required.", "danger")
         return redirect(url_for("locations.new"))
-
     result = get_location_service().create(
         location=location,
         description=form.get("description", "").strip() or None,
         color=form.get("color", "").strip() or None,
     )
     await flash(result.message, result.category)
-    if result.success:
-        return redirect(url_for("locations.index"))
-    return redirect(url_for("locations.new"))
+    return redirect(url_for("locations.index") if result.success else url_for("locations.new"))
 
 
 @bp.route("/<int:id>")
 async def detail(id):
-    """Show location details."""
     location, kanbans = get_location_service().get_detail(id)
     if not location:
         await flash("Location not found.", "danger")
@@ -74,8 +68,8 @@ async def detail(id):
 
 
 @bp.route("/<int:id>/edit")
+@manager_required
 async def edit(id):
-    """Show edit location form."""
     location = get_location_service().get_edit_context(id)
     if not location:
         await flash("Location not found.", "danger")
@@ -84,14 +78,13 @@ async def edit(id):
 
 
 @bp.route("/<int:id>", methods=["POST"])
+@manager_required
 async def update(id):
-    """Update a location."""
     form = await request.form
     location = form.get("location", "").strip()
     if not location:
         await flash("Location is required.", "danger")
         return redirect(url_for("locations.edit", id=id))
-
     result = get_location_service().update(
         id, location=location,
         description=form.get("description", "").strip() or None,
@@ -102,10 +95,8 @@ async def update(id):
 
 
 @bp.route("/<int:id>/delete", methods=["POST"])
+@manager_required
 async def delete(id):
-    """Delete a location."""
     result = get_location_service().delete(id)
     await flash(result.message, result.category)
-    if result.success:
-        return redirect(url_for("locations.index"))
-    return redirect(url_for("locations.detail", id=id))
+    return redirect(url_for("locations.index") if result.success else url_for("locations.detail", id=id))

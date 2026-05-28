@@ -4,6 +4,7 @@ from datetime import datetime
 
 from quart import Blueprint, render_template, request, redirect, url_for, flash, Response
 
+from kanban.auth import manager_required
 from kanban.deps import get_inventory_service, get_part_repo
 
 bp = Blueprint("inventory", __name__, url_prefix="/inventory")
@@ -33,6 +34,7 @@ async def index():
 
 
 @bp.route("/<int:part_id>/adjust", methods=["GET", "POST"])
+@manager_required
 async def adjust(part_id):
     """Adjust inventory quantity for a part."""
     part = get_part_repo().find_with_inventory(part_id)

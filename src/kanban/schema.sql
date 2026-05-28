@@ -9,6 +9,7 @@ DROP TABLE IF EXISTS kanban_event_type;
 DROP TABLE IF EXISTS kanban_event;
 DROP TABLE IF EXISTS inventory;
 DROP TABLE IF EXISTS setting;
+DROP TABLE IF EXISTS user;
 
 -- Units of Measure: How parts should be quantified
 CREATE TABLE unit_of_measure (
@@ -85,6 +86,7 @@ CREATE TABLE kanban_event (
     id INTEGER PRIMARY KEY,
     kanban_id INTEGER NOT NULL REFERENCES kanban(id),
     kanban_event_type INTEGER NOT NULL REFERENCES kanban_event_type(id),
+    user_id INTEGER REFERENCES user(id),
     quantity INTEGER,
     notes TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -97,6 +99,19 @@ CREATE TABLE inventory (
     quantity_on_hand REAL NOT NULL DEFAULT 0,
     last_count_date TIMESTAMP,
     notes TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Users: Application accounts with role-based access
+CREATE TABLE user (
+    id INTEGER PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL COLLATE NOCASE,
+    display_name TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'user' CHECK(role IN ('admin', 'manager', 'user')),
+    is_active INTEGER NOT NULL DEFAULT 1,
+    last_login_at TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

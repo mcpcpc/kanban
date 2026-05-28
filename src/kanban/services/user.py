@@ -1,0 +1,89 @@
+"""Service for user authentication and management."""
+
+import re
+from sqlite3 import IntegrityError
+
+from werkzeug.security import check_password_hash, generate_password_hash
+
+from kanban.repositories.user import UserRepository
+from kanban.services import ServiceResult
+
+
+def validate_password(password: str) -> str | None:
+    if len(password) < 8:
+        return "Password must be at least 8 characters."
+    if not re.search(r"[a-z]", password):
+        return "Password must include a lowercase letter."
+    if not re.search(r"[A-Z]", password):
+        return "Password must include an uppercase letter."
+    if not re.search(r"\d", password):
+        return "Password must include a number."
+    return None
+
+
+class UserService:
+    ROLES = ("admin", "manager", "user")
+
+    def __init__(self, user_repo: UserRepository) -> None:
+        self.user_repo = user_repo
+
+    def authenticate(self, email: str, password: str):
+        """Return the user row if credentials are valid and account active, else None."""
+        user = self.user_repo.find_by_email(email.strip())
+        if not user or not user["is_active"]:
+            return None
+        if not check_password_hash(user["password_hash"], password):
+            return None
+        self.user_repo.update_last_login(user["id"])
+        return user
+
+    def list(self):
+        return self.user_repo.find_all()
+
+    def get_by_id(self, user_id: int):
+        return self.user_repo.find_by_id(user_id)
+
+    def create(self, *, email, display_name, password, role="user") -> ServiceResult:
+        error = validate_password(password)
+        if error:
+            return ServiceResult(False, error, "danger")
+        try:
+            self.user_repo.create(
+                email=email.strip().lower(),
+                display_name=display_name.strip(),
+                password_hash=generate_password_hash(password),
+                role=role,
+            )
+        except IntegrityError:
+            return ServiceResult(False, "Email is already in use.", "danger")
+        return ServiceResult(True, f"User '{email}' created successfully.")
+
+    def update(self, user_id: int, *, email, display_name, role,
+               is_active, current_user_id: int) -> ServiceResult:
+        user = self.user_repo.find_by_id(user_id)
+        if user and user["role"] == "admin":
+            losing_admin = role != "admin" or not int(is_active)
+            if losing_admin and self.user_repo.count_admins() <= 1:
+                return ServiceResult(
+                    False,
+                    "Cannot demote or deactivate the last active admin.",
+                    "danger",
+                )
+        try:
+            self.user_repo.update(
+                user_id,
+                email=email.strip().lower(),
+                display_name=display_name.strip(),
+                role=role,
+                is_active=int(is_active),
+            )
+        except IntegrityError:
+            return ServiceResult(False, "Email is already in use.", "danger")
+        return ServiceResult(True, f"User '{email}' updated.")
+
+    def set_password(self, user_id: int, password: str) -> ServiceResult:
+        error = validate_password(password)
+        if error:
+            return ServiceResult(False, error, "danger")
+        self.user_repo.update_password(user_id, generate_password_hash(password))
+        return ServiceResult(True, "Password updated.")

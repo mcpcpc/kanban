@@ -85,7 +85,7 @@
         <div class="card-body" style="padding: 0;">
             {% if kanbans %}
             <div class="table-container" style="border: none; border-radius: 0;">
-                <table>
+                <table class="table-responsive">
                     <thead>
                         <tr>
                             <th>Location</th>
@@ -97,16 +97,16 @@
                     <tbody>
                         {% for kanban in kanbans %}
                         <tr>
-                            <td>{{ kanban.location_name }}</td>
-                            <td>{{ kanban.kanban_quantity * kanban.number_of_cards }}</td>
-                            <td>
+                            <td data-label="Location">{{ kanban.location_name }}</td>
+                            <td data-label="Total Qty">{{ kanban.kanban_quantity * kanban.number_of_cards }}</td>
+                            <td data-label="Status">
                                 {% if kanban.is_active %}
                                 <span class="badge badge-success">Active</span>
                                 {% else %}
                                 <span class="badge badge-warning">Inactive</span>
                                 {% endif %}
                             </td>
-                            <td class="text-right">
+                            <td data-label="" class="text-right">
                                 <a href="{{ url_for('kanbans.detail', id=kanban.id) }}" class="btn btn-sm btn-secondary" title="View">
                                     <svg><use href="#icon-eye"></use></svg>
                                 </a>

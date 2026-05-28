@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign In — Kanban</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+    --color-primary: #6366f1;
+    --color-primary-hover: #4f46e5;
+    --color-bg: #f5f5f8;
+    --color-bg-secondary: #ffffff;
+    --color-text: #0d0d14;
+    --color-text-muted: #6b6b8a;
+    --color-border: #e0dded;
+    --color-danger: #ef4444;
+    --color-danger-bg: #fef2f2;
+    --color-danger-border: #fecaca;
+    --radius-md: 10px;
+    --shadow-md: 0 4px 24px rgba(0,0,0,0.10);
+}
+[data-theme="dark"] {
+    --color-bg: #0f0f14;
+    --color-bg-secondary: #16161e;
+    --color-text: #e8e8f4;
+    --color-text-muted: #8888a8;
+    --color-border: #2a2a3a;
+}
+body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--color-bg);
+    color: var(--color-text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+}
+.login-card {
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    width: 100%;
+    max-width: 380px;
+    padding: 2.5rem 2rem;
+}
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    margin-bottom: 2rem;
+    justify-content: center;
+}
+.brand-mark {
+    width: 36px; height: 36px;
+    color: var(--color-primary);
+}
+.brand-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-text);
+}
+h1 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.25rem;
+}
+.subtitle {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    margin-bottom: 1.75rem;
+}
+label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    margin-bottom: 0.35rem;
+    letter-spacing: 0.01em;
+}
+input[type="email"], input[type="password"] {
+    display: block;
+    width: 100%;
+    padding: 0.6rem 0.875rem;
+    font-size: 0.9rem;
+    font-family: inherit;
+    color: var(--color-text);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.12s, box-shadow 0.12s;
+    margin-bottom: 1rem;
+}
+input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+}
+.btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.65rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: inherit;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background: var(--color-primary);
+    color: #fff;
+    transition: background 0.12s;
+    margin-top: 0.5rem;
+}
+.btn:hover { background: var(--color-primary-hover); }
+.alert {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    margin-bottom: 1.25rem;
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
+    border: 1px solid var(--color-danger-border);
+}
+</style>
+</head>
+<body>
+<div class="login-card">
+    <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 32 32">
+            <rect width="32" height="32" rx="7" fill="currentColor"/>
+            <rect x="5" y="8"  width="16" height="3.5" rx="1.75" fill="white"/>
+            <rect x="5" y="14" width="11" height="3.5" rx="1.75" fill="white" opacity="0.6"/>
+            <rect x="5" y="20" width="6"  height="3.5" rx="1.75" fill="white" opacity="0.3"/>
+            <circle cx="26" cy="9.75" r="3.75" fill="#f59e0b"/>
+        </svg>
+        <span class="brand-name">Kanban</span>
+    </div>
+
+    <h1>Sign in</h1>
+    <p class="subtitle">Enter your credentials to continue</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for _, message in messages %}
+        <div class="alert">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <form method="post" action="{{ url_for('auth.login', next=request.args.get('next', '')) }}">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" autocomplete="email"
+               autofocus required placeholder="you@example.com">
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password"
+               autocomplete="current-password" required placeholder="••••••••">
+
+        <button type="submit" class="btn">Sign in</button>
+    </form>
+</div>
+
+<script>
+(function(){
+    var saved = localStorage.getItem('theme');
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+    else if (window.matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.setAttribute('data-theme', 'dark');
+})();
+</script>
+</body>
+</html>
