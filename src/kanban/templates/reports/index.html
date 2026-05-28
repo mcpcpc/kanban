@@ -18,38 +18,19 @@
 <!-- Overview Stats -->
 <div class="grid grid-3 mb-3">
     <div class="stat-card">
-        <div class="stat-card-header">
-            <span class="stat-card-title">Total Events</span>
-            <div class="stat-card-icon" style="background-color: var(--color-info-bg); color: var(--color-info);">
-                <svg><use href="#icon-activity"></use></svg>
-            </div>
-        </div>
+        <div class="stat-card-label">Total Events</div>
         <div class="stat-card-value">{{ total_events }}</div>
     </div>
 
     <div class="stat-card">
-        <div class="stat-card-header">
-            <span class="stat-card-title">Active Kanbans</span>
-            <div class="stat-card-icon" style="background-color: var(--color-success-bg); color: var(--color-success);">
-                <svg><use href="#icon-kanban"></use></svg>
-            </div>
-        </div>
+        <div class="stat-card-label">Active Kanbans</div>
         <div class="stat-card-value">{{ total_kanbans }}</div>
     </div>
 
     <div class="stat-card">
-        <div class="stat-card-header">
-            <span class="stat-card-title">Avg Cycle Time</span>
-            <div class="stat-card-icon" style="background-color: var(--color-warning-bg); color: var(--color-warning);">
-                <svg><use href="#icon-events"></use></svg>
-            </div>
-        </div>
+        <div class="stat-card-label">Avg Cycle Time</div>
         <div class="stat-card-value">
-            {% if avg_cycle_days %}
-            {{ '%.1f'|format(avg_cycle_days) }}d
-            {% else %}
-            -
-            {% endif %}
+            {% if avg_cycle_days %}{{ '%.1f'|format(avg_cycle_days) }}d{% else %}-{% endif %}
         </div>
     </div>
 </div>
