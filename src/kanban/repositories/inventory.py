@@ -67,3 +67,12 @@ class InventoryRepository:
                 updated_at = CURRENT_TIMESTAMP
             WHERE part_id = ?
         """, [amount, part_id])
+
+    def increase_quantity(self, part_id: int, amount: float) -> None:
+        self.db.execute("""
+            INSERT INTO inventory (part_id, quantity_on_hand, updated_at)
+            VALUES (?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(part_id) DO UPDATE SET
+                quantity_on_hand = quantity_on_hand + excluded.quantity_on_hand,
+                updated_at = CURRENT_TIMESTAMP
+        """, [part_id, amount])

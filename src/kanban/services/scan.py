@@ -89,11 +89,14 @@ class ScanService:
         # Record event
         self.event_repo.create(kanban_id, event_type_id, qty, notes or None, user_id)
 
-        # Decrease inventory on signal
+        # Decrease inventory on signal; restore it on restock_complete
         if event_type is EventType.SIGNAL:
             self.inventory_repo.decrease_quantity(
                 kanban["part_id"], kanban["kanban_quantity"]
             )
+        elif event_type is EventType.RESTOCK_COMPLETE:
+            restock_qty = qty if qty is not None else kanban["kanban_quantity"]
+            self.inventory_repo.increase_quantity(kanban["part_id"], restock_qty)
 
         self.kanban_repo.db.commit()
 
