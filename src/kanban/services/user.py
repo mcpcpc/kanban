@@ -59,7 +59,7 @@ class UserService:
         return ServiceResult(True, f"User '{email}' created successfully.")
 
     def update(self, user_id: int, *, email, display_name, role,
-               is_active, current_user_id: int) -> ServiceResult:
+               is_active) -> ServiceResult:
         user = self.user_repo.find_by_id(user_id)
         if user and user["role"] == "admin":
             losing_admin = role != "admin" or not int(is_active)

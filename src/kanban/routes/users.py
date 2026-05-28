@@ -1,4 +1,4 @@
-from quart import Blueprint, g, render_template, request, redirect, url_for, flash
+from quart import Blueprint, render_template, request, redirect, url_for, flash
 
 from kanban.auth import admin_required
 from kanban.deps import get_user_service
@@ -58,7 +58,6 @@ async def update(id):
         display_name=form.get("display_name", "").strip(),
         role=form.get("role", "user"),
         is_active=form.get("is_active") == "on",
-        current_user_id=g.current_user["id"],
     )
     await flash(result.message, result.category)
     return redirect(url_for("users.index") if result.success else url_for("users.edit", id=id))

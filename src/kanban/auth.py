@@ -16,20 +16,6 @@ PUBLIC_ENDPOINTS = frozenset({
 })
 
 
-def _is_public() -> bool:
-    ep = request.endpoint
-    return ep is None or ep in PUBLIC_ENDPOINTS or ep.startswith("static")
-
-
-def login_required(f):
-    @wraps(f)
-    async def wrapper(*args, **kwargs):
-        if not g.current_user:
-            return redirect(url_for("auth.login", next=request.path))
-        return await f(*args, **kwargs)
-    return wrapper
-
-
 def manager_required(f):
     """Allows managers and admins; blocks regular users."""
     @wraps(f)

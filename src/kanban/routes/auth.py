@@ -1,3 +1,5 @@
+import time
+
 from quart import Blueprint, g, render_template, request, redirect, url_for, flash, session
 
 from kanban.deps import get_user_service
@@ -17,7 +19,6 @@ async def login():
 
         user = get_user_service().authenticate(email, password)
         if user:
-            import time
             session.permanent = True
             session["user_id"] = user["id"]
             session["_last_active"] = time.time()
