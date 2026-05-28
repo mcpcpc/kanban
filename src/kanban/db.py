@@ -54,8 +54,10 @@ def init_db_command() -> None:
 @with_appcontext
 def create_admin_command() -> None:
     """Create an administrator account."""
+    from sqlite3 import IntegrityError
+    from werkzeug.security import generate_password_hash
     from kanban.repositories.user import UserRepository
-    from kanban.services.user import UserService, validate_password
+    from kanban.services.user import validate_password
 
     email = prompt("Email")
     display_name = prompt("Display name")
@@ -67,13 +69,16 @@ def create_admin_command() -> None:
         return
 
     db = get_db()
-    result = UserService(UserRepository(db)).create(
-        email=email,
-        display_name=display_name,
-        password=password,
-        role="admin",
-    )
-    echo(result.message)
+    try:
+        UserRepository(db).create(
+            email=email.strip().lower(),
+            display_name=display_name.strip(),
+            password_hash=generate_password_hash(password),
+            role="admin",
+        )
+        echo(f"Admin '{email}' created successfully.")
+    except IntegrityError:
+        echo("Error: that email is already in use.")
 
 
 def init_db(app) -> None:
