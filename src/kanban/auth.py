@@ -12,6 +12,7 @@ PUBLIC_ENDPOINTS = frozenset({
     "dashboard.index",
     "auth.login",
     "auth.logout",
+    "auth.reset_password",
     "static",
 })
 

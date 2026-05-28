@@ -51,12 +51,9 @@
                 </div>
                 {% endif %}
                 {% if not user %}
-                <div class="form-group">
-                    <label class="form-label" for="password">Password</label>
-                    <input type="password" id="password" name="password" class="form-control"
-                           required autocomplete="new-password"
-                           placeholder="Min 8 chars, uppercase, lowercase, number">
-                </div>
+                <p class="form-text" style="margin-top: 0.25rem;">
+                    A one-time setup link will be generated after saving. Share it with the user so they can set their own password.
+                </p>
                 {% endif %}
                 <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
                     <button type="submit" class="btn btn-primary">
@@ -75,14 +72,22 @@
         <div class="card-body">
             <form method="post" action="{{ url_for('users.set_password', id=user.id) }}">
                 <div class="form-group">
-                    <label class="form-label" for="new_password">New Password</label>
+                    <label class="form-label" for="new_password">Set Password Directly</label>
                     <input type="password" id="new_password" name="password" class="form-control"
                            required autocomplete="new-password"
                            placeholder="Min 8 chars, uppercase, lowercase, number">
                 </div>
                 <button type="submit" class="btn btn-secondary">
                     <svg><use href="#icon-refresh"></use></svg>
-                    Reset Password
+                    Set Password
+                </button>
+            </form>
+            <hr style="margin: 1.25rem 0; border-color: var(--color-border);">
+            <form method="post" action="{{ url_for('users.generate_reset_link', id=user.id) }}">
+                <p class="form-text" style="margin-bottom: 0.75rem;">Generate a one-time setup link the user can use to set their own password.</p>
+                <button type="submit" class="btn btn-secondary">
+                    <svg><use href="#icon-link"></use></svg>
+                    Generate Setup Link
                 </button>
             </form>
         </div>

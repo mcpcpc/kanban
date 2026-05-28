@@ -111,6 +111,8 @@ CREATE TABLE user (
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'user' CHECK(role IN ('admin', 'manager', 'user')),
     is_active INTEGER NOT NULL DEFAULT 1,
+    must_change_password INTEGER NOT NULL DEFAULT 0,
+    password_reset_token TEXT,
     last_login_at TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP

@@ -28,14 +28,43 @@ class UserRepository:
         ).fetchone()[0]
 
     def create(self, *, email, display_name, password_hash,
-               role="user", is_active=1) -> int:
+               role="user", is_active=1,
+               must_change_password=0, password_reset_token=None) -> int:
         cursor = self.db.execute(
-            """INSERT INTO user (email, display_name, password_hash, role, is_active)
-               VALUES (?, ?, ?, ?, ?)""",
-            [email, display_name, password_hash, role, is_active],
+            """INSERT INTO user
+               (email, display_name, password_hash, role, is_active,
+                must_change_password, password_reset_token)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            [email, display_name, password_hash, role, is_active,
+             must_change_password, password_reset_token],
         )
         self.db.commit()
         return cursor.lastrowid
+
+    def find_by_reset_token(self, token: str):
+        return self.db.execute(
+            "SELECT * FROM user WHERE password_reset_token = ?", [token]
+        ).fetchone()
+
+    def clear_reset_token(self, user_id: int) -> None:
+        self.db.execute(
+            """UPDATE user
+               SET password_reset_token = NULL, must_change_password = 0,
+                   updated_at = CURRENT_TIMESTAMP
+               WHERE id = ?""",
+            [user_id],
+        )
+        self.db.commit()
+
+    def set_reset_token(self, user_id: int, token: str) -> None:
+        self.db.execute(
+            """UPDATE user
+               SET password_reset_token = ?, must_change_password = 1,
+                   updated_at = CURRENT_TIMESTAMP
+               WHERE id = ?""",
+            [token, user_id],
+        )
+        self.db.commit()
 
     def update(self, user_id: int, *, email, display_name, role, is_active) -> None:
         self.db.execute(
