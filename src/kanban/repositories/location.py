@@ -47,13 +47,6 @@ class LocationRepository:
         ).fetchall()
         return [row["color"] for row in rows]
 
-    def get_30_day_creation_trend(self, since: str):
-        return self.db.execute("""
-            SELECT date(created_at) AS day, COUNT(*) AS count
-            FROM location WHERE created_at >= ?
-            GROUP BY date(created_at) ORDER BY day
-        """, (since,)).fetchall()
-
     def create(self, *, location: str, description: str | None = None,
                color: str | None = None) -> int:
         cursor = self.db.execute(

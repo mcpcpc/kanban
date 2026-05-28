@@ -38,15 +38,6 @@ class DashboardService:
 
         thirty_days_ago = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
 
-        kanban_trend, kanban_max = build_30_day_trend(
-            self.kanban_repo.get_30_day_creation_trend(thirty_days_ago)
-        )
-        parts_trend, parts_max = build_30_day_trend(
-            self.part_repo.get_30_day_creation_trend(thirty_days_ago)
-        )
-        locations_trend, locations_max = build_30_day_trend(
-            self.location_repo.get_30_day_creation_trend(thirty_days_ago)
-        )
         signals_trend, signals_max = build_30_day_trend(
             self.event_repo.get_30_day_signal_trend(thirty_days_ago)
         )
@@ -59,12 +50,6 @@ class DashboardService:
             "pending_signals": pending_signals,
             "recent_events": recent_events,
             "current_time": datetime.now(),
-            "kanban_trend": kanban_trend,
-            "kanban_max": kanban_max,
-            "parts_trend": parts_trend,
-            "parts_max": parts_max,
-            "locations_trend": locations_trend,
-            "locations_max": locations_max,
             "signals_trend": signals_trend,
             "signals_max": signals_max,
         }

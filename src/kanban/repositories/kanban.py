@@ -118,13 +118,6 @@ class KanbanRepository:
             LIMIT ?
         """, [limit]).fetchall()
 
-    def get_30_day_creation_trend(self, since: str):
-        return self.db.execute("""
-            SELECT date(created_at) AS day, COUNT(*) AS count
-            FROM kanban WHERE created_at >= ?
-            GROUP BY date(created_at) ORDER BY day
-        """, (since,)).fetchall()
-
     def get_with_lead_time(self, kanban_id: int):
         return self.db.execute("""
             SELECT k.*, p.reorder_lead_time_days

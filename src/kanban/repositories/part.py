@@ -79,13 +79,6 @@ class PartRepository:
         ).fetchone()
         return row["reorder_lead_time_days"] if row else 7.0
 
-    def get_30_day_creation_trend(self, since: str):
-        return self.db.execute("""
-            SELECT date(created_at) AS day, COUNT(*) AS count
-            FROM part WHERE created_at >= ?
-            GROUP BY date(created_at) ORDER BY day
-        """, (since,)).fetchall()
-
     def get_units_of_measure(self):
         return self.db.execute(
             "SELECT * FROM unit_of_measure ORDER BY name"
