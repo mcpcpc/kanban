@@ -153,7 +153,7 @@ INSERT INTO setting (printer_hostname, printer_port, printer_timeout_seconds, la
 ^FD{part_number}^FS
 ^FO162,99
 ^A0N,28,28
-^FD{part_manufacturer}^FS
+^FD{manufacturer}^FS
 ^FO162,130
 ^A0N,20,20
 ^TBN,345,96
