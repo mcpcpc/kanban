@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Dashboard</h1>
+    <a href="{{ url_for('scan.index') }}" class="btn btn-primary">
+        <svg><use href="#icon-scan"></use></svg>
+        Quick Scan
+    </a>
+</div>
+
+<!-- Stats -->
+<div class="grid grid-4 mb-3">
+    <div class="stat-card" style="--stat-accent: var(--color-info);">
+        <div class="stat-card-label">Active Kanbans</div>
+        <div class="stat-card-value">{{ total_kanbans }}</div>
+        <div class="stat-card-sub">Kanban cards in system</div>
+    </div>
+
+    <div class="stat-card" style="--stat-accent: var(--color-success);">
+        <div class="stat-card-label">Parts</div>
+        <div class="stat-card-value">{{ total_parts }}</div>
+        <div class="stat-card-sub">Distinct part numbers</div>
+    </div>
+
+    <div class="stat-card" style="--stat-accent: var(--color-warning);">
+        <div class="stat-card-label">Locations</div>
+        <div class="stat-card-value">{{ total_locations }}</div>
+        <div class="stat-card-sub">Storage locations</div>
+    </div>
+
+    <div class="stat-card" style="--stat-accent: {% if active_signals > 0 %}var(--color-danger){% else %}var(--color-success){% endif %};">
+        <div class="stat-card-label">Pending Signals</div>
+        <div class="stat-card-value" style="{% if active_signals > 0 %}color: var(--color-danger);{% endif %}">{{ active_signals }}</div>
+        <div class="stat-card-sub">{% if active_signals == 0 %}All kanbans stocked{% elif active_signals == 1 %}1 kanban awaiting restock{% else %}{{ active_signals }} kanbans awaiting restock{% endif %}</div>
+    </div>
+</div>
+
+<!-- Signal Activity Chart -->
+<div class="card mb-3">
+    <div class="card-header">
+        Signal Activity
+        <span class="text-xs text-muted" style="font-weight: 400;">30-day history</span>
+    </div>
+    <div class="card-body" style="padding-bottom: 1rem;">
+        {% if signals_trend %}
+        {% set chart_total = signals_trend | sum(attribute='count') %}
+        <div class="chart-bars" role="img" aria-label="Signal activity over the last 30 days">
+            {% for point in signals_trend %}
+            {% set bar_h = ((point.count / signals_max) * 76) | int if signals_max > 0 else 0 %}
+            <div class="chart-bar{% if point.count == 0 %} chart-bar-zero{% elif loop.last %} chart-bar-today{% elif loop.revindex <= 7 %} chart-bar-recent{% endif %}"
+                 style="height: {{ [bar_h, 2] | max }}px;"
+                 title="{{ point.day }}: {{ point.count }} signal{{ 's' if point.count != 1 else '' }}"></div>
+            {% endfor %}
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.625rem;font-size:0.68rem;color:var(--color-text-subtle);">
+            <span>{{ signals_trend[0].day[5:] }}</span>
+            <span style="color:var(--color-text-muted);">
+                {% if chart_total == 0 %}No signals in this period
+                {% elif chart_total == 1 %}1 signal total
+                {% else %}{{ chart_total }} signals total{% endif %}
+            </span>
+            <span>Today</span>
+        </div>
+        {% else %}
+        <div class="empty-state" style="padding: 1.5rem 1rem;">
+            <svg><use href="#icon-activity"></use></svg>
+            <div class="empty-state-title">No activity data yet</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Pending Signals + Recent Activity -->
+<div class="grid grid-2">
+    <div class="card">
+        <div class="card-header">
+            Pending Signals
+            {% if active_signals %}
+            <span class="badge badge-danger">{{ active_signals }}</span>
+            {% else %}
+            <span class="badge badge-success">All clear</span>
+            {% endif %}
+        </div>
+        <div style="padding: 0;">
+            {% if pending_signals %}
+            <div class="table-container" style="border: none; border-radius: 0 0 var(--radius-md) var(--radius-md);">
+                <table class="table-responsive">
+                    <thead>
+                        <tr>
+                            <th>Kanban</th>
+                            <th>Location</th>
+                            <th>Waiting</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for signal in pending_signals %}
+                        <tr>
+                            <td data-label="Kanban">
+                                <span class="font-mono" style="font-size:0.8rem;">K{{ '%06d' % signal.kanban_id }}</span>
+                                {% if signal.pending_count > 1 %}<span class="badge badge-danger" style="margin-left: 0.25rem; font-size:0.62rem;">{{ signal.pending_count }}×</span>{% endif %}
+                                <div class="text-muted text-truncate" style="font-size: 0.75rem; margin-top:0.1rem;" title="{{ signal.part_name }}">{{ signal.part_name }}</div>
+                            </td>
+                            <td data-label="Location" class="cell-truncate text-muted" style="font-size:0.82rem;" title="{{ signal.location_name }}">{{ signal.location_name }}</td>
+                            <td data-label="Waiting" class="text-muted nowrap" style="font-size:0.82rem;">
+                                {% set delta = (current_time - signal.signal_time) %}
+                                {% if delta.days > 0 %}{{ delta.days }}d
+                                {% elif delta.seconds >= 3600 %}{{ (delta.seconds // 3600) }}h
+                                {% else %}{{ (delta.seconds // 60) }}m{% endif %}
+                            </td>
+                            <td data-label="" class="text-right">
+                                <a href="{{ url_for('kanbans.detail', id=signal.kanban_id) }}" class="btn btn-sm btn-secondary">
+                                    <svg><use href="#icon-arrow-right"></use></svg>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <svg><use href="#icon-check"></use></svg>
+                <div class="empty-state-title">All Clear</div>
+                <p>No pending signals — all kanbans are stocked.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            Recent Activity
+            <a href="{{ url_for('events.history') }}" class="btn btn-sm btn-secondary">View all</a>
+        </div>
+        <div style="padding: 0;">
+            {% if recent_events %}
+            <div class="table-container" style="border: none; border-radius: 0 0 var(--radius-md) var(--radius-md);">
+                <table class="table-responsive">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Event</th>
+                            <th>Part</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in recent_events %}
+                        <tr>
+                            <td data-label="Time" class="text-muted nowrap" style="font-size:0.8rem;">
+                                {{ event.created_at.strftime('%m/%d %H:%M') if event.created_at else '—' }}
+                            </td>
+                            <td data-label="Event">
+                                {% if event.event_type == 'signal' %}
+                                <span class="badge badge-warning">Signal</span>
+                                {% elif event.event_type == 'restock_start' %}
+                                <span class="badge badge-info">Restocking</span>
+                                {% elif event.event_type == 'restock_complete' %}
+                                <span class="badge badge-success">Restocked</span>
+                                {% elif event.event_type == 'adjustment' %}
+                                <span class="badge badge-secondary">Adjusted</span>
+                                {% endif %}
+                            </td>
+                            <td data-label="Part" class="cell-truncate-lg" title="{{ event.part_name }}" style="font-size:0.82rem;">
+                                <a href="{{ url_for('kanbans.detail', id=event.kanban_id) }}" style="color:var(--color-text);">{{ event.part_name }}</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <svg><use href="#icon-events"></use></svg>
+                <div class="empty-state-title">No recent activity</div>
+                <p>Events will appear here as kanbans are scanned.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}{% if kanban %}Edit Kanban{% else %}New Kanban{% endif %}{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}">Home</a>
+    <span class="breadcrumb-separator">/</span>
+    <a href="{{ url_for('kanbans.index') }}">Kanbans</a>
+    <span class="breadcrumb-separator">/</span>
+    <span class="breadcrumb-current">{% if kanban %}Edit{% else %}New{% endif %}</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">{% if kanban %}Edit Kanban{% else %}New Kanban{% endif %}</h1>
+</div>
+
+<div class="card form-card">
+    <div class="card-body">
+        <form method="post" action="{% if kanban %}{{ url_for('kanbans.update', id=kanban.id) }}{% else %}{{ url_for('kanbans.create') }}{% endif %}">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="part_id">Part *</label>
+                    <select id="part_id" name="part_id" class="form-control" required>
+                        <option value="">Select a part...</option>
+                        {% for part in parts %}
+                        <option value="{{ part.id }}" data-lead-time="{{ part.reorder_lead_time_days }}" {% if (kanban and kanban.part_id == part.id) or (selected_part_id and selected_part_id == part.id) %}selected{% endif %}>
+                            {{ part.part_number }} ({{ part.manufacturer }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="location_id">Location *</label>
+                    <select id="location_id" name="location_id" class="form-control" required>
+                        <option value="">Select a location...</option>
+                        {% for location in locations %}
+                        <option value="{{ location.id }}" {% if (kanban and kanban.location_id == location.id) or (selected_location_id and selected_location_id == location.id) %}selected{% endif %}>
+                            {{ location.location }}{% if location.description %} - {{ location.description }}{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="kanban_quantity">Container Quantity *</label>
+                    <input type="number" id="kanban_quantity" name="kanban_quantity" 
+                           class="form-control" required min="1"
+                           value="{{ kanban.kanban_quantity if kanban else '100' }}">
+                    <div class="form-text">Units per container</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="estimated_daily_demand">Daily Demand *</label>
+                    <input type="number" id="estimated_daily_demand" name="estimated_daily_demand" 
+                           class="form-control" required min="0" step="0.1"
+                           value="{{ kanban.estimated_daily_demand if kanban else '0' }}">
+                    <div class="form-text">Expected units consumed per day</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="safety_lead_time_days">Safety Lead Time (days) *</label>
+                    <input type="number" id="safety_lead_time_days" name="safety_lead_time_days" 
+                           class="form-control" required min="0" step="0.5"
+                           value="{{ kanban.safety_lead_time_days if kanban else '0' }}">
+                    <div class="form-text">Buffer time for variability</div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Lead Time (days)</label>
+                    <div id="lead-time-display" class="form-control" style="background-color: var(--color-bg-tertiary); font-weight: 600;">
+                        {% if kanban %}{{ kanban.lead_time_days }}{% else %}-{% endif %}
+                    </div>
+                    <div class="form-text">From part settings</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Number of Cards</label>
+                    <div id="number-of-cards-display" class="form-control" style="background-color: var(--color-bg-tertiary); font-weight: 600;">
+                        {{ kanban.number_of_cards if kanban else '-' }}
+                    </div>
+                    <div class="form-text">(Demand × (LT + Safety LT)) / Container Qty</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Reorder Point</label>
+                    <div id="reorder-point-display" class="form-control" style="background-color: var(--color-bg-tertiary); font-weight: 600;">
+                        {% if kanban %}{{ ((kanban.estimated_daily_demand * (kanban.lead_time_days + kanban.safety_lead_time_days))|round|int) }}{% else %}-{% endif %}
+                    </div>
+                    <div class="form-text">Demand × (LT + Safety LT)</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" name="is_active" 
+                           {% if not kanban or kanban.is_active %}checked{% endif %}
+                           style="width: 20px; height: 20px;">
+                    <span>Active</span>
+                </label>
+                <div class="form-text">Inactive kanbans won't accept scan events</div>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary">
+                    <svg><use href="#icon-check"></use></svg>
+                    {% if kanban %}Update Kanban{% else %}Create Kanban{% endif %}
+                </button>
+                <a href="{% if kanban %}{{ url_for('kanbans.detail', id=kanban.id) }}{% else %}{{ url_for('kanbans.index') }}{% endif %}" 
+                   class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const partSelect = document.getElementById('part_id');
+    const qtyInput = document.getElementById('kanban_quantity');
+    const demandInput = document.getElementById('estimated_daily_demand');
+    const safetyLTInput = document.getElementById('safety_lead_time_days');
+    const leadTimeDisplay = document.getElementById('lead-time-display');
+    const cardsDisplay = document.getElementById('number-of-cards-display');
+    const reorderDisplay = document.getElementById('reorder-point-display');
+
+    function getLeadTime() {
+        const selected = partSelect.options[partSelect.selectedIndex];
+        if (selected && selected.dataset.leadTime) {
+            return parseFloat(selected.dataset.leadTime);
+        }
+        return 0;
+    }
+
+    function updateCalculations() {
+        const leadTime = getLeadTime();
+        const qty = parseInt(qtyInput.value) || 0;
+        const demand = parseFloat(demandInput.value) || 0;
+        const safetyLT = parseFloat(safetyLTInput.value) || 0;
+
+        if (!partSelect.value) {
+            leadTimeDisplay.textContent = '-';
+            cardsDisplay.textContent = '-';
+            reorderDisplay.textContent = '-';
+            return;
+        }
+
+        leadTimeDisplay.textContent = leadTime;
+
+        const totalLT = leadTime + safetyLT;
+        reorderDisplay.textContent = Math.round(demand * totalLT);
+
+        if (qty > 0 && demand > 0) {
+            cardsDisplay.textContent = Math.max(1, Math.ceil((demand * totalLT) / qty));
+        } else {
+            cardsDisplay.textContent = 1;
+        }
+    }
+
+    partSelect.addEventListener('change', updateCalculations);
+    qtyInput.addEventListener('input', updateCalculations);
+    demandInput.addEventListener('input', updateCalculations);
+    safetyLTInput.addEventListener('input', updateCalculations);
+    updateCalculations();
+</script>
+{% endblock %}

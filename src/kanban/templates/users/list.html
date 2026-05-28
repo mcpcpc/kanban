@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Users{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}">Home</a>
+    <span class="breadcrumb-separator">/</span>
+    <span class="breadcrumb-current">Users</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Users</h1>
+    <a href="{{ url_for('users.new') }}" class="btn btn-primary">
+        <svg><use href="#icon-plus"></use></svg>
+        New User
+    </a>
+</div>
+
+<div class="table-container">
+    <table class="table-responsive">
+        <thead>
+            <tr>
+                <th>Display Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Last Login</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td data-label="Display Name">{{ user.display_name }}</td>
+                <td data-label="Email">{{ user.email }}</td>
+                <td data-label="Role">
+                    {% if user.role == 'admin' %}
+                    <span class="badge badge-danger">Admin</span>
+                    {% elif user.role == 'manager' %}
+                    <span class="badge badge-info">Manager</span>
+                    {% else %}
+                    <span class="badge badge-secondary">User</span>
+                    {% endif %}
+                </td>
+                <td data-label="Status">
+                    {% if user.is_active %}
+                    <span class="badge badge-success">Active</span>
+                    {% else %}
+                    <span class="badge badge-warning">Inactive</span>
+                    {% endif %}
+                </td>
+                <td data-label="Last Login" class="text-muted">
+                    {{ user.last_login_at.strftime('%Y-%m-%d %H:%M') if user.last_login_at else 'Never' }}
+                </td>
+                <td data-label="" class="text-right">
+                    <a href="{{ url_for('users.edit', id=user.id) }}" class="btn btn-sm btn-secondary" title="Edit">
+                        <svg><use href="#icon-edit"></use></svg>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

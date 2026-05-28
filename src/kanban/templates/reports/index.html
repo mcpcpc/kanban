@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Reports{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}">Home</a>
+    <span class="breadcrumb-separator">/</span>
+    <span class="breadcrumb-current">Reports</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Reports</h1>
+</div>
+
+<!-- Overview Stats -->
+<div class="grid grid-3 mb-3">
+    <div class="stat-card">
+        <div class="stat-card-label">Total Events</div>
+        <div class="stat-card-value">{{ total_events }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-label">Active Kanbans</div>
+        <div class="stat-card-value">{{ total_kanbans }}</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-label">Avg Cycle Time</div>
+        <div class="stat-card-value">
+            {% if avg_cycle_days %}{{ '%.1f'|format(avg_cycle_days) }}d{% else %}-{% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-2">
+    <!-- Events by Type -->
+    <div class="card">
+        <div class="card-header">Events by Type</div>
+        <div class="card-body" style="padding: 0;">
+            {% if events_by_type %}
+            <div class="table-container" style="border: none; border-radius: 0;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Event Type</th>
+                            <th class="text-right">Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in events_by_type %}
+                        <tr>
+                            <td>
+                                {% if event.type == 'signal' %}
+                                <span class="badge badge-warning">Signal</span>
+                                {% elif event.type == 'restock_start' %}
+                                <span class="badge badge-info">Restocking</span>
+                                {% elif event.type == 'restock_complete' %}
+                                <span class="badge badge-success">Restocked</span>
+                                {% elif event.type == 'adjustment' %}
+                                <span class="badge badge-purple">Adjustment</span>
+                                {% else %}
+                                <span class="badge">{{ event.type }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-right" style="font-weight: 500;">{{ event.count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <p>No events recorded yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Most Active Kanbans -->
+    <div class="card">
+        <div class="card-header">Most Active Kanbans</div>
+        <div class="card-body" style="padding: 0;">
+            {% if active_kanbans %}
+            <div class="table-container" style="border: none; border-radius: 0;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Part</th>
+                            <th>Location</th>
+                            <th class="text-right">Events</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for kanban in active_kanbans %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('kanbans.detail', id=kanban.id) }}">{{ kanban.part_name }}</a>
+                            </td>
+                            <td>{{ kanban.location_name }}</td>
+                            <td class="text-right" style="font-weight: 500;">{{ kanban.event_count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <p>No kanban activity yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Export Section -->
+<div class="card mt-2">
+    <div class="card-header">Export Data</div>
+    <div class="card-body">
+        <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+            <a href="{{ url_for('events.export') }}" class="btn btn-secondary">
+                <svg><use href="#icon-download"></use></svg>
+                All Events (CSV)
+            </a>
+            <a href="{{ url_for('events.export', type='signal') }}" class="btn btn-secondary">
+                <svg><use href="#icon-download"></use></svg>
+                Signals Only
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

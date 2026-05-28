@@ -1,0 +1,6 @@
+include LICENSE
+include src/kanban/schema.sql
+graft src/kanban/templates
+graft src/kanban/routes
+graft src/kanban/utils
+global-exclude *.pyc

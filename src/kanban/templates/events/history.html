@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Event History{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}">Home</a>
+    <span class="breadcrumb-separator">/</span>
+    <span class="breadcrumb-current">Events</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Event History</h1>
+    <a href="{{ url_for('events.export', type=selected_type, kanban_id=kanban_id) }}" class="btn btn-secondary">
+        <svg><use href="#icon-download"></use></svg>
+        Export CSV
+    </a>
+</div>
+
+<!-- Filters -->
+<div class="card mb-2">
+    <div class="card-body">
+        <form method="get" action="{{ url_for('events.history') }}">
+            <div class="form-row">
+                <div class="form-group" style="margin-bottom: 0; flex: 1;">
+                    <div class="search-input-wrapper">
+                        <input type="text" name="search" class="form-control" 
+                               placeholder="Search events..." value="{{ search }}">
+                        <svg><use href="#icon-search"></use></svg>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <select name="type" class="form-control">
+                        <option value="">All Types</option>
+                        {% for et in event_types %}
+                        <option value="{{ et.type }}" {% if et.type == selected_type %}selected{% endif %}>
+                            {{ et.type|replace('_', ' ')|title }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% if kanban_id %}
+                <input type="hidden" name="kanban_id" value="{{ kanban_id }}">
+                {% endif %}
+                <div class="form-group" style="margin-bottom: 0;">
+                    <button type="submit" class="btn btn-secondary">
+                        <svg><use href="#icon-filter"></use></svg>
+                        Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if kanban_id %}
+<div class="alert alert-info mb-2">
+    <svg><use href="#icon-filter"></use></svg>
+    <span>Showing events for kanban K{{ '%06d' % (kanban_id|int) }}. <a href="{{ url_for('events.history') }}">Clear filter</a></span>
+</div>
+{% endif %}
+
+<!-- Events List -->
+{% if events %}
+<div class="table-container">
+    <table class="table-responsive">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Event</th>
+                <th>Part</th>
+                <th>Location</th>
+                <th>Qty</th>
+                <th>Notes</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in events %}
+            <tr>
+                <td data-label="Time" class="text-muted" style="white-space: nowrap;">
+                    {{ event.created_at.strftime('%Y-%m-%d %H:%M') if event.created_at else '-' }}
+                </td>
+                <td data-label="Event">
+                    {% if event.event_type == 'signal' %}
+                    <span class="badge badge-warning">Signal</span>
+                    {% elif event.event_type == 'restock_start' %}
+                    <span class="badge badge-info">Restocking</span>
+                    {% elif event.event_type == 'restock_complete' %}
+                    <span class="badge badge-success">Restocked</span>
+                    {% elif event.event_type == 'adjustment' %}
+                    <span class="badge badge-purple">Adjustment</span>
+                    {% endif %}
+                </td>
+                <td data-label="Part" class="cell-truncate-lg" title="{{ event.part_name }} - {{ event.manufacturer }}">
+                    {{ event.part_name }}
+                    <div class="text-muted text-truncate" style="font-size: 0.8125rem;">{{ event.manufacturer }}</div>
+                </td>
+                <td data-label="Location" class="cell-truncate" title="{{ event.location_name }}">{{ event.location_name }}</td>
+                <td data-label="Qty">{{ event.quantity if event.quantity else '-' }}</td>
+                <td data-label="Notes" class="cell-truncate text-muted">
+                    {{ event.notes if event.notes else '-' }}
+                </td>
+                <td data-label="" class="text-right nowrap">
+                    <a href="{{ url_for('parts.detail', id=event.part_id) }}" class="btn btn-sm btn-secondary" title="View Part">
+                        <svg><use href="#icon-parts"></use></svg>
+                    </a>
+                    <a href="{{ url_for('kanbans.detail', id=event.kanban_id) }}" class="btn btn-sm btn-secondary" title="View Kanban">
+                        <svg><use href="#icon-kanban"></use></svg>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body">
+        <div class="empty-state">
+            <svg><use href="#icon-events"></use></svg>
+            <div class="empty-state-title">No Events Found</div>
+            {% if search or selected_type %}
+            <p>Try adjusting your search criteria.</p>
+            <a href="{{ url_for('events.history') }}" class="btn btn-secondary mt-2">Clear Filters</a>
+            {% else %}
+            <p>No events have been recorded yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

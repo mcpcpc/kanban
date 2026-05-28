@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+
+{% block title %}Help{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}">Home</a>
+    <span class="breadcrumb-separator">/</span>
+    <span class="breadcrumb-current">Help</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Help & Documentation</h1>
+</div>
+
+<div class="grid grid-2 mb-3">
+    <!-- Quick Start -->
+    <div class="card">
+        <div class="card-header">Quick Start</div>
+        <div class="card-body">
+            <ol class="workflow-list" style="line-height: 1.8;">
+                <li><strong>Add Parts</strong> — Create entries for components you stock</li>
+                <li><strong>Add Locations</strong> — Define physical storage locations</li>
+                <li><strong>Create Kanbans</strong> — Link parts to locations with reorder rules</li>
+                <li><strong>Print Cards</strong> — Generate cards to place at locations</li>
+                <li><strong>Start Scanning</strong> — Use Quick Scan when locations need restocking</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Key Concepts -->
+    <div class="card">
+        <div class="card-header">Key Concepts</div>
+        <div class="card-body">
+            <dl class="help-dl">
+                <dt>Part</dt>
+                <dd>An item being tracked in inventory, identified by part number and manufacturer.</dd>
+                
+                <dt>Location</dt>
+                <dd>A physical location that holds inventory. A location can contain multiple kanbans for different parts.</dd>
+                
+                <dt>Kanban</dt>
+                <dd>A visual signal linking a part to a location with replenishment rules (reorder point, quantity, max).</dd>
+                
+                <dt>Signal</dt>
+                <dd>Triggered when a kanban quantity is depleted — indicates replenishment is needed.</dd>
+                
+                <dt>Reorder Point</dt>
+                <dd>The stock level at which a signal should be triggered. Calculated as: Daily Demand × (Lead Time + Safety Lead Time).</dd>
+                
+                <dt>Safety Lead Time</dt>
+                <dd>Buffer time to protect against demand variability and supply delays.</dd>
+                
+                <dt>Lead Time</dt>
+                <dd>Days required to receive new stock after ordering.</dd>
+            </dl>
+        </div>
+    </div>
+</div>
+
+<!-- Workflows -->
+<div class="card mb-3">
+    <div class="card-header">Workflows</div>
+    <div class="card-body">
+        <div class="grid grid-3" style="gap: 2rem;">
+            <!-- Daily Operations -->
+            <div>
+                <h3 class="workflow-heading">
+                    <svg><use href="#icon-scan"></use></svg>
+                    Daily Operations
+                </h3>
+                <ol class="workflow-list">
+                    <li>Worker depletes a kanban → takes kanban card</li>
+                    <li>Scan card → records <span class="badge badge-warning">Signal</span></li>
+                    <li>Warehouse sees active signals on Dashboard</li>
+                    <li>Starts replenishment → <span class="badge badge-info">Restocking</span></li>
+                    <li>Receives material → <span class="badge badge-success">Restocked</span></li>
+                    <li>Returns card to location with restocked material</li>
+                </ol>
+            </div>
+
+            <!-- Inventory Monitoring -->
+            <div>
+                <h3 class="workflow-heading">
+                    <svg><use href="#icon-inventory"></use></svg>
+                    Inventory Monitoring
+                </h3>
+                <ol class="workflow-list">
+                    <li>View Inventory page for stock levels</li>
+                    <li>Check days of supply vs. lead time</li>
+                    <li>Filter by status to find problems</li>
+                    <li>Export CSV for purchasing or ERP</li>
+                </ol>
+            </div>
+
+            <!-- Cycle Counting -->
+            <div>
+                <h3 class="workflow-heading">
+                    <svg><use href="#icon-edit"></use></svg>
+                    Cycle Counting
+                </h3>
+                <ol class="workflow-list">
+                    <li>Go to Inventory → select a part</li>
+                    <li>Click "Adjust" button</li>
+                    <li>Count physical stock at location</li>
+                    <li>Enter new quantity with reason</li>
+                    <li>System logs adjustment for audit</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scanning Guide -->
+<div class="card mb-3">
+    <div class="card-header">Scanning Guide</div>
+    <div class="card-body">
+        <p style="margin: 0 0 1rem 0;">Use the <strong>Quick Scan</strong> page to record kanban events. Select the appropriate action before scanning:</p>
+        <div class="table-container" style="margin-bottom: 1rem;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Action</th>
+                        <th>When to Use</th>
+                        <th>Quantity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge badge-warning">Signal</span></td>
+                        <td>Kanban quantity depleted — pulling this card to request replenishment</td>
+                        <td>Not needed</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-info">Restocking</span></td>
+                        <td>You've started gathering material to refill this kanban (optional intermediate step)</td>
+                        <td>Not needed</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-success">Restocked</span></td>
+                        <td>Kanban has been refilled — returning the card with replenished material</td>
+                        <td><strong>Enter quantity received</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p style="margin: 0; font-size: 0.875rem; color: var(--color-text-muted);">
+            <strong>Tip:</strong> Most users only need <span class="badge badge-warning">Signal</span> (when pulling a card) and <span class="badge badge-success">Restocked</span> (when returning a card with material).
+        </p>
+    </div>
+</div>
+
+<!-- User Roles -->
+<div class="card mb-3">
+    <div class="card-header">User Roles</div>
+    <div class="card-body" style="padding: 0;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Role</th>
+                    <th>Primary Tasks</th>
+                    <th>Key Pages</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Line Worker</strong></td>
+                    <td>Scan kanban cards when kanbans are depleted</td>
+                    <td>Quick Scan</td>
+                </tr>
+                <tr>
+                    <td><strong>Warehouse</strong></td>
+                    <td>Process signals, restock kanbans, perform cycle counts</td>
+                    <td>Dashboard, Quick Scan, Inventory</td>
+                </tr>
+                <tr>
+                    <td><strong>Purchasing</strong></td>
+                    <td>Monitor inventory, generate POs, track lead times</td>
+                    <td>Inventory, Reports, Events</td>
+                </tr>
+                <tr>
+                    <td><strong>Manager</strong></td>
+                    <td>Setup parts/locations/kanbans, review reports, configure system</td>
+                    <td>All pages</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Status Reference -->
+<div class="grid grid-2">
+    <div class="card">
+        <div class="card-header">Event Types</div>
+        <div class="card-body" style="padding: 0;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge badge-warning">Signal</span></td>
+                        <td>Replenishment needed — card was pulled</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-info">Restocking</span></td>
+                        <td>Replenishment in progress</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-success">Restocked</span></td>
+                        <td>Material received and kanban restocked</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-purple">Adjustment</span></td>
+                        <td>Manual inventory correction</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Inventory Status</div>
+        <div class="card-body" style="padding: 0;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge badge-success">OK</span></td>
+                        <td>Stock levels are healthy</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-warning">Warning</span></td>
+                        <td>Days of supply ≤ lead time</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-warning">Low Stock</span></td>
+                        <td>Quantity ≤ reorder point</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-danger">Out</span></td>
+                        <td>Zero quantity on hand</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Frequently Asked Questions -->
+<div class="card mt-3">
+    <div class="card-header">Frequently Asked Questions</div>
+    <div class="card-body">
+        <dl class="help-dl">
+            <dt>What happens when I set a kanban to inactive?</dt>
+            <dd>
+                Inactive kanbans are excluded from all forward-looking inventory calculations:
+                <ul style="margin: 0.5rem 0 0 0; padding-left: 1.25rem;">
+                    <li><strong>Reorder Point:</strong> The kanban's reorder point is removed from the part's total reorder threshold</li>
+                    <li><strong>Kanban Quantities:</strong> Not included in total kanban quantity calculations</li>
+                    <li><strong>Scan Events:</strong> Scanning an inactive kanban card will show a warning and won't record events</li>
+                    <li><strong>Inventory Adjustments:</strong> Adjustment events are only logged to active kanbans</li>
+                </ul>
+                <p style="margin: 0.5rem 0 0 0;"><strong>Note:</strong> Historical data (past events, demand history) is preserved even after deactivating a kanban.</p>
+            </dd>
+
+            <dt>How is "Days of Supply" calculated?</dt>
+            <dd>
+                Days of Supply = Quantity on Hand ÷ Average Daily Demand. The average daily demand is calculated from restock events over the last 30 days. If there's no restock history, days of supply cannot be calculated.
+            </dd>
+
+            <dt>What's the difference between "Warning" and "Low Stock" status?</dt>
+            <dd>
+                <ul style="margin: 0; padding-left: 1.25rem;">
+                    <li><strong>Low Stock:</strong> Quantity on hand is at or below the sum of all active kanban reorder points for that part</li>
+                    <li><strong>Warning:</strong> Days of supply is less than or equal to the part's lead time — you may run out before new stock arrives</li>
+                </ul>
+            </dd>
+
+            <dt>How does lead time affect inventory status?</dt>
+            <dd>
+                Lead time (set on each part) is compared against days of supply. If your days of supply is less than your lead time, the system shows a "Warning" status — indicating you should reorder now to avoid a stockout before new material arrives.
+            </dd>
+
+            <dt>Can I have multiple kanbans for the same part?</dt>
+            <dd>
+                Yes. You might have the same part stocked in multiple locations across different areas. Each kanban has its own reorder point and quantity. The inventory view aggregates all active kanbans when calculating totals for a part.
+            </dd>
+
+            <dt>How should I set my reorder point?</dt>
+            <dd>
+                The recommended formula is: <strong>Reorder Point = (Estimated Daily Demand × Lead Time) + Safety Stock</strong>. 
+                Enter your estimated daily demand on the kanban form, and the system will suggest a reorder point. 
+                You can compare this against actual demand shown on the Inventory page.
+            </dd>
+
+            <dt>What is safety stock and how do I determine it?</dt>
+            <dd>
+                Safety stock is buffer inventory that protects against unexpected demand spikes or supply delays. A simple approach: 
+                set it to cover 1-2 days of estimated demand. For critical parts, consider: (Max Daily Demand × Max Lead Time) - (Avg Daily Demand × Avg Lead Time).
+            </dd>
+
+            <dt>What is estimated daily demand?</dt>
+            <dd>
+                The expected units consumed per day for this kanban. Use this to calculate reorder points for new parts without history, 
+                or to plan for expected demand changes. Compare against actual demand on the Inventory page and adjust as needed.
+            </dd>
+        </dl>
+    </div>
+</div>
+{% endblock %}

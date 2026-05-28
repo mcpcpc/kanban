@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Adjust Inventory - {{ part.part_number }}{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}">Home</a>
+    <span class="breadcrumb-separator">/</span>
+    <a href="{{ url_for('inventory.index') }}">Inventory</a>
+    <span class="breadcrumb-separator">/</span>
+    <span class="breadcrumb-current">Adjust</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Adjust Inventory</h1>
+</div>
+
+<div class="grid grid-2">
+    <div class="card">
+        <div class="card-header">Current Stock</div>
+        <div class="card-body">
+            <dl class="dl-grid">
+                <dt class="text-muted">Part</dt>
+                <dd>
+                    <strong>{{ part.part_number }}</strong>
+                    <div class="text-muted" style="font-size: 0.875rem;">{{ part.manufacturer }}</div>
+                </dd>
+
+                <dt class="text-muted">Quantity On Hand</dt>
+                <dd style="font-size: 1.25rem; font-weight: 600;">{{ part.quantity_on_hand|round(1) }} {{ part.uom_abbr }}</dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Make Adjustment</div>
+        <div class="card-body">
+            <form method="post" action="{{ url_for('inventory.adjust', part_id=part.id) }}">
+                <div class="form-group">
+                    <label class="form-label">Adjustment Type</label>
+                    <select name="adjustment_type" class="form-control" id="adjustmentType">
+                        <option value="set">Set quantity to</option>
+                        <option value="add">Add to current</option>
+                        <option value="subtract">Subtract from current</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Quantity ({{ part.uom_abbr }})</label>
+                    <input type="number" name="quantity" class="form-control" 
+                           step="0.01" min="0" value="{{ part.quantity_on_hand }}" required
+                           id="quantityInput">
+                    <div class="text-muted" style="font-size: 0.8125rem; margin-top: 0.25rem;" id="quantityHint">
+                        New quantity will be: <strong id="newQuantity">{{ part.quantity_on_hand }}</strong> {{ part.uom_abbr }}
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Reason (optional)</label>
+                    <input type="text" name="reason" class="form-control" 
+                           placeholder="e.g., Cycle count, Received shipment, Damaged items">
+                </div>
+                
+                <div class="flex gap-1">
+                    <button type="submit" class="btn btn-primary">
+                        <svg><use href="#icon-check"></use></svg>
+                        Save Adjustment
+                    </button>
+                    <a href="{{ url_for('inventory.index') }}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const currentQty = {{ part.quantity_on_hand }};
+    const adjustmentType = document.getElementById('adjustmentType');
+    const quantityInput = document.getElementById('quantityInput');
+    const newQuantitySpan = document.getElementById('newQuantity');
+    
+    function updatePreview() {
+        const type = adjustmentType.value;
+        const qty = parseFloat(quantityInput.value) || 0;
+        let newQty;
+        
+        if (type === 'set') {
+            newQty = qty;
+        } else if (type === 'add') {
+            newQty = currentQty + qty;
+        } else if (type === 'subtract') {
+            newQty = currentQty - qty;
+        }
+        
+        newQty = Math.max(0, newQty);
+        newQuantitySpan.textContent = newQty.toFixed(1);
+    }
+    
+    adjustmentType.addEventListener('change', function() {
+        if (this.value === 'set') {
+            quantityInput.value = currentQty;
+        } else {
+            quantityInput.value = 0;
+        }
+        updatePreview();
+    });
+    
+    quantityInput.addEventListener('input', updatePreview);
+</script>
+{% endblock %}

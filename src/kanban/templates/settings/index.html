@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}">Home</a>
+    <span class="breadcrumb-separator">/</span>
+    <span class="breadcrumb-current">Settings</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Settings</h1>
+</div>
+
+<div class="grid grid-2">
+    <!-- Printer Configuration -->
+    <div class="card">
+        <div class="card-header">Printer Configuration</div>
+        <div class="card-body">
+            <form method="post" action="{{ url_for('settings.save') }}">
+                <div class="form-group">
+                    <label class="form-label" for="printer_hostname">Printer Hostname</label>
+                    <input type="text" class="form-control" id="printer_hostname" name="printer_hostname"
+                           value="{{ setting['printer_hostname'] }}"
+                           placeholder="e.g. 192.168.1.100 or printer.local">
+                    <small class="form-text">IP address or hostname of the Zebra label printer.</small>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="printer_port">Port</label>
+                        <input type="number" class="form-control" id="printer_port" name="printer_port"
+                               value="{{ setting['printer_port'] }}"
+                               min="1" max="65535">
+                        <small class="form-text">Printer port number.</small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="printer_timeout_seconds">Timeout (seconds)</label>
+                        <input type="number" class="form-control" id="printer_timeout_seconds" name="printer_timeout_seconds"
+                               value="{{ setting['printer_timeout_seconds'] }}"
+                               min="1" max="120" step="0.5">
+                        <small class="form-text">Connection timeout in seconds.</small>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="label_template">Label Template (ZPL)</label>
+                    <textarea class="form-control" id="label_template" name="label_template"
+                              rows="20" style="font-family: monospace; font-size: 0.85em;">{{ setting['label_template'] or '' }}</textarea>
+                    <small class="form-text">ZPL template for kanban labels. Available placeholders: {id}, {location_name}, {part_number}, {manufacturer}, {part_description}, {uom_abbr}, {reorder_point}, {kanban_quantity}, {number_of_cards}, {card_number}.</small>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <svg><use href="#icon-check"></use></svg>
+                    Save Printer Settings
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- DataWedge Server -->
+    <div class="card">
+        <div class="card-header">DataWedge Server</div>
+        <div class="card-body">
+            <div class="form-group">
+                <label class="form-label">Status</label>
+                <div>
+                    {% if datawedge_status == 'Running' %}
+                        <span class="badge badge-success">Running</span>
+                    {% else %}
+                        <span class="badge badge-danger">Stopped</span>
+                    {% endif %}
+                </div>
+            </div>
+            <small class="form-text mb-2" style="display: block;">
+                The DataWedge server listens for barcode scan data from Zebra mobile devices over the network.
+            </small>
+            <div class="flex gap-1">
+                {% if datawedge_status == 'Running' %}
+                    <a href="{{ url_for('settings.stop_datawedge') }}" class="btn btn-danger btn-sm">
+                        Stop Server
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('settings.start_datawedge') }}" class="btn btn-success btn-sm">
+                        Start Server
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

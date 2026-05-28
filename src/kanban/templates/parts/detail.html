@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}{{ part.part_number }}{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}">Home</a>
+    <span class="breadcrumb-separator">/</span>
+    <a href="{{ url_for('parts.index') }}">Parts</a>
+    <span class="breadcrumb-separator">/</span>
+    <span class="breadcrumb-current">{{ part.part_number }}</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">{{ part.part_number }}</h1>
+    <div class="flex gap-1">
+        <a href="{{ url_for('parts.edit', id=part.id) }}" class="btn btn-secondary">
+            <svg><use href="#icon-edit"></use></svg>
+            Edit
+        </a>
+        <form method="post" action="{{ url_for('parts.delete', id=part.id) }}" 
+              onsubmit="return confirm('Are you sure you want to delete this part?');"
+              style="display: inline;">
+            <button type="submit" class="btn btn-danger">
+                <svg><use href="#icon-trash"></use></svg>
+                Delete
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="grid grid-2">
+    <!-- Part Details -->
+    <div class="card">
+        <div class="card-header">Part Details</div>
+        <div class="card-body">
+            <dl class="dl-grid">
+                <dt class="text-muted">Part Number</dt>
+                <dd>{{ part.part_number }}</dd>
+
+                <dt class="text-muted">Manufacturer</dt>
+                <dd>{{ part.manufacturer }}</dd>
+
+                {% if part.description %}
+                <dt class="text-muted">Description</dt>
+                <dd>{{ part.description }}</dd>
+                {% endif %}
+
+                {% if part.category %}
+                <dt class="text-muted">Category</dt>
+                <dd><span class="badge badge-info">{{ part.category }}</span></dd>
+                {% endif %}
+
+                <dt class="text-muted">Unit of Measure</dt>
+                <dd>{{ part.uom_name }} ({{ part.uom_abbr }})</dd>
+
+                <dt class="text-muted">Reorder Lead Time</dt>
+                <dd>{{ part.reorder_lead_time_days }} days</dd>
+
+                {% if part.datasheet %}
+                <dt class="text-muted">Datasheet</dt>
+                <dd><a href="{{ part.datasheet }}" target="_blank">View Datasheet</a></dd>
+                {% endif %}
+
+                <dt class="text-muted">Created</dt>
+                <dd>{{ part.created_at.strftime('%Y-%m-%d %H:%M') if part.created_at else '-' }}</dd>
+
+                <dt class="text-muted">Updated</dt>
+                <dd>{{ part.updated_at.strftime('%Y-%m-%d %H:%M') if part.updated_at else '-' }}</dd>
+            </dl>
+        </div>
+    </div>
+
+    <!-- Associated Kanbans -->
+    <div class="card">
+        <div class="card-header flex justify-between items-center">
+            <span>Kanbans Using This Part</span>
+            <a href="{{ url_for('kanbans.new') }}?part_id={{ part.id }}" class="btn btn-sm btn-primary">
+                <svg><use href="#icon-plus"></use></svg>
+                Add
+            </a>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            {% if kanbans %}
+            <div class="table-container" style="border: none; border-radius: 0;">
+                <table class="table-responsive">
+                    <thead>
+                        <tr>
+                            <th>Location</th>
+                            <th>Total Qty</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for kanban in kanbans %}
+                        <tr>
+                            <td data-label="Location">{{ kanban.location_name }}</td>
+                            <td data-label="Total Qty">{{ kanban.kanban_quantity * kanban.number_of_cards }}</td>
+                            <td data-label="Status">
+                                {% if kanban.is_active %}
+                                <span class="badge badge-success">Active</span>
+                                {% else %}
+                                <span class="badge badge-warning">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td data-label="" class="text-right">
+                                <a href="{{ url_for('kanbans.detail', id=kanban.id) }}" class="btn btn-sm btn-secondary" title="View">
+                                    <svg><use href="#icon-eye"></use></svg>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <svg><use href="#icon-kanban"></use></svg>
+                <div class="empty-state-title">No Kanbans</div>
+                <p>This part is not used in any kanbans yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

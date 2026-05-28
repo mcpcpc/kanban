@@ -1,0 +1,14 @@
+[project]
+name = "kanban"
+description = "Kanban and inventory management system"
+readme = "README.md"
+license = {file = "LICENSE"}
+dynamic = ["version"]
+requires-python = ">=3.12"
+dependencies = ["quart"]
+
+[project.optional-dependencies]
+prod = ["uvicorn"]
+
+[tool.setuptools.dynamic]
+version = {attr = "kanban.__version__"}

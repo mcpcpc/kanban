@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Locations{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb">
+    <a href="{{ url_for('dashboard.index') }}">Home</a>
+    <span class="breadcrumb-separator">/</span>
+    <span class="breadcrumb-current">Locations</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Locations</h1>
+    <a href="{{ url_for('locations.new') }}" class="btn btn-primary">
+        <svg><use href="#icon-plus"></use></svg>
+        New Location
+    </a>
+</div>
+
+<!-- Search and Filter -->
+<div class="card mb-2">
+    <div class="card-body">
+        <form method="get" action="{{ url_for('locations.index') }}">
+            <div class="form-row">
+                <div class="form-group" style="margin-bottom: 0; flex: 1;">
+                    <div class="search-input-wrapper">
+                        <input type="text" name="search" class="form-control" 
+                               placeholder="Search locations..." value="{{ search }}">
+                        <svg><use href="#icon-search"></use></svg>
+                    </div>
+                </div>
+                {% if colors_in_use %}
+                <div class="form-group" style="margin-bottom: 0;">
+                    <select name="color" class="form-control" style="min-width: 130px;">
+                        <option value="">All Colors</option>
+                        {% for color in colors_in_use %}
+                        <option value="{{ color }}" {% if color_filter == color %}selected{% endif %}>
+                            {{ color|capitalize }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                <div class="form-group" style="margin-bottom: 0;">
+                    <button type="submit" class="btn btn-secondary">
+                        <svg><use href="#icon-search"></use></svg>
+                        Search
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Bins List -->
+{% if locations %}
+<div class="grid grid-3">
+    {% for location in locations %}
+    <div class="card">
+        <div class="card-body">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="min-width: 0; display: flex; align-items: center; gap: 0.5rem;">
+                    {% if location.color %}
+                    {% for color_name, color_dark, color_light in location_colors %}
+                    {% if color_name == location.color %}
+                    <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: {{ color_dark }}; flex-shrink: 0;"></span>
+                    {% endif %}
+                    {% endfor %}
+                    {% endif %}
+                    <h3 class="text-truncate" style="margin: 0; font-size: 1.125rem;" title="{{ location.location }}">
+                        {{ location.location }}
+                    </h3>
+                </div>
+                <svg style="width: 24px; height: 24px; color: var(--color-text-muted); flex-shrink: 0;">
+                    <use href="#icon-locations"></use>
+                </svg>
+            </div>
+            {% if location.description %}
+            <p class="text-muted text-truncate" style="margin: 0.25rem 0 0 0; font-size: 0.875rem;" title="{{ location.description }}">{{ location.description }}</p>
+            {% endif %}
+            <div style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                <span class="text-muted" style="font-size: 0.875rem;">
+                    {{ location_kanban_counts.get(location.id, 0) }} kanban{% if location_kanban_counts.get(location.id, 0) != 1 %}s{% endif %}
+                </span>
+                <a href="{{ url_for('locations.detail', id=location.id) }}" class="btn btn-sm btn-secondary" title="View">
+                    <svg><use href="#icon-eye"></use></svg>
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body">
+        <div class="empty-state">
+            <svg><use href="#icon-locations"></use></svg>
+            <div class="empty-state-title">No Locations Found</div>
+            {% if search or color_filter %}
+            <p>Try adjusting your search criteria.</p>
+            <a href="{{ url_for('locations.index') }}" class="btn btn-secondary mt-2">Clear Filters</a>
+            {% else %}
+            <p>No locations have been created yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
