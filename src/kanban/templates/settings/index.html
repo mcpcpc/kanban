@@ -48,7 +48,7 @@
                     <label class="form-label" for="label_template">Label Template (ZPL)</label>
                     <textarea class="form-control" id="label_template" name="label_template"
                               rows="20" style="font-family: monospace; font-size: 0.85em;">{{ setting['label_template'] or '' }}</textarea>
-                    <small class="form-text">ZPL template for kanban labels. Available placeholders: {id}, {bin_location}, {part_number}, {part_manufacturer}, {part_description}, {unit_of_measure_abbreviation}, {reorder_point}, {kanban_quantity}, {number_of_cards}, {card_number}.</small>
+                    <small class="form-text">ZPL template for kanban labels. Available placeholders: {id}, {location_name}, {part_number}, {manufacturer}, {part_description}, {uom_abbr}, {reorder_point}, {kanban_quantity}, {number_of_cards}, {card_number}.</small>
                 </div>
                 <button type="submit" class="btn btn-primary">
                     <svg><use href="#icon-check"></use></svg>

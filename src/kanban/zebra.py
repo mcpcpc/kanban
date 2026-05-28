@@ -97,10 +97,13 @@ class KanbanLabelTemplate:
         return template.format(
             id=self.id,
             location_name=self.location_name,
+            bin_location=self.location_name,
             part_number=self.part_number,
             manufacturer=self.manufacturer,
+            part_manufacturer=self.manufacturer,
             part_description=self.part_description,
             uom_abbr=self.uom_abbr,
+            unit_of_measure_abbreviation=self.uom_abbr,
             reorder_point=self.reorder_point,
             kanban_quantity=self.kanban_quantity,
             number_of_cards=self.number_of_cards,
