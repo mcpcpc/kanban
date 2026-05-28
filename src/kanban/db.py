@@ -40,59 +40,6 @@ def _open_db(path: str):
     return db
 
 
-def run_auth_migration(db_path: str) -> None:
-    """Idempotent migration: add auth tables to an existing database."""
-    db = _open_db(db_path)
-    db.execute("""
-        CREATE TABLE IF NOT EXISTS user (
-            id INTEGER PRIMARY KEY,
-            email TEXT UNIQUE NOT NULL COLLATE NOCASE,
-            display_name TEXT NOT NULL,
-            password_hash TEXT NOT NULL,
-            role TEXT NOT NULL DEFAULT 'user'
-                CHECK(role IN ('admin', 'manager', 'user')),
-            is_active INTEGER NOT NULL DEFAULT 1,
-            last_login_at TIMESTAMP,
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    try:
-        db.execute(
-            "ALTER TABLE kanban_event ADD COLUMN "
-            "user_id INTEGER REFERENCES user(id)"
-        )
-    except Exception:
-        pass  # column already exists
-    # Remove username column if present (UNIQUE columns can't be dropped directly)
-    cols = [r[1] for r in db.execute("PRAGMA table_info(user)").fetchall()]
-    if "username" in cols:
-        db.executescript("""
-            PRAGMA foreign_keys = OFF;
-            CREATE TABLE user_new (
-                id INTEGER PRIMARY KEY,
-                email TEXT UNIQUE NOT NULL COLLATE NOCASE,
-                display_name TEXT NOT NULL,
-                password_hash TEXT NOT NULL,
-                role TEXT NOT NULL DEFAULT 'user'
-                    CHECK(role IN ('admin', 'manager', 'user')),
-                is_active INTEGER NOT NULL DEFAULT 1,
-                last_login_at TIMESTAMP,
-                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-            );
-            INSERT INTO user_new
-                SELECT id, email, display_name, password_hash,
-                       role, is_active, last_login_at, created_at, updated_at
-                FROM user;
-            DROP TABLE user;
-            ALTER TABLE user_new RENAME TO user;
-            PRAGMA foreign_keys = ON;
-        """)
-    db.commit()
-    db.close()
-
-
 @command("init-db")
 @with_appcontext
 def init_db_command() -> None:
@@ -133,8 +80,3 @@ def init_db(app) -> None:
     app.teardown_appcontext(close_db)
     app.cli.add_command(init_db_command)
     app.cli.add_command(create_admin_command)
-
-    # Auto-migrate auth schema for existing databases
-    db_path = app.config.get("DATABASE", "")
-    if db_path and exists(db_path):
-        run_auth_migration(db_path)
