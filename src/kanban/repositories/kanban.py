@@ -120,7 +120,7 @@ class KanbanRepository:
 
     def get_with_lead_time(self, kanban_id: int):
         return self.db.execute("""
-            SELECT k.*, p.reorder_lead_time_days
+            SELECT k.*, p.reorder_lead_time_days AS lead_time_days
             FROM kanban k
             JOIN part p ON k.part_id = p.id
             WHERE k.id = ?
