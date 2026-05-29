@@ -1,4 +1,4 @@
-from quart import Blueprint, g, render_template, request, redirect, url_for, flash
+from quart import Blueprint, g, render_template, request, redirect, url_for, flash, jsonify
 
 from kanban.deps import get_scan_service
 
@@ -23,6 +23,9 @@ async def process():
         notes=form.get("notes", "").strip(),
         user_id=user_id,
     )
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify(success=result.success, message=result.message, category=result.category)
+
     await flash(result.message, result.category)
     return_to = form.get("return_to", "").strip()
     return redirect(return_to or url_for("scan.index"))
