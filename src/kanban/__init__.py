@@ -20,7 +20,7 @@ from kanban.routes.scan import bp as scan_bp
 from kanban.routes.settings import bp as settings_bp
 from kanban.routes.users import bp as users_bp
 
-__version__ = "0.0.1"
+__version__ = "1.0.0"
 
 
 def create_app(test_config=None) -> Quart:
