@@ -11,7 +11,7 @@ from werkzeug.security import generate_password_hash
 from kanban.repositories.user import UserRepository
 from kanban.services.user import UserService
 
-SCHEMA_PATH = '/root/projects/kanban/src/kanban/schema.sql'
+SCHEMA_PATH = str(__import__('pathlib').Path(__file__).parents[1] / 'src' / 'kanban' / 'schema.sql')
 
 
 def make_db() -> sqlite3.Connection:

@@ -8,7 +8,7 @@ sys.path.insert(0, str(__import__('pathlib').Path(__file__).parents[1] / 'src'))
 
 from kanban.repositories.inventory import InventoryRepository
 
-SCHEMA_PATH = '/root/projects/kanban/src/kanban/schema.sql'
+SCHEMA_PATH = str(__import__('pathlib').Path(__file__).parents[1] / 'src' / 'kanban' / 'schema.sql')
 
 
 def make_db() -> sqlite3.Connection:
