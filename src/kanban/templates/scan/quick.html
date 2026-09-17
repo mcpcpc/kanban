@@ -59,6 +59,44 @@
     [data-theme="dark"] .scan-section {
         background: linear-gradient(135deg, var(--color-primary-muted) 0%, var(--color-bg-secondary) 100%);
     }
+    .barcode-error {
+        display: none;
+        font-size: 0.75rem;
+        color: var(--color-danger-text, #dc2626);
+        margin-top: 0.375rem;
+    }
+    .notes-toggle {
+        font-size: 0.8125rem;
+        color: var(--color-primary);
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .notes-toggle:hover {
+        text-decoration: underline;
+    }
+    #scanLogList li {
+        padding: 0.5rem 1rem;
+        border-bottom: 1px solid var(--color-border);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.8125rem;
+    }
+    #scanLogList li:last-child {
+        border-bottom: none;
+    }
+    .scan-log-msg {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .scan-log-time {
+        color: var(--color-text-muted);
+        font-size: 0.7rem;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
 </style>
 
 <div class="page-header">
@@ -68,6 +106,8 @@
 <div class="grid grid-2">
     <div class="card">
         <div class="card-body">
+            <div id="scanResult"></div>
+
             <form method="post" action="{{ url_for('scan.process') }}" id="scanForm" data-no-loading>
                 <div class="scan-section">
                     <label class="form-label" for="barcode" style="font-size: 0.9375rem; margin-bottom: 0.625rem; display: block; text-align: center;">
@@ -78,6 +118,7 @@
                            placeholder="K000001"
                            autocomplete="off" autocorrect="off" autocapitalize="characters"
                            inputmode="text" autofocus>
+                    <span id="barcodeError" class="barcode-error">Barcode must be K followed by digits (e.g. K000001)</span>
                     <div class="form-text text-center" style="margin-top: 0.5rem;">
                         Point scanner at kanban card, or type barcode above
                     </div>
@@ -104,25 +145,32 @@
                     </div>
                 </div>
 
-                <div class="form-row">
+                <div id="quantityRow" class="form-row">
                     <div class="form-group">
-                        <label class="form-label" for="quantity">Quantity <span class="text-muted" style="font-weight:400;">(optional)</span></label>
+                        <label class="form-label" for="quantity">Quantity</label>
                         <input type="number" id="quantity" name="quantity" class="form-control"
-                               placeholder="e.g. 50" min="0" step="any">
+                               placeholder="e.g. 50" min="1" step="1">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="notes">Notes <span class="text-muted" style="font-weight:400;">(optional)</span></label>
-                    <input type="text" id="notes" name="notes" class="form-control"
-                           placeholder="Optional notes...">
+                    <a id="notesToggle" class="notes-toggle">+ Add note</a>
+                    <div id="notesField" style="display: none; margin-top: 0.5rem;">
+                        <label class="form-label" for="notes">Note</label>
+                        <input type="text" id="notes" name="notes" class="form-control"
+                               placeholder="Optional notes...">
+                    </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">
+                <button type="submit" id="submitBtn" class="btn btn-primary btn-lg" style="width: 100%;" disabled>
                     <svg><use href="#icon-check"></use></svg>
                     Submit Scan
                 </button>
             </form>
+
+            <noscript>
+                <p class="form-text text-center" style="margin-top: 0.75rem;">JavaScript is disabled — form will submit with full page reload.</p>
+            </noscript>
         </div>
     </div>
 
@@ -155,9 +203,16 @@
                 <ul style="margin: 0; padding-left: 1.25rem;">
                     <li>Keep the scan input focused (click it if needed)</li>
                     <li>Scanner should be configured with Enter suffix</li>
-                    <li>Barcode format: K followed by 6 digits (e.g., K000001)</li>
-                    <li><strong>Quantity</strong> is required for <em>Restocked</em>, optional otherwise</li>
+                    <li>Barcode format: K followed by digits (e.g., K000001)</li>
+                    <li><strong>Quantity</strong> is required for <em>Restocked</em></li>
                 </ul>
+            </div>
+        </div>
+
+        <div class="card mt-2" id="scanLogCard" style="display: none;">
+            <div class="card-header">Recent Scans</div>
+            <div class="card-body" style="padding: 0;">
+                <ul id="scanLogList"></ul>
             </div>
         </div>
     </div>
@@ -166,45 +221,171 @@
 
 {% block scripts %}
 <script>
-(function() {
+(function () {
+    const BARCODE_PATTERN = /^[Kk]?\d+$/;
+    const CATEGORY_LABELS = { success: 'OK', warning: 'Warn', danger: 'Error' };
+    const LOG_MAX = 5;
+
+    const form         = document.getElementById('scanForm');
     const barcodeInput = document.getElementById('barcode');
-    const form = document.getElementById('scanForm');
-    
-    // Auto-focus on page load
-    barcodeInput.focus();
-    
-    // Re-focus when clicking anywhere on the page
-    document.addEventListener('click', function(e) {
+    const barcodeError = document.getElementById('barcodeError');
+    const submitBtn    = document.getElementById('submitBtn');
+    const quantityRow  = document.getElementById('quantityRow');
+    const quantityInput = document.getElementById('quantity');
+    const notesToggle  = document.getElementById('notesToggle');
+    const notesField   = document.getElementById('notesField');
+    const notesInput   = document.getElementById('notes');
+    const scanResult   = document.getElementById('scanResult');
+    const scanLogCard  = document.getElementById('scanLogCard');
+    const scanLogList  = document.getElementById('scanLogList');
+
+    let scanLog = [];
+    let fetchInFlight = false;
+    let dismissTimer = null;
+
+    // --- Barcode validation ---
+    function validateBarcode() {
+        const val = barcodeInput.value.trim();
+        const empty = val === '';
+        const valid = !empty && BARCODE_PATTERN.test(val);
+        barcodeError.style.display = (!empty && !valid) ? '' : 'none';
+        submitBtn.disabled = !valid;
+    }
+
+    // --- Quantity visibility ---
+    function updateQuantityVisibility() {
+        const action = form.querySelector('[name="action"]:checked').value;
+        const show = action === 'restock_complete';
+        quantityRow.style.display = show ? '' : 'none';
+        quantityInput.required = show;
+        if (!show) quantityInput.value = '';
+    }
+
+    // --- Inline alert ---
+    function showAlert(message, category) {
+        clearTimeout(dismissTimer);
+        const iconId = category === 'success' ? 'icon-check' : 'icon-alert-circle';
+        scanResult.innerHTML =
+            '<div class="alert alert-' + category + '" role="alert">' +
+            '<svg><use href="#' + iconId + '"></use></svg>' +
+            '<span>' + escapeHtml(message) + '</span>' +
+            '</div>';
+        if (category === 'success') {
+            dismissTimer = setTimeout(function () { scanResult.innerHTML = ''; }, 4000);
+        }
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // --- Scan log ---
+    function renderScanLog() {
+        scanLogCard.style.display = '';
+        scanLogList.innerHTML = scanLog.map(function (e) {
+            const label = CATEGORY_LABELS[e.category] || e.category;
+            const time  = e.time.toLocaleTimeString();
+            return '<li>' +
+                '<span class="badge badge-' + e.category + '">' + label + '</span>' +
+                '<span class="scan-log-msg">' + escapeHtml(e.message) + '</span>' +
+                '<span class="scan-log-time">' + time + '</span>' +
+                '</li>';
+        }).join('');
+    }
+
+    function pushLog(data) {
+        scanLog.unshift({ time: new Date(), category: data.category, message: data.message });
+        if (scanLog.length > LOG_MAX) scanLog.pop();
+        renderScanLog();
+    }
+
+    // --- AJAX submit ---
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (fetchInFlight) return;
+        fetchInFlight = true;
+        submitBtn.disabled = true;
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: new FormData(form),
+            redirect: 'manual'
+        })
+        .then(function (response) {
+            // Redirect means session expired
+            if (response.type === 'opaqueredirect' || response.redirected) {
+                showAlert('Session expired — please reload the page.', 'danger');
+                return null;
+            }
+            const ct = response.headers.get('content-type') || '';
+            if (!ct.includes('application/json')) {
+                showAlert('Session expired — please reload the page.', 'danger');
+                return null;
+            }
+            return response.json();
+        })
+        .then(function (data) {
+            if (!data) return;
+            showAlert(data.message, data.category);
+            pushLog(data);
+            if (data.success) {
+                barcodeInput.value = '';
+                // Collapse notes
+                notesInput.value = '';
+                notesField.style.display = 'none';
+                notesToggle.style.display = '';
+            }
+            validateBarcode();
+        })
+        .catch(function () {
+            showAlert('Network error — scan may not have been recorded. Check the log.', 'danger');
+        })
+        .finally(function () {
+            fetchInFlight = false;
+            // Submit button re-enabled only if barcode is valid
+            validateBarcode();
+            barcodeInput.focus();
+        });
+    });
+
+    // --- Action selection (visual) ---
+    const actionOptions = form.querySelectorAll('.action-option');
+    actionOptions.forEach(function (option) {
+        option.addEventListener('click', function () {
+            actionOptions.forEach(function (o) { o.classList.remove('selected'); });
+            option.classList.add('selected');
+        });
+        option.querySelector('input').addEventListener('change', updateQuantityVisibility);
+    });
+
+    // --- Notes toggle ---
+    notesToggle.addEventListener('click', function (e) {
+        e.preventDefault();
+        notesToggle.style.display = 'none';
+        notesField.style.display = '';
+        notesInput.focus();
+    });
+
+    // --- Re-focus barcode when clicking anywhere on the form ---
+    document.addEventListener('click', function (e) {
         if (e.target.closest('form') === form && e.target !== barcodeInput) {
             barcodeInput.focus();
         }
     });
-    
-    // Auto-submit on Enter (scanner sends Enter after barcode)
-    barcodeInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter' && barcodeInput.value.trim()) {
-            // Let the form submit naturally
-        }
-    });
-    
-    // Handle action option selection
-    const actionOptions = form.querySelectorAll('.action-option');
-    actionOptions.forEach(function(option) {
-        option.addEventListener('click', function() {
-            actionOptions.forEach(function(opt) {
-                opt.classList.remove('selected');
-            });
-            option.classList.add('selected');
-        });
-    });
-    
-    // Clear barcode input after form submission to prepare for next scan
-    form.addEventListener('submit', function() {
-        setTimeout(function() {
-            barcodeInput.value = '';
-            barcodeInput.focus();
-        }, 100);
-    });
+
+    // --- Init ---
+    validateBarcode();
+    updateQuantityVisibility();
+
+    // Expand notes if pre-populated (e.g. future sticky-form re-render)
+    if (notesInput.value.trim()) {
+        notesToggle.style.display = 'none';
+        notesField.style.display = '';
+    }
+
+    barcodeInput.addEventListener('input', validateBarcode);
+    barcodeInput.focus();
 })();
 </script>
 {% endblock %}
